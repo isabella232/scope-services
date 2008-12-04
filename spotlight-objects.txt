@@ -63,21 +63,3 @@ GRID-COLOR ::= "<grid-color>" COLOR "</grid-color>" ;
 # As a suggestion ( not really used in any public spec, AFAIK):
 # the six first hexes are the color, the last two the alpha channel
 COLOR ::= [0-9A-Fa-f]{8} ;
-Page Discussion Edit History Move Watch 
-Chrisk My talk My preferences My watchlist My contributions 
-Navigation 
-Main Page
-Recent changes
-Random page
-Help
-Search 
-    
-Toolbox 
-What links here
-Related changes
-Upload file
-Special pages
-Printable version
-Permanent link
-
-This page was last modified 11:57, 24 October 2008. This page has been ac
