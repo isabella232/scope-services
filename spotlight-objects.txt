@@ -1,0 +1,83 @@
+###
+# New Highlight Spec
+ 
+ 
+###
+# This is a new version of the SPOTLIGHT-OBJECT command of the ECMAScript debugger protocol.
+# The mockup on  http://kaleidoscope.vlab.osa/tests-and-mockups/highlight-mockup/ is part of this spec.
+# Box means an area on the view-port for a given DOM element. Dimensions refer to CSS definitions.
+# E.g. the dimension box means the area given by the width and height of the element,
+# the padding box includes the padding, the border box the borders and the margin box the margins.
+# The display property like inline, inline-block, etc is currently not taken in regard
+# ( must probably be addressed later ), the elements are always treated as block levels.
+# Borders or grids of a given box are always drawn with 1px with, inside the box dimension.
+ 
+COMMAND ::= SPOTLIGHT-OBJECTS ;
+ 
+# with the new spotlight command more then one element can be highlighted.
+# This will be used to draw only borders around previously selected elements
+# if the user selects to do so ( try the "lock" checkmark in the mockup ).
+# The drawing order starts with the last SPOTLIGHT-OBJECT.
+# Drawing starts always with clearing everything previously drawn,
+# e.g. with no SPOTLIGHT-OBJECT it's like a clear command.
+SPOTLIGHT-OBJECTS ::= "<spotlight-objects>"
+                          SPOTLIGHT-OBJECT*
+                      "</spotlight-objects>" ;
+ 
+# The drawing order is box, reference-box-frame, box-frame, grid.
+# OBJECT-ID: see existing spec.
+# SCROLL-INTO-VIEW: see existing spec. It's only valid for the first SPOTLIGHT-OBJECT.
+# *-COLOR: The corresponding box is drawn only if the element is present
+SPOTLIGHT-OBJECT ::= "<spotlight-object>"
+                          OBJECT-ID
+                          SCROLL-INTO-VIEW?
+                          BOX-TYPE
+                          BOX-COLOR?
+                          REFERENCE-BOX-FRAME-COLOR?
+                          BOX-FRAME-COLOR?
+                          GRID-COLOR?
+                      "</spotlight-object>" ;
+ 
+# If the box can have a reference box, that means is either padding, border or margin
+# and REFERENCE-BOX-FRAME-COLOR is not empty ( or is a valid color )
+# then the box is drawn as a XOR of the box and the refernce box, otherwise the box is drawn.
+# The reference box is the next "smaller" box, e.g. for the margin-box it's the border-box,
+# for the border-box it's the padding-box, for the padding-box t's the dimension-box.
+# See e.g. the "test-negative-margins.html" in the mockup on hovering "margin" area in "Metrics".
+# The XOR will fail in some cases, but in the most ( real world ) cases it will show
+# the actual margin, border or padding dimensions.
+# The type could probably be shortened to 1 | 2 | 3 | 4.
+BOX-TYPE ::= "<box-type>" ( "dimension" | "padding" | "border" | "margin" ) "</box-type>" ;
+ 
+BOX-COLOR ::= "<box-color>" COLOR "</box-color>" ;
+ 
+# Drawn with 1px width inside the reference-box
+REFERENCE-BOX-FRAME-COLOR ::= "<reference-box-frame-color>" COLOR "</reference-box-frame-color>" ;
+ 
+# Drawn with 1px width inside the box
+BOX-FRAME-COLOR ::= "<box-frame-color>" COLOR "</box-frame-color>" ;
+ 
+# Drawn with 1px width inside the box over the whole document
+GRID-COLOR ::= "<grid-color>" COLOR "</grid-color>" ;
+ 
+# As a suggestion ( not really used in any public spec, AFAIK):
+# the six first hexes are the color, the last two the alpha channel
+COLOR ::= [0-9A-Fa-f]{8} ;
+Page Discussion Edit History Move Watch 
+Chrisk My talk My preferences My watchlist My contributions 
+Navigation 
+Main Page
+Recent changes
+Random page
+Help
+Search 
+    
+Toolbox 
+What links here
+Related changes
+Upload file
+Special pages
+Printable version
+Permanent link
+
+This page was last modified 11:57, 24 October 2008. This page has been ac
