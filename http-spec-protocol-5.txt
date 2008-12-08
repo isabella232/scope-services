@@ -19,6 +19,7 @@ of the architecture of Opera. Most importantly, we are interested in showing
 information from the entire lifespan of a request. This may span modules
 in a ways that dictate the structure of the protocol.
 
+
 ### What's a meta request?
 
 A meta request is the highest level request for a resources. It means
@@ -31,95 +32,119 @@ resource. When a new tab requests that resource, a meta-request occurs.
 
 ## BNF:
 
-PROTOCOL ::= (COMMAND | EVENT)* ;
+    PROTOCOL ::= (COMMAND | EVENT)* ;
+        
+    COMMAND ::= SET-RESPONSE-DATA-MODE
+              | GET-RESOURCE ;
     
-COMMAND ::= SET-RESPONSE-DATA-MODE ;
+    EVENT ::= META-REQUEST
+            | REQUEST
+            | RESPONSE-HEADER
+            | RESPONSE-FINISHED
+            | RESOURCE-DATA ;
+    
+    
+    # Events:
+    
+    # There will _always_ be fired a meta request event when a resource is requested
+    META-REQUEST ::= "<meta-request>"
+                       CONTEXT
+                       RESOURCE-ID
+                       URL
+                     "</meta-request>" ;
 
-EVENT ::= META-REQUEST
-        | REQUEST
-        | RESPONSE-HEADER
-        | RESPONSE-FINISHED
-        | RESOURCE-DATA ;
-
-
-META-REQUEST ::= "<meta-request>"
-                   CONTEXT
-                   RESOURCE-ID
-                   URL
-                 "</meta-request>" ;
-                 
-REQUEST ::= "<request>"
-              REQUEST-ID
-              RESOURCE-ID
-              CONTEXT
-              URL
-              RAW-REQUEST-HEADER # same as HEADER in proto-4
-            "</request>" ;
-
-RESPONSE-HEADER ::= "<response-header>"
-                      REQUEST-ID
-                      RESOURCE-ID
-                      TIME
-                      RAW-RESPONSE-HEADER # same as HEADER in proto-4
-                      PARSED-HEADERS
-                      METHOD
-                      STATUS
-                    "</response-header>" ;
-
-RESPONSE-FINISHED ::= "<response-finished>"
-                        REQUEST-ID
+    # There _may_ be fired a request event when a resource is requested
+    # If there is a request event there _must_ be a RESPONSE-HEADER and
+    # RESPONSE-FINISHED event.
+    REQUEST ::= "<request>"
+                  REQUEST-ID
+                  RESOURCE-ID
+                  CONTEXT
+                  URL
+                  RAW-REQUEST-HEADER # same as HEADER in proto-4
+                "</request>" ;
+    
+    RESPONSE-HEADER ::= "<response-header>"
+                          REQUEST-ID
+                          RESOURCE-ID
+                          TIME
+                          RAW-RESPONSE-HEADER # same as HEADER in proto-4
+                          PARSED-HEADERS
+                          METHOD
+                          STATUS
+                        "</response-header>" ;
+    
+    RESPONSE-FINISHED ::= "<response-finished>"
+                            REQUEST-ID
+                            RESOURCE-ID
+                            TIME
+                            CONTENT-LENGTH
+                          "</response-finished>" ;
+    
+    # a response-finished event will always be followed by a RESOURCE-DATA
+    # event. The resource may or may not contain the content of the resouce,
+    # depending on the current settings
+    # A RESOURCE-DATA event may also be the result of a GET-RESOURCE action
+    RESOURCE-DATA ::= "<resource-data>"
                         RESOURCE-ID
-                        TIME
-                        CONTENT-LENGTH
-                      "</response-finished>" ;
-
-RESOURCE-DATA ::= "<resource-data>"
-                    RESOURCE-ID
-                    PARSED-HEADERS
-                    URL
-                    MIME-TYPE
-                    CONTENT?
-                  "</resource-data>" ;
-
-CONTENT ::= "<resource-content>"
-              RESOURCE-ENCODING
-              CONTENT-LENGTH
-              CONTENT-DATA
-            "</resource-content>" ;
-
-RAW-REQUEST-HEADER ::= "<raw-request-header>" TEXT "</raw-request-header>" ;
-
-RAW-RESPONSE-HEADER ::= "<raw-response-header>" TEXT "</raw-response-header>" ;
-
-PARSED-HEADERS ::= "<parsed-headers>"
-                     HEADER*
-                   "</parsed-headers>" ;
-
-HEADER ::= "<header>"
-             HEADER-NAME
-             HEADER-VALUE
-           "</header>" ;
-
-HEADER-NAME ::= "<header-name>" STRING "</header-name>" ;
-
-HEADER-VALUE ::= "<header-value>" STRING "</header-value>" ;
+                        PARSED-HEADERS
+                        URL
+                        MIME-TYPE
+                        CONTENT?
+                      "</resource-data>" ;
 
 
-CONTEXT ::= WINDOW-ID
-            DOCUMENT-ID ;
+
+    # Commands:
+    
+    SET-RESPONSE-DATA-MODE ::= "<set-response-data-mode>"
+                                 RESPONSE-DATA-MODE
+                               "</set-response-data-mode>"
+
+    GET-RESOURCE ::= "<get-resource>"
+                       RESOURCE-ID
+                       RESPONSE-DATA-OPTIONS
+                     "</get-resource>"
 
 
-WINDOW-ID ::= "<window-id>" UNSIGNED "</window-id>" ;
-
-DOCUMENT-ID ::= "<document-id>" UNSIGNED "</document-id>" ;
-
-RESOURCE-ID ::= "<resource-id>" UNSIGNED "</resource-id>" ;
-
-SET-RESPONSE-DATA-MODE ::= "<set-response-data-mode>"
-                             RESPONSE-DATA-MODE
-                           "</set-response-data-mode>"
-
-RESPONSE-DATA-MODE ::= "full" | "only-metadata"
+    # The parts of the above.
+    
+    CONTENT ::= "<resource-content>"
+                  RESOURCE-ENCODING
+                  CONTENT-LENGTH
+                  CONTENT-DATA
+                "</resource-content>" ;
+    
+    RAW-REQUEST-HEADER ::= "<raw-request-header>" TEXT "</raw-request-header>" ;
+    
+    RAW-RESPONSE-HEADER ::= "<raw-response-header>" TEXT "</raw-response-header>" ;
+    
+    PARSED-HEADERS ::= "<parsed-headers>"
+                         HEADER*
+                       "</parsed-headers>" ;
+    
+    HEADER ::= "<header>"
+                 HEADER-NAME
+                 HEADER-VALUE
+               "</header>" ;
+    
+    HEADER-NAME ::= "<header-name>" STRING "</header-name>" ;
+    
+    HEADER-VALUE ::= "<header-value>" STRING "</header-value>" ;
+    
+    
+    CONTEXT ::= WINDOW-ID
+                DOCUMENT-ID ;
+    
+    
+    WINDOW-ID ::= "<window-id>" UNSIGNED "</window-id>" ;
+    
+    DOCUMENT-ID ::= "<document-id>" UNSIGNED "</document-id>" ;
+    
+    RESOURCE-ID ::= "<resource-id>" UNSIGNED "</resource-id>" ;
+    
+    
+    RESPONSE-DATA-MODE ::= "full" | "only-metadata"
 
 
 ## Caveats
