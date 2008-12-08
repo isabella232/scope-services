@@ -1,5 +1,4 @@
 
-
 # Scope protocol version 5 http logger specification draft
 
 Last modified by runeh@opera.com, 08 dec. 2008
@@ -9,6 +8,8 @@ Last modified by runeh@opera.com, 08 dec. 2008
 - Access to information about what Opera knows and thinks about a resource.
 - Access to body of data sent and received
 -- But only when required, as in profile vs. debug modes
+- Splitting sets of requests into request contexts, for profiling full page
+  loads
 
 ## Observations
 
@@ -123,6 +124,14 @@ RESPONSE-DATA-MODE ::= "full" | "only-metadata"
 
 ## Caveats
 
-When in only-metadata mode, there is no guarantee that what you get back when
-requesting a resource is what was retrieved the first time the resource was
-requested.
+- When in only-metadata mode, there is no guarantee that what you get back when
+  requesting a resource is what was retrieved the first time the resource was
+  requested.
+- The issue of "request context" has not been dealt with in any way. That is, a
+  context to which numerous requests belong. This is needed in order to show
+  nice graphs of how long it takes to load a certain web page for instance.
+  A possible sollution would be to introduce a <new-request-context> event. This
+  would contain the window-id as it's content. The event would be raised
+  whenever a window (as windows are defined in the context of scope) is
+  reloaded or navigation switches from one url to another. Who can opine about
+  the feasability of getting this from core? Would platform need to be involved?
