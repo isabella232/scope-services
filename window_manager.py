@@ -66,11 +66,11 @@ window_closed_c22="""<window-closed>
 </window-closed>
 """
 
-window_manager = Service("WindowManager",
+window_manager = Service("WindowManager", version="2.0", coreRelease="2.4",
                          commands=[Request(1, "GetActiveWindow", False,         window_id)
                                   ,Request(3, "ListWindows",     False,         window_list) # core_2_2=window_list_c22
-                                  ,Request(5, "ModifyFilter",    window_filter, False, core_2_2=filter_c22)
-                                  ,Event(0, "OnWindowUpdated", window_info, core_2_2=updated_window_c22)
-                                  ,Event(2, "OnWindowClosed",  window_id,   core_2_2=window_closed_c22)
+                                  ,Request(5, "ModifyFilter",    window_filter, False)
+                                  ,Event(0, "OnWindowUpdated", window_info)
+                                  ,Event(2, "OnWindowClosed",  window_id)
                                   ],
                          cpp_class="OpScopeWindowManager", cpp_hfile="modules/scope/src/scope_window_manager.h")
