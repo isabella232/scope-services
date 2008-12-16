@@ -11,7 +11,7 @@ exec_data = Message("Exec",
                                                          ]))                                                          
                            ])
 
-exec_service = Service("Exec",
+exec_service = Service("Exec", version="2.0", coreRelease="2.4",
                        commands=[Request(1,  "Exec", exec_data, False)
                                 ],
                        cpp_class="OpScopeExec", cpp_hfile="modules/scope/src/scope_exec.h")

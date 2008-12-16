@@ -13,7 +13,7 @@ esl_configure = Message("Configure",
                         fields=[Field(Proto.Bool, "reformat", 1, q=Quantifier.Optional)
                                ])
 
-ecmascript_logger = Service("EcmascriptLogger",
+ecmascript_logger = Service("EcmascriptLogger", version="2.0", coreRelease="2.4",
                             commands=[Request(1,  "Configure", esl_configure, False)
                                      ,Event(0,  "NewScript", esl_new_script)
                                      ],

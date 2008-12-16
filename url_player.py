@@ -17,7 +17,7 @@ urlplayer_play = Message("PlayUrl",
                                 ,Field(Proto.String, "url",          2)
                                 ])
 
-url_player = Service("UrlPlayer",
+url_player = Service("UrlPlayer", version="2.0", coreRelease="2.4",
                      commands=[Request(1,  "CreateWindows", urlplayer_window, urlplayer_window_info)
                               ,Request(3,  "LoadUrl",       urlplayer_play,   False)
                               ],

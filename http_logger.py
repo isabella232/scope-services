@@ -17,7 +17,7 @@ response_header = Message("Response",
                                 ,Field(Proto.String, "header",    4)
                                 ])
 
-http_logger = Service("HttpLogger",
+http_logger = Service("HttpLogger", version="2.0", coreRelease="2.4",
                       commands=[Event(0,  "Request",  request_header)
                                ,Event(2,  "Response", response_header)
                                ],
@@ -68,7 +68,7 @@ http_logger = Service("HttpLogger",
 #                                 ,Field(Proto.Message, "headers",   7, q=Quantifier.Repeated, message=parsed_header)
 #                                 ])
 #
-#http_logger = Service("HttpLogger",
+#http_logger = Service("HttpLogger", version="2.0", coreRelease="2.4",
 #                      commands=[Request(1,  "SetLogMode",      log_mode, False)
 #                               ,Request(3,  "GetLogMode",      False,    log_mode)
 #                               ,Request(5,  "GetResponseBody", response_selection, response_body)

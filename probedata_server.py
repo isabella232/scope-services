@@ -7,7 +7,7 @@ probe_data = Message("ProbeData",
                      fields=[Field(Proto.Bytes, "data", 1)
                             ])
 
-probedata_server = Service("ProbedataServer",
+probedata_server = Service("ProbedataServer", version="2.0", coreRelease="2.4",
                            commands=[Request(1,  "AllData",  False, probe_data)
                                     ],
                            cpp_class="OpScopeProbedataServer", cpp_hfile="modules/scope/src/scope_probedata_server.h")

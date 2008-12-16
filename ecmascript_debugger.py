@@ -172,7 +172,7 @@ backtrace_frames = Message("BacktraceFrameList",
                            fields=[Field(Proto.Message, "frames", 1, q=Quantifier.Repeated, message=backtrace_frame)
                                   ])
 
-es_debugger = Service("EcmascriptDebugger",
+es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
                                ,Request(3,  "ContinueThread",      thread_mode,         False)
                                ,Request(5,  "Eval",                eval_data,           eval_result)
