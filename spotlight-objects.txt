@@ -26,26 +26,27 @@ SPOTLIGHT-OBJECTS ::= "<spotlight-objects>"
  
 # The drawing order is box, reference-box-frame, box-frame, grid.
 # OBJECT-ID: see existing spec.
-# *-COLOR: The corresponding box is drawn only if the element is present
 SPOTLIGHT-OBJECT ::= "<spotlight-object>"
                           OBJECT-ID
                           SCROLL-INTO-VIEW
-                          BOX-TYPE
-                          BOX-COLOR?
-                          REFERENCE-BOX-FRAME-COLOR?
-                          BOX-FRAME-COLOR?
-                          GRID-COLOR?
+                          BOX*
                       "</spotlight-object>" ;
+
+# *-COLOR: The corresponding box is drawn only if the element is present
+BOX ::= "<box>"
+            BOX-TYPE
+            FILL-COLOR?
+            FRAME-COLOR?
+            GRID-COLOR?
+        "</box>" ;
 
 # Boolean value to choose whether the given object should be scrolled into view.
 SCROLL-INTO-VIEW ::= "<scroll-into-view>"
                          ( 0 | 1 )
                      "</scroll-into-view>" ;
 
-# If the box can have a reference box, that means is either padding, border or margin
-# and REFERENCE-BOX-FRAME-COLOR is not empty ( or is a valid color )
-# then the box is drawn as a XOR of the box and the refernce box, otherwise the box is drawn.
-# The reference box is the next "smaller" box, e.g. for the margin-box it's the border-box,
+# The fill color of a box is always drawn as an XOR of the box the box immediately within it,
+# which is the next "smaller" box:for the margin-box it's the border-box,
 # for the border-box it's the padding-box, for the padding-box t's the dimension-box.
 # See e.g. the "test-negative-margins.html" in the mockup on hovering "margin" area in "Metrics".
 # The XOR will fail in some cases, but in the most ( real world ) cases it will show
@@ -58,13 +59,10 @@ SCROLL-INTO-VIEW ::= "<scroll-into-view>"
 #   4: margin
 BOX-TYPE ::= "<box-type>" ( 1 | 2 | 3 | 4 ) "</box-type>" ;
  
-BOX-COLOR ::= "<box-color>" COLOR "</box-color>" ;
- 
-# Drawn with 1px width inside the reference-box
-REFERENCE-BOX-FRAME-COLOR ::= "<reference-box-frame-color>" COLOR "</reference-box-frame-color>" ;
+FILL-COLOR ::= "<fill-color>" COLOR "</fill-color>" ;
  
 # Drawn with 1px width inside the box
-BOX-FRAME-COLOR ::= "<box-frame-color>" COLOR "</box-frame-color>" ;
+FRAME-COLOR ::= "<frame-color>" COLOR "</frame-color>" ;
  
 # Drawn with 1px width inside the box over the whole document
 GRID-COLOR ::= "<grid-color>" COLOR "</grid-color>" ;
