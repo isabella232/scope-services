@@ -70,7 +70,8 @@ window_manager = Service("WindowManager", version="2.0", coreRelease="2.4",
                          commands=[Request(1, "GetActiveWindow", False,         window_id)
                                   ,Request(3, "ListWindows",     False,         window_list) # core_2_2=window_list_c22
                                   ,Request(5, "ModifyFilter",    window_filter, False)
-                                  ,Event(0, "OnWindowUpdated", window_info)
-                                  ,Event(2, "OnWindowClosed",  window_id)
+                                  ,Event(0, "OnWindowUpdated",   window_info)
+                                  ,Event(2, "OnWindowClosed",    window_id)
+                                  ,Event(4, "OnWindowActivated", window_id)
                                   ],
                          cpp_class="OpScopeWindowManager", cpp_hfile="modules/scope/src/scope_window_manager.h")
