@@ -3,23 +3,16 @@ from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Se
 
 # Service: HttpLogger (core-2.2)
 
-request_header = Message("Request",
-                         fields=[Field(Proto.Uint32, "requestID", 1)
-                                ,Field(Proto.Uint32, "windowID",  2)
-                                ,Field(Proto.String, "time",      3, comment="Float encoded as string")
-                                ,Field(Proto.String, "header",    4)
-                                ])
-
-response_header = Message("Response",
-                         fields=[Field(Proto.Uint32, "requestID", 1)
-                                ,Field(Proto.Uint32, "windowID",  2)
-                                ,Field(Proto.String, "time",      3, comment="Float encoded as string")
-                                ,Field(Proto.String, "header",    4)
-                                ])
+header = Message("Header",
+                 fields=[Field(Proto.Uint32, "requestID", 1)
+                        ,Field(Proto.Uint32, "windowID",  2)
+                        ,Field(Proto.String, "time",      3, comment="Float encoded as string")
+                        ,Field(Proto.String, "header",    4)
+                        ])
 
 http_logger = Service("HttpLogger", version="2.0", coreRelease="2.4",
-                      commands=[Event(0,  "Request",  request_header)
-                               ,Event(2,  "Response", response_header)
+                      commands=[Event(0,  "OnRequest",  header)
+                               ,Event(2,  "OnResponse", header)
                                ],
                       cpp_class="OpScopeHttpLogger", cpp_hfile="modules/scope/src/scope_http_logger.h")
 
