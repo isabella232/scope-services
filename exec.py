@@ -3,7 +3,7 @@ from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Se
 
 # Service: Exec
 
-exec_data = Message("Exec",
+exec_data = Message("ActionList",
                     fields=[Field(Proto.Message, "Actions", 1, q=Quantifier.Repeated,
                                   message=Message("Action", is_global=False,
                                                   fields=[Field(Proto.String, "Name",  1)
