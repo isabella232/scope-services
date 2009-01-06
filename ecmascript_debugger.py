@@ -48,7 +48,7 @@ thread_stopinfo = Message("ThreadStopInfo",
                              ,Field(Proto.Uint32, "breakpointID",  6, q=Quantifier.Optional)
                              ])
 
-thread_status = Message("ThreadStatus",
+thread_result = Message("ThreadResult",
                       fields=[Field(Proto.Uint32, "runtimeID", 1)
                              ,Field(Proto.Uint32, "threadID",  2)
                              ,Field(Proto.String, "status",    3)
@@ -190,7 +190,7 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(2,  "OnRuntimeStopped",  runtime_id)
                                ,Event(4,  "OnNewScript",       script_info)
                                ,Event(6,  "OnThreadStarted",   thread_info)
-                               ,Event(8,  "OnThreadFinished",  thread_status)
+                               ,Event(8,  "OnThreadFinished",  thread_result)
                                ,Event(10, "OnThreadStoppedAt", thread_stopinfo)
                                ,Event(12, "OnHandleEvent",     dom_event)
                                ,Event(14, "OnObjectSelected",  object_selection)
