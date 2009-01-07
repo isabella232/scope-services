@@ -1,0 +1,35 @@
+AddType application/xhtml+xml .xml
+AddDefaultCharset utf-8
+DirectorySlash Off
+DirectoryIndex client.xml
+RewriteEngine On
+
+# add a trailing slash to a directory path if it's missing
+# with query
+RewriteCond %{QUERY_STRING} !^$
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule !/$  https://dragonfly.opera.com%{REQUEST_URI}/?%{QUERY_STRING} [R,L]
+# without query
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule !/$  https://dragonfly.opera.com%{REQUEST_URI}/ [R,L]
+
+# redirect all requests for the index file on the default path 
+# if they don't match the current core version
+# with query
+RewriteCond %{QUERY_STRING} !^$
+RewriteCond %{HTTP_USER_AGENT} Presto/(\d)+\.(\d)+
+RewriteCond %{HTTP_USER_AGENT} !Presto/2\.1
+RewriteRule ^app/(cutting-edge/)?(client(?:-[a-zA-Z\-]{2,5})?\.xml)?$  https://dragonfly.opera.com/app/core-%1-%2/$1$2?%{QUERY_STRING} [R,L]
+# without query
+RewriteCond %{HTTP_USER_AGENT} Presto/(\d)+\.(\d)+
+RewriteCond %{HTTP_USER_AGENT} !Presto/2\.1
+RewriteRule ^app/(cutting-edge/)?(client(?:-[a-zA-Z\-]{2,5})?\.xml)?$  https://dragonfly.opera.com/app/core-%1-%2/$1$2 [R,L]
+
+# use the language cookie if it's set
+RewriteCond  %{HTTP_COOKIE}  ui-lang=([^;]*)
+RewriteRule /(client\.xml)?$  %{REQUEST_URI}client-%1.xml
+
+ExpiresActive On
+ExpiresDefault A28800
+SetOutputFilter DEFLATE
+Header unset Cache-control
