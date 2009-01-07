@@ -53,11 +53,11 @@ SCROLL-INTO-VIEW ::= "<scroll-into-view>"
 # the actual margin, border or padding dimensions.
 #
 # Valid values:
-#   1: dimension
-#   2: padding
-#   3: border
-#   4: margin
-BOX-TYPE ::= "<box-type>" ( 1 | 2 | 3 | 4 ) "</box-type>" ;
+#   0: dimension
+#   1: padding
+#   2: border
+#   3: margin
+BOX-TYPE ::= "<box-type>" ( 0 | 1 | 2 | 3 ) "</box-type>" ;
  
 FILL-COLOR ::= "<fill-color>" COLOR "</fill-color>" ;
  
