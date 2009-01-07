@@ -28,7 +28,7 @@ RewriteRule ^app/(cutting-edge/)?(client(?:-[a-zA-Z\-]{2,5})?\.xml)?$  https://d
 # use the language cookie if it's set
 # include only client pathes, e.g. not zipps/ or logs/
 RewriteCond  %{HTTP_COOKIE}  ui-lang=([^;]*)
-RewriteRule (?:app|\d+-\d+)/(client\.xml)?$  %{REQUEST_URI}client-%1.xml
+RewriteRule (?:app|\d+-\d+|cutting-edge)/(client\.xml)?$  %{REQUEST_URI}client-%1.xml
 
 ExpiresActive On
 ExpiresDefault A28800
