@@ -2,9 +2,9 @@
 from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
 
 runtime_selection = Message("RuntimeSelection",
-                        fields=[Field(Proto.Uint32, "runtimeID",    1, q=Quantifier.Repeated)
-                               ,Field(Proto.Bool,   "allRuntimes",  2, q=Quantifier.Optional)
-                               ])
+                            fields=[Field(Proto.Uint32, "runtimeList",  1, q=Quantifier.Repeated)
+                                   ,Field(Proto.Bool,   "allRuntimes",  2, q=Quantifier.Optional)
+                                   ])
 
 runtime_info = Message("RuntimeInfo",
                       fields=[Field(Proto.Uint32, "runtimeID",     1)
@@ -72,10 +72,10 @@ thread_mode = Message("ThreadMode",
                              ])
 
 property_data = Message("Property",
-                        fields=[Field(Proto.Uint32, "name",     1)
-                               ,Field(Proto.String, "type",     2) # TODO Make an enum
-                               ,Field(Proto.String, "value",    3, q=Quantifier.Optional, comment="Only present for `Object`, `Number`, `String` or `Boolean`")
-                               ,Field(Proto.Uint32, "objectID", 4, q=Quantifier.Optional, comment="If you want to set a property on an object")
+                        fields=[Field(Proto.String, "name",     1)
+                               ,Field(Proto.String, "type",     2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
+                               ,Field(Proto.String, "value",    3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
+                               ,Field(Proto.Uint32, "objectID", 4, q=Quantifier.Optional, comment="Only present for `Object`")
                                ])
 
 eval_data = Message("EvalData",
@@ -92,10 +92,10 @@ eval_result = Message("EvalResult",
                              ,Field(Proto.String, "value",     4, q=Quantifier.Optional, comment="Only present for `Object`, `Number`, `String` or `Boolean`")
                              ])
 
-object_selection = Message("ObjectSelection",
-                           fields=[Field(Proto.Uint32, "runtimeID", 1)
-                                  ,Field(Proto.Uint32, "objectID",  2, q=Quantifier.Repeated)
-                                  ])
+examine_list = Message("ExamineList",
+                       fields=[Field(Proto.Uint32, "runtimeID",  1)
+                              ,Field(Proto.Uint32, "objectList", 2, q=Quantifier.Repeated)
+                              ])
 
 frame_selection = Message("FrameSelection",
                           fields=[Field(Proto.Uint32, "runtimeID", 1)
@@ -119,13 +119,17 @@ object_info = Message("ObjectInfo",
 
 spotlight_selection = Message("SpotlightSelection",
                               fields=[Field(Proto.Uint32, "objectID",       1)
-                                     ,Field(Proto.Bool,   "scrollIntoView", 2)
+                                     ,Field(Proto.Bool,   "scrollIntoView", 2, q=Quantifier.Optional, default=False)
                                      ]) 
 
-breakpoint_pos = Message("BreakpointPosition",
+breakpoint_pos = Message("BreakpointPosition", # TODO: Perhaps it is better to create one Command per break-type?
                          fields=[Field(Proto.Uint32, "breakpointID", 1)
-                                ,Field(Proto.Uint32, "scriptID",     2)
-                                ,Field(Proto.Uint32, "lineNumber",   3)
+                                ,Field(Proto.String, "type",         2) # TODO: enum, "line", "function", "event"
+
+                                ,Field(Proto.Uint32, "scriptID",     3, q=Quantifier.Optional, comment="Present when `Type` is `Line`")
+                                ,Field(Proto.Uint32, "lineNumber",   4, q=Quantifier.Optional, comment="Present when `Type` is `Line`")
+
+                                ,Field(Proto.String, "eventType",    5, q=Quantifier.Optional, comment="Present when `Type` is `Event`")
                                 ]) 
 
 breakpoint_id = Message("BreakpointID",
@@ -150,13 +154,20 @@ configuration  = Message("Configuration",
                                 ,Field(Proto.Bool, "stopAtException", 2, q=Quantifier.Optional)
                                 ,Field(Proto.Bool, "stopAtError",     3, q=Quantifier.Optional)
                                 ,Field(Proto.Bool, "stopAtAbort",     4, q=Quantifier.Optional)
+                                ,Field(Proto.Bool, "stopAtGc",        5, q=Quantifier.Optional)
+                                ,Field(Proto.Bool, "stopAtDebuggerStatement", 6, q=Quantifier.Optional)
                                 ])
 
 backtrace_selection = Message("BacktraceSelection",
                               fields=[Field(Proto.Uint32, "runtimeID", 1)
                                      ,Field(Proto.Uint32, "threadID",  2)
-                                     ,Field(Proto.Uint32, "maxFrames", 3, q=Quantifier.Optional, comment="If `maxFrames` is omitted, all frames are returned")
+                                     ,Field(Proto.Uint32, "maxFrames", 3, q=Quantifier.Optional, default=0, comment="If `maxFrames` is omitted, all frames are returned")
                                      ])
+
+break_selection = Message("BreakSelection",
+                          fields=[Field(Proto.Uint32, "runtimeID", 1)
+                                 ,Field(Proto.Uint32, "threadID",  2)
+                                 ])
 
 backtrace_frame = Message("BacktraceFrame",
                            fields=[Field(Proto.Uint32,  "functionID",     1)
@@ -174,25 +185,27 @@ backtrace_frames = Message("BacktraceFrameList",
 
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
-                               ,Request(3,  "ContinueThread",      thread_mode,         False)
-                               ,Request(5,  "Eval",                eval_data,           eval_result)
-                               ,Request(7,  "ExamineObjects",      object_selection,    object_info)
-                               ,Request(9,  "SpotlightObject",     spotlight_selection, False)
-                               ,Request(11, "AddBreakpoint",       breakpoint_pos,      False)
-                               ,Request(13, "RemoveBreakpoint",    breakpoint_id,       False)
-                               ,Request(15, "AddEventHandler",     event_handler,       False)
-                               ,Request(17, "RemoveEventHandler",  event_handler_id,    False)
-                               ,Request(19, "SetConfiguration",    configuration,       False)
-                               ,Request(21, "GetBacktrace",        backtrace_selection, backtrace_frames)
+                               ,Request(2,  "ContinueThread",      thread_mode,         False)
+                               ,Request(3,  "Eval",                eval_data,           eval_result)
+                               ,Request(4,  "ExamineObjects",      examine_list,        object_info)
+                               ,Request(5,  "SpotlightObject",     spotlight_selection, False)
+                               ,Request(6,  "AddBreakpoint",       breakpoint_pos,      False)
+                               ,Request(7,  "RemoveBreakpoint",    breakpoint_id,       False)
+                               ,Request(8,  "AddEventHandler",     event_handler,       False)
+                               ,Request(9,  "RemoveEventHandler",  event_handler_id,    False)
+                               ,Request(10, "SetConfiguration",    configuration,       False)
+                               ,Request(11, "GetBacktrace",        backtrace_selection, False)
+                               ,Request(12, "Break",               break_selection, False)
 #                               ,Request(7,  "ExamineFrame",        frame_selection,     object_info)
 # TODO ExamineFrame does not seem to exists, remove it
-                               ,Event(0,  "OnRuntimeStarted",  runtime_info)
-                               ,Event(2,  "OnRuntimeStopped",  runtime_id)
-                               ,Event(4,  "OnNewScript",       script_info)
-                               ,Event(6,  "OnThreadStarted",   thread_info)
-                               ,Event(8,  "OnThreadFinished",  thread_result)
-                               ,Event(10, "OnThreadStoppedAt", thread_stopinfo)
-                               ,Event(12, "OnHandleEvent",     dom_event)
-                               ,Event(14, "OnObjectSelected",  object_selection)
+                               ,Event(13, "OnRuntimeStarted",  runtime_info)
+                               ,Event(14, "OnRuntimeStopped",  runtime_id)
+                               ,Event(15, "OnNewScript",       script_info)
+                               ,Event(16, "OnThreadStarted",   thread_info)
+                               ,Event(17, "OnThreadFinished",  thread_result)
+                               ,Event(18, "OnThreadStoppedAt", thread_stopinfo)
+                               ,Event(19, "OnHandleEvent",     dom_event)
+                               ,Event(20, "OnObjectSelected",  object_selection)
+                               ,Event(21, "OnBacktrace",       backtrace_frames)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
