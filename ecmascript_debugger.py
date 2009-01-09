@@ -172,7 +172,7 @@ break_selection = Message("BreakSelection",
 backtrace_frame = Message("BacktraceFrame",
                            fields=[Field(Proto.Uint32,  "functionID",     1)
                                   ,Field(Proto.Uint32,  "argumentObject", 2)
-                                  ,Field(Proto.Uint32,  "varibleObject",  3)
+                                  ,Field(Proto.Uint32,  "variableObject", 3)
                                   ,Field(Proto.Uint32,  "thisObject",     4)
                                   ,Field(Proto.Message, "object",         5, q=Quantifier.Optional, message=object_data) # TODO: Spec says repeated, while the code only assumes one (optional)
                                   ,Field(Proto.Uint32,  "scriptID",       6, q=Quantifier.Optional)
@@ -188,7 +188,7 @@ dom_traversal = Message("DomTraversal",
                                ,Field(Proto.String,  "traversal", 2) # TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
                                ])
 
-attribute = Message("Attribute",
+attribute = Message("Attribute", is_global=False,
                     fields=[Field(Proto.String,  "namePrefix", 1)
                            ,Field(Proto.String,  "name",       2)
                            ,Field(Proto.String,  "value",      3)
