@@ -174,7 +174,7 @@ backtrace_frame = Message("BacktraceFrame",
                                   ,Field(Proto.Uint32,  "argumentObject", 2)
                                   ,Field(Proto.Uint32,  "varibleObject",  3)
                                   ,Field(Proto.Uint32,  "thisObject",     4)
-                                  ,Field(Proto.Message, "objects",        5, q=Quantifier.Repeated, message=object_data)
+                                  ,Field(Proto.Message, "object",         5, q=Quantifier.Optional, message=object_data) # TODO: Spec says repeated, while the code only assumes one (optional)
                                   ,Field(Proto.Uint32,  "scriptID",       6, q=Quantifier.Optional)
                                   ,Field(Proto.Uint32,  "lineNumber",     7, q=Quantifier.Optional)
                                   ])
@@ -182,6 +182,42 @@ backtrace_frame = Message("BacktraceFrame",
 backtrace_frames = Message("BacktraceFrameList",
                            fields=[Field(Proto.Message, "frames", 1, q=Quantifier.Repeated, message=backtrace_frame)
                                   ])
+
+dom_traversal = Message("DomTraversal",
+                        fields=[Field(Proto.Uint32,  "objectID",  1)
+                               ,Field(Proto.String,  "traversal", 2) # TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
+                               ])
+
+attribute = Message("Attribute",
+                    fields=[Field(Proto.String,  "namePrefix", 1)
+                           ,Field(Proto.String,  "name",       2)
+                           ,Field(Proto.String,  "value",      3)
+#                           ,Field(Proto.Message, "attributes", 4, q=Quantifier.Repeated)
+                           ])
+#attribute.fields[3].message = attribute
+
+node_info = Message("NodeInfo",
+                    fields=[Field(Proto.Uint32,  "objectID", 1)
+                           ,Field(Proto.Uint32,  "type",     2)
+                           ,Field(Proto.String,  "name",     3)
+                           ,Field(Proto.Uint32,  "depth",    4)
+
+                           # If `type` is 1
+                           ,Field(Proto.String,  "namespacePrefix", 5, q=Quantifier.Optional)
+                           ,Field(Proto.Message, "attributes",      6, q=Quantifier.Repeated, message=attribute)
+                           ,Field(Proto.Uint32,  "childrenLength",  7, q=Quantifier.Optional)
+
+                           # If `type` is 3, 4, 7 or 8
+                           ,Field(Proto.String,  "value",    8, q=Quantifier.Optional)
+
+                           # If `type` is 10
+                           ,Field(Proto.String,  "publicID", 9,  q=Quantifier.Optional)
+                           ,Field(Proto.String,  "systemID", 10, q=Quantifier.Optional)
+                           ])
+
+node_list = Message("NodeList",
+                    fields=[Field(Proto.Message,  "nodes", 1, q=Quantifier.Repeated, message=node_info)
+                           ])
 
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
@@ -194,18 +230,18 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(8,  "AddEventHandler",     event_handler,       False)
                                ,Request(9,  "RemoveEventHandler",  event_handler_id,    False)
                                ,Request(10, "SetConfiguration",    configuration,       False)
-                               ,Request(11, "GetBacktrace",        backtrace_selection, False)
-                               ,Request(12, "Break",               break_selection, False)
+                               ,Request(11, "GetBacktrace",        backtrace_selection, backtrace_frames)
+                               ,Request(12, "Break",               break_selection,     False)
+                               ,Request(13, "InspectDom",          dom_traversal,       node_list)
 #                               ,Request(7,  "ExamineFrame",        frame_selection,     object_info)
 # TODO ExamineFrame does not seem to exists, remove it
-                               ,Event(13, "OnRuntimeStarted",  runtime_info)
-                               ,Event(14, "OnRuntimeStopped",  runtime_id)
-                               ,Event(15, "OnNewScript",       script_info)
-                               ,Event(16, "OnThreadStarted",   thread_info)
-                               ,Event(17, "OnThreadFinished",  thread_result)
-                               ,Event(18, "OnThreadStoppedAt", thread_stopinfo)
-                               ,Event(19, "OnHandleEvent",     dom_event)
-                               ,Event(20, "OnObjectSelected",  object_selection)
-                               ,Event(21, "OnBacktrace",       backtrace_frames)
+                               ,Event(14, "OnRuntimeStarted",  runtime_info)
+                               ,Event(15, "OnRuntimeStopped",  runtime_id)
+                               ,Event(16, "OnNewScript",       script_info)
+                               ,Event(17, "OnThreadStarted",   thread_info)
+                               ,Event(18, "OnThreadFinished",  thread_result)
+                               ,Event(19, "OnThreadStoppedAt", thread_stopinfo)
+                               ,Event(20, "OnHandleEvent",     dom_event)
+                               ,Event(21, "OnObjectSelected",  object_selection)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
