@@ -1,0 +1,214 @@
+================
+ Scope services
+================
+
+:Author:  Jan Borsodi <jborsodi@opera.com>
+:Version: 0.2
+:Date:    25th September 2008
+
+Changelog
+=========
+
+=== =================================================================
+0.1 Moved all doc not related to STP to this document.
+=== =================================================================
+
+Commands and Events
+===================
+
+Commands (Request/Response) and Events are all sent as STP messages. STP v1
+now takes responsibility for transporting the the synchronization tag and
+the name of the command, instead the Command structure is now only the data.
+All commands are be defined in a unified structure which will allow the
+commands to be transported in multiple formats, all depending on the clients
+choice.
+The structure is based on Protocol Buffers (PB) where the PB message is a list
+of fields. Each field consists of::
+
+- A basic type, restricted to integer (with variations), float/double, bool, string and binary data.
+- A numerical identifier (unique per PB message).
+- A textual identifier (unique per PB message).
+
+In addition to this we will also ensure that the order of fields are kept,
+this is important for formats which cannot easily convey the ID nor the name.
+Currently this is needed for JSON support.
+
+Arrays/lists are possible with the use of repeated fields and complex
+structure with the use of sub-messages.
+
+More details on Protocol Buffer and the wire format can be read at:
+http://code.google.com/apis/protocolbuffers/
+
+System commands
+===============
+
+All previous system commands (starts with a `*`) will be now be organized in
+a proper service called "scope". See `Service: Scope`_ for more details.
+
+Services and multiple clients
+=============================
+
+Some services allows for multiple clients to be active while others should
+only have one client active at a time.
+For instance the ecmascript debugger involves getting information about new
+threads and scripts and can change the current state with breakpoints and
+continuing execution. If two or more clients do this it would be impossible for
+them to know what state the Opera host is in and there can also be conflicting
+requests for instance if both tries to act on stopped threads in different
+ways.
+
+Whenever a client enables a service the service will be able to differentiate
+between them with a unique client ID. The service can keep track of which
+clients are active and send back information to specific clients if it wants.
+It can also deny new clients to be active if one already is active.
+There should be a new C++ API available to unify the way clients are handled,
+services that don't need this differentation can work as they did earlier.
+
+If a service denies a client access it must respond with the status 1 (Conflict).
+
+Services
+========
+
+Service: Scope
+--------------
+
+This is a special service which is always present and always enabled. It also
+deviates from the other services in that it uses a special plain-text format
+for sending out events and receiving commands. This is required for sending
+out and receiving messages before the clients preference of formats is known.
+
+Event: hello
+^^^^^^^^^^^^
+
+This event is sent when the client connects and provides with enough
+information to determine available services and their features.
+
+The event is defined as::
+
+  HELLO ::= "stp-version:" SINGLE-VERSION LF
+            "version:" VERSION LF
+            "platform:" STRING LF
+            "operating-system:" STRING LF
+            "user-agent:" STRING LF
+            "services:" SERVICE-LIST LF
+
+  SERVICE-LIST   ::= ( SERVICENAME "=" MAJOR-VERSION "." MINOR-VERSION ("." PATCH-VERSION)? "," ACTIVE "," MAX_ACTIVE ";" )*
+  VERSION        ::= DIGIT+ ("." DIGIT+)*
+  MAJOR-VERSION  ::= DIGIT+
+  MINOR-VERSION  ::= DIGIT+
+  PATCH-VERSION  ::= DIGIT+
+  SINGLE-VERSION ::= DIGIT+
+  SERVICENAME    ::= IDENTIFIER
+  ACTIVE         ::= DIGIT+
+  MAX_ACTIVE     ::= DIGIT+
+  IDENTIFIER     ::= ALPHA (ALPHA | NUMERIC | "-")*
+
+The client must check the MAJOR-VERSION and MINOR-VERSION for compatility, the
+PATCH-VERSION is to be ignored, if wanted it could be shown to the end-user.
+
+The MAJOR-VERSION determines major changes (ie. compatibility breaks) while
+the MINOR-VERSION determines incremental changes (ie. backwards compatible).
+The client must check these two numbers to ensure it is able to communicate
+properly with the service, if the MAJOR-VERSION is different from the
+versions the client is compatible with or the MINOR-VERSION is less than
+the required version it must disconnect.
+
+Lets says a client supports version 1.6 and up and also version 2.0 and up,
+it would do::
+
+  if major == 1 and minor >= 6 or major == 2:
+    print "We support service version %d.%d" % (major, minor)
+  else:
+    print "We do not support service version %d.%d" % (major, minor)
+
+Command: configure
+^^^^^^^^^^^^^^^^^^
+
+This commands allows the client to configure their global preferences
+and must be sent before any services are enabled, after they are enabled
+this command cannot be used.
+
+The command is defined as::
+
+  CONFIGURE    ::= FORMAT-PREFS LF
+  FORMAT-PREFS ::= "format:" FORMAT
+  FORMAT       ::= "protocol-buffer" | "json" | "xml"
+
+FORMAT-PREFS specifies which format the client accepts in responses/events.
+For instance a client might prefer JSON structures over XML.
+
+Command: enable
+^^^^^^^^^^^^^^^
+
+This is used to enable one service.
+
+It is defined as::
+
+  ENABLE ::= SERVICENAME
+
+If the service was enable "scope" will respond with a message containing information
+on the enabled service.
+For now it only contains a list of commands, this list is used to map the name of
+the command the the command ID, ie. the first command will have command ID equal to 0,
+the next one will be 1 and so on.
+
+The response is defined as::
+
+  ENABLE-RESPONSE ::= "commands:" SP* COMMAND-LIST LF
+  COMMAND-LIST    ::= COMMAND ("," COMMAND)*
+
+If the service is not found it will return the message with status set
+to "Service Not Found" (6).
+
+Command: disable
+^^^^^^^^^^^^^^^^
+
+This is used to disable one service.
+
+It is defined as::
+
+  DISABLE ::= SERVICENAME
+
+The response is a message containing the disabled service.
+
+It is defined as::
+
+  DISABLE-RESPONSE ::= SERVICENAME
+
+If the service is not yet enabled it will return the message with status set
+to "Service Not Enabled" (8).
+If the service is not found it will return the message with status set
+to "Service Not Found" (6).
+
+Command: quit
+^^^^^^^^^^^^^
+
+The quit message is sent to Opera when the proxy terminates operation. No
+communication with the proxy will be possible once it has sent the quit
+message. When Opera receives this message it should disable all debugging
+services that are currently enabled. 
+
+The quit message is also sent by Opera to the proxy when Opera terminates
+operation. No communication with Opera is possible once Opera has sent the
+quit message. When the proxy receives this message it broadcasts hostquit
+to all its clients. 
+
+The message does not consists of any data.
+
+Event: hostquit
+^^^^^^^^^^^^^^^
+
+Sent by the proxy to all clients when it receives the quit command from
+the host.
+
+Existing clients
+================
+
+============= ===============
+Name          Protocol
+============= ===============
+Dragonfly     HTTP/Javascript
+OpWatir       HTTP
+PyScope       STP
+devtools-test STP
+============= ===============
