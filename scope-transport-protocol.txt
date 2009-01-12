@@ -1,0 +1,634 @@
+=============================
+ Scope transport protocol v1
+=============================
+
+:Author:  Jan Borsodi <jborsodi@opera.com>
+:Version: 0.7
+:Date:    24th September 2008
+
+Changelog
+=========
+
+=== =================================================================
+0.1 Initial ideas
+0.2 Protocol supports backwards compatibility with old clients.
+0.3 Added overview of all protocols, formats and clients.
+    Simplified protocol due to relaxed compatibility requirements.
+    Changed header structure slightly.
+    Added more details on HTTP and Javascript clients.
+0.4 Fixed inconsistencies and mistakes in protocol and examples.
+    Details on existing * commands.
+0.5 Replaced `tag` in Javascript client with a callback.
+    Moved version checking in Javascript client to the `connect`
+    callback.
+0.6 Revised and simplified several aspects after discussions.
+0.7 Minor changes to status, client id and version numbers
+=== =================================================================
+
+EBNF
+====
+
+The following common EBNF entries are defined::
+
+  PB-UINT32      ::= <32bit unsigned encoded as Protocol Buffer varint>
+  PB-ZERO-UINT32 ::= <0 encoded as Protocol Buffer varint>
+  DIGIT          ::= "0"-"9"
+
+Protocols
+=========
+
+There are currently several different protocols in use by scope and related
+components. To avoid confusion between them and their improvements they
+are summarized in the following sections.
+
+Scope Transport Protocol
+------------------------
+
+This is the basic component in the communication layer, abbreviated as STP.
+It defines how to send commands with data (arguments) between the
+Opera host and the clients.
+
+STP version 0 is defined as::
+
+  STP          ::= COUNT TERMINATOR KEYWORD TERMINATOR DATA
+  TERMINATOR   ::= " "
+  COUNT        ::= "0"-"9"+
+  KEYWORD      ::= COMMAND | SERVICE
+  COMMAND      ::= "*" COMMAND-NAME
+  COMMAND-NAME ::= "services" | "enable" | "disable" | "quit" | "hostquit"
+  SERVICE      ::= ^[ ,]+
+
+The flow of the transport protocol currently looks like this::
+
+              Opera              proxy                 client
+  
+  *services     ---------------->
+                                      ----------------->   *services
+                                      <-----------------   *enable
+  *enable       <----------------
+  data          <--------------------------------------->  data
+                                  ....
+                                      <------------------  *quit
+  *disable      <----------------
+  *quit         ---------------->
+                                      ------------------>  *hostquit
+                                      ------------------>  *quit
+
+STP is used between the Opera host and the proxy as well as between the proxy
+and clients speaking STP.
+
+Currently used by the Python scope client (pyscope).
+
+Scope HTTP Adapter Protocol
+---------------------------
+
+This is the communication layer between the proxy and clients
+which are limited to HTTP communication. The proxy takes care of transforming
+the STP communication to HTTP request/responses. The major difference is how
+requests and responses/events are handled. In HTTP the request/response is
+synchronous and you cannot receive data without asking for it.
+
+Currently used by Dragonfly when loaded trough the proxy
+(/file/ecma-debugger/client.xml)
+
+Scope Javascript Protocol
+-------------------------
+
+This is the direct communication layer used between
+the Opera Host and the direct Javascript client. Here the STP is trimmed
+down to only send the KEYWORD and DATA elements.
+All of this handled by the the opera.scopeTransmit and opera.scopeAddClient
+JS functions.
+
+Currently used by the builtin Dragonfly client for the desktop 9.5 release.
+
+Service Protocols
+=================
+
+In addition to the transport protocol there is also protocols defined by each
+service which defines formats used and available commands.
+
+EcmaScript Debugger Protocol
+----------------------------
+
+Uses XML for the ecmascript part. Also has CSS inspector which can respond in
+XML and XML+JSON. Requests are all in XML.
+Version: 3
+
+Problems
+========
+
+The current protocol is based around sending Unicode strings to and from the
+clients. This makes it very hard to support sending binary data.
+Also the encoding is predetermined (UTF-16) and cannot be changed to better
+suit the transported data.
+
+XML is used as primary format which is inefficient when transporting lots
+of data, lightweight alternatives are needed. XML also affects the decoding
+process of some clients since it has to first decode it to a DOM tree and
+then extract interesting parts using the DOM interface.
+The format is also predeterminded by each service and there is no way
+to change dynamically. For instance Javascript based clients will be
+able to decode the responses more quickly if it is sent as JSON.
+
+There is no standard way to tie (ie. a tag) a response to a previous
+request, this is currently embedded in the content of the request
+which is specific to each service and each command in the service. For
+instance if you receive an error message there is no information about
+what request caused this error. There is also a chance of tag-conflicts
+when multiple clients are in use, a better system for handling the tags
+is needed.
+
+The protocol was designed to handle multiple clients with the use of
+the proxy. However there are currently problems with multiple clients
+in some services (e.g ecmascript-debugger). Services that cannot handle
+this should deny multiple `*enable` requests and send back an error message
+to the client.
+  
+Overview
+========
+
+The various parts of the scope communication chain are:
+
+===================== ====================
+Communication         Port/Protocol
+===================== ====================
+Opera<->Proxy/Client  Port:7001 STP/0
+Proxy<->Clients       Port:8001 STP/0
+Proxy<->HTTP-Client   Port:8002 HTTP/1.1
+Opera<->Opera         Port:49152-65535 STP/0
+Opera<->Remote Opera  Port:49152-65535 STP/0
+Opera<->JS-Client     Javascript functions
+===================== ====================
+
+These are the following services with formats and versions.
+
+====================== ============== ================
+Service                Format         Version
+====================== ============== ================
+ecmascript-debugger    pure XML       4
+css-inspector (of esd) XML/XML+JSON   4
+====================== ============== ================
+
+.. TODO: Fill in complete service list.
+
+To get a better overview a few examples follows which displays how the various
+protocols communicate.
+
+A typical developer setup with Dragonfly communicating with the Proxy using
+the HTTP adapter protocol::
+
+  +-------+ STP/0 +-------+ HTTP/1.1 +-----------+
+  |       | 7001  |       |   8002   |           |
+  | Scope |<----->| Proxy +<-------->| Dragonfly |
+  |       |       |       |          |           |
+  +-------+       +-------+          +-----------+
+
+The common usage scenario with Dragonfly connecting to Opera using
+the internal javascript methods. Internally these methods will
+communicate with scope using an internal socket (will be changed)::
+
+  +-------+ +----------+            +-----------+
+  |       | | Opera    | Javascript |           |
+  | Scope | | Internal |<---------->| Dragonfly |
+  |       | | "Proxy"  |            |           |
+  +-------+ +----------+            +-----------+
+     ^         ^
+     |         |
+     +---------+
+        STP/0
+     49152-65535
+
+Another setup with Dragonfly for remote debugging on an embedded device,
+in this case a mobile phone::
+
+  +-------+ +----------+            +-----------+
+  |       | | Opera    | Javascript |           |
+  | Scope | | Internal |<---------->| Dragonfly |
+  |       | | "Proxy"  |            |           |
+  +-------+ +----------+            +-----------+
+               ^
+               |
+               |
+               | STP/0
+  +---------+  | 7001
+  |         |  |
+  | Phone   |<-+
+  | w/Scope |
+  |         |
+  +---------+
+
+Other clients can communicate directly using STP, here for is the Python
+client used for internal development::
+
+  +-------+ STP/0 +-------+  STP/0   +---------+
+  |       | 7001  |       |   8001   |         |
+  | Scope |<----->| Proxy +<-------->| PyScope |
+  |       |       |       |          |         |
+  +-------+       +-------+          +---------+
+
+Backwards compatibility
+=======================
+
+The new protocol will introduce a major break in compatibility between the
+host, proxy and clients. To ensure that future changes are less disruptive
+a set of compatibility rules will be defined. The various components in scope
+will be defined to either provide a break between each version change or
+provide only incremental changes for each version.
+
+The transport protocol is the fundemental part and changes to it will be hard
+to do incrementally so there is only a need to for breaks between versions.
+This means that clients must immediately disconnect if they encounter a
+version they do not know how to handle.
+
+Services however will use a combination of incremental and breaking changes.
+This is handled by supplying a version number with two components, the first
+is the major version and determines changes that will break existing clients,
+the second is the minor version and will determine incremental (or additional)
+changes. This means that clients will not need to be updated if only the minor
+version increases. For this to be possible the following rules apply:
+
+1. Events and responses will be sent using the same structure as the previous
+   versions.
+2. Events and commands can only get new optional parameters, existing
+   parameters cannot change or be removed.
+3. If a command requires a change of behaviour (or parameter change) a new
+   command must be made and the existing one must be kept.
+4. The new and optional parameters to commands can be used to trigger extend
+   functionality, or alternative behaviour. However this must be confined to
+   the client that request the command.
+5. The order of fields can never be changed.
+
+If the amount of work to keep backwards compatibility increases or the code
+gets bloated the major version must be increased. This will signal a major
+change and allows for older behaviour and code to be cleanup or removed.
+
+The compatibility changes in each service is handled separately, this ensures
+that a client which is dependent on one specific service does not need to
+change unless that service gets a major changes.
+
+Finally a global version for scope is defined, this will use the current core
+version. This allows clients with more complex service dependencies a way to
+determine available features on a global scale.
+
+Opera host
+----------
+
+The host will only support the latest version of the STP. If it detects any
+other protocols it will simply disconnect.
+
+Proxy
+-----
+
+The proxy will follow the same guidelines as the Opera host in regards to STP
+and will only allow the newest version to be used for the host and client
+connection.
+
+Client
+------
+
+Any compatibility with STP version 0 is left to the client. If the client
+decides it can communicate with both versions depending on what the host
+offers. If the client finds a host with a version it does not support it must
+disconnect.
+
+Dragonfly
+---------
+
+This client will need to maintain backwards compatibility. This means that it
+must check the version the proxy/host reports and load the corresponding code.
+Since Dragonfly is an HTTP client it will only need to adapt to the new way of
+sending the TAG_ and service/command identifiers.
+
+STP v1
+======
+
+The new transport message is defined as::
+
+  CONNECTION     ::= PROTOCOL-VERSION MESSAGES
+  MESSAGES       ::= MESSAGE*
+  MESSAGE        ::= MESSAGE-HEADER MESSAGE-BODY
+  MESSAGE-HEADER ::= SERVICE
+                     COMMAND
+                     TYPE-FIELD
+                     CID-FIELD
+                     TAG
+  # The uint32 is the index value of the services list
+  # Service index #0 is reserved for the internal "scope" service.
+  SERVICE        ::= PB-UINT32
+  # The uint32 is the value of the command (in the given service).
+  COMMAND        ::= PB-UINT32
+  TYPE-FIELD     ::= PB-UINT32
+  CID-FIELD      ::= PB-UINT32
+  TAG            ::= PB-UINT32
+  MESSAGE-BODY   ::= CHUNKED-BODY
+
+Each message is encoded using Protocol Buffer binary encoding.
+The result is that the overhead of each message overhead is
+kept to a minimum, the smallest overhead is 7 bytes (includes
+chunked data overhead) and the largest is 21 byte (excludes
+chunked data overhead). The average will be most likely be
+around 7 to 14 bytes and depends on how much data is
+transferred.
+
+PROTOCOL-VERSION
+----------------
+
+PROTOCOL-VERSION is only sent once per active connection and used to establish the version of the subsequent messages.
+The version consists of magic string and a single unsigned integer::
+
+  PROTOCOL-VERSION ::= "STP/" VERSION LF
+  VERSION          ::= DIGIT+
+
+The following versions are defined:
+
+== ================================================================= 
+0  The first version which used the UTF-16, there was no notion of
+    version in this protocol so it will never be sent.
+1  First version of the new protocol.
+== =================================================================
+
+If the client detects a version it cannot handle it must immediately
+disconnect.
+
+SERVICE
+-------
+
+SERVICE is sent as a number in the range 0 to 2^32-1 and represents the index
+of the service in the initial "hello" message. The value 0 is reserved for the
+internal "scope" service, this means you can communicate with this service even
+if you don't have the full list.
+
+COMMAND
+-------
+
+COMMAND value is a number in the range 0 to 2^32-1 and corresponds to a given
+command in the specific service. The command value is unique in the specific
+service only and is guaranteed to stay the same for all future releases.
+
+TYPE-FIELD
+----------
+
+TYPE-FIELD is a bitfield consisting of the type and status::
+
+  TYPE-FIELD
+  {
+    STATUS   uint32 : 5;
+    TYPE     uint32 : 2; # 2 bits for TYPE_
+  }
+
+This ensures it is not longer than 7 bits and can be
+encoded as 1 byte with varint.
+
+STATUS
+------
+
+The STATUS value is used to send back information to the client when errors
+occurs. The default of 0 means that there was no problems, and is also the
+same value sent by the clients to the host.
+
+==== ==========================
+Code Description
+==== ==========================
+0    OK
+1    Conflict
+2    Unsupported Type
+3    Bad Request
+4    Internal Error
+5    Command Not Found
+6    Service Not Found
+7    Out Of Memory (OOM)
+8    Service Not Enabled
+9    Service Already Enabled
+==== ==========================
+
+TYPE
+----
+
+The TYPE value is used to identifiy the format of the message
+body, this also determines the encoding used on the message
+body.
+
+=====  ====================  ========
+Code   Description           Encoding
+=====  ====================  ========
+0      Protocol Buffer       OCTET
+1      JSON structures       UTF-8
+2      XML structures        UTF-8
+3      Internal "scope"      UTF-8
+=====  ====================  ========
+
+CID-FIELD
+---------
+
+CID-FIELD is a bitfield (32 bit) containing the client IDs (CID) which
+will receive the message. Each bit represents a client and the ones which
+are to receive the message will have the bit set to 1. If there are no client
+bits set, in other words the entire field is 0, then the message is sent to
+all clients. In practice the bitfield will have multiple bits set only for
+events which are to be sent to multiple clients, for responses to a previous
+request only the bit for the corresponding client will be present.
+
+On the host side the bitfield is used as one unique client ID (CID), if more
+bits are set it will deny the request. The CID ensures there are no crashes
+with tag values between multiple clients accessing the same service. This
+means that the same TAG_ can be used by two clients connected to the same
+service as long as both have a different CID.
+This header is not needed when connecting to the Opera host directly since
+only one client is possible. However when connecting to the proxy, it will
+take care of assigning a unique ID to each client connection and add the CID
+header to all requests going to the Opera host. If the Opera host receives a
+request with a given CID it will respond with the same value.
+Events and responses going from the host to the proxy will be forwarded the
+corresponding clients according to the bitfield, the bitfield will not be
+modified.
+
+For instance if a bitfield with the value %110 is received the proxy will
+transmit the message to client 2 (%010) and client 3 (%100), both will
+receive %110 in the bitfield.
+
+In practice any client connecting to the proxy does not have to care about the
+CID, it can be read from the first message it receives from the proxy but it
+serves no specific purpose other than for debugging.
+
+TAG
+---
+
+TAG represent a synchronization value which is sent by the client to bind the
+request to a response from the host. A value of 0 means there is no
+synchronization involved and is used for events.
+
+The tag system will be part of the protocol API and provides a standardized
+way of doing synchronization. The tag value can be read without knowledge of
+the underlying format, this allows the proxy to properly filter responses back
+to the correct client and it also makes it easier for the clients to handle
+responses since it can map the tag value to a response handler.
+
+TAG is an unsigned integer in the range 1 to 2^31-1. The client is free to
+reuse the Tag value as long as there is no current open requests using it.
+
+Tag values are only needed for requests/responses, if a service sends out an
+event the Tag header is set to 0.
+
+CHUNKED-BODY
+------------
+
+Identifying the length/end of the message will no longer be done using
+a Count value at the beginning. Instead the message body will be sent using
+chunked encoding, that means sending over multiple chunks where each chunk
+is preceded by a chunk size. This allows for better streaming of data when
+the size is not known beforehand. For instance when encoding to UTF-8 the
+exact size cannot be known without first going over all characters.
+
+Chunked encoding will only be used for the message body.
+
+The structure is::
+
+  CHUNKED-BODY ::= CHUNK* LAST-CHUNK
+  CHUNK        ::= CHUNK-SIZE CHUNK-DATA
+  LAST-CHUNK   ::= PB-ZERO-UINT32
+  CHUNK-SIZE   ::= PB-UINT32
+  CHUNK-DATA   ::= CHUNK-SIZE(OCTET)
+
+Changes
+=======
+
+Client changes
+--------------
+
+The client cannot know the version of the host or proxy until a detection
+scheme is performed. This needs to be done by all STP clients
+(not HTTP/Javascript clients), even those who will not support version 0.
+The detection is done by looking for UTF-16 data in the first part of the
+message, this part is always UTF-16 in v0 and always US-ASCII in v1+.
+To detect UTF-16 the client must check for a series of Unicode characters
+making up the old COUNT header. This header consists of one or more digits
+(U+0030 - U+0039) followed by a space (U+0020) terminator. To detect the new
+version it will contain "STP/" followed by a version number, e.g. "STP/1".
+If any other data is found the protocol is unknown and the client must
+disconnect.
+
+In addition the client must make sure it follows the compatability guidelines,
+this means checking version numbers (global or per service) and detect
+incremental changes vs changes that break the command structures.
+
+HTTP client changes
+-------------------
+
+Since the HTTP clients already use HTTP as the transport mechanism they do
+not have to do anything in regards to encoding, that will be handled by the
+proxy.
+
+Sending the new headers is done using existing HTTP headers or as custom
+X-OPSCOPE-* headers, e.g::
+
+  POST /ecmascript-debugger
+  Content-Type: text/xml
+  X-OPSCOPE-TAG: 5
+
+The following shows a list of STP headers and their mapping to HTTP.
+
+==================  =================
+STP name            HTTP header
+==================  =================
+Service ID          X-OPSCOPE-SERVICE
+Command ID          X-OPSCOPE-COMMAND
+Tag                 X-OPSCOPE-TAG
+CID-FIELD           X-OPSCOPE-CLIENT-MASK
+Type                Content-Type*
+Status              X-OPSCOPE-STATUS
+==================  =================
+
+* The STP type is converted to a suitable Content-Type
+
+Receving responses is the same as posting requests but uses the HTTP GET method.
+
+Javascript client changes
+-------------------------
+
+Note: The Javascript API will be refined at a later stage.
+
+To detect the presence of the new JS API the client must check for the new
+parameter to the `connected` callback mentioned below. It will contain the
+version of the protocol in use. When the new version has been established
+the client must act differently when using the existing JS methods, the
+changes are as follows:
+
+scopeAddClient stays the same, however the callbacks are changed::
+
+  scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
+
+The `connected` callback receives the new hello message as an associative array.
+Secondly it receives a new `version` parameter which contains the version of
+the protocol (not the same as scope version) as as a number.
+
+  connected(services: array, version: array)
+  
+TODO: Update the `services` parameter with the new "hello" message
+
+The `receive` callback has extra arguments.
+`command` is the name of the command/event.
+`status` is a number containing the status code.
+`type` is the type of the message, if type is "es_object" then
+message contains native Javascript objects, otherwise it is a string
+and the type is the format::
+
+  receive(service: string, command: string, status: integer, type: string, message: array|string)
+
+The `quit` callback has no changes::
+
+  quit()
+
+Example code::
+
+  var connected = function(services, version)
+  {
+    if (version != 1)
+      alert("Client can only work with version 1");
+  }
+
+  var receive = function(service, status, type, message)
+  {
+    if (status == 0)
+    {
+      /*...*/
+    }
+  }
+
+  var quit = function()
+  {
+  }
+
+  opera.scopeAddClient(connected, receive, quit, 0)
+
+scopeEnableService has no changes::
+
+  scopeEnableService(service: string)
+
+scopeTransmit will now request data from services in native Javascript objects,
+if that is not supported the service will respond with a string and correct type.
+The request format is now also Javascript objects which can contain arrays,
+numbers, strings and booleans. The final parameter is a callback object which
+will be called when there is a response to the request, if there is no
+response tied directly to the request the callback is not needed. This
+callback behaves in the same way as the `receive` callback above. The full
+syntax is::
+
+  scopeTransmit(service: string, command: string, message: array[, response: callback])
+  
+Example code::
+
+  var cssIndexReply = function(service, command, status, type, message)
+  {
+  }
+  scopeTransmit("ecmascript-debugger", "css-get-index-list", [], cssIndexReply)
+
+Proxy changes
+-------------
+
+The proxy will use the same version-detection scheme as the other clients
+to determine the version used in the Opera host. However it will not allow
+version 0 to be used, instead it will disconnect.
+
+The HTTP server will be extended to transform the new headers into proper
+HTTP headers.
