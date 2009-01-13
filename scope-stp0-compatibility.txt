@@ -1,0 +1,203 @@
+===============================
+ STP/0 <-> STP/1 compatibility
+===============================
+
+:Author:  Jan Borsodi <jborsodi@opera.com>
+:Version: 0.1
+:Date:    13th January 2009
+
+A requirement for the introduction of the new STP/1 protocol is a
+compatibility layer to allow an STP/0 proxy to access an STP/1 host.
+A typical use-case is an Opera instance connected to a remote Opera
+instance (e.g. a mobile phone) which runs STP/1, the main Opera host
+will act as a proxy between the currently running Dragonfly client and
+the Opera host being debugged.
+
+It is first important to note the distinction between the transport
+layer (STP) and the protocol of the services (messages). The core of
+the STP is to provide a means to transport specific messages from one
+end to the other with information on what kind of message and which
+service it belongs to. The messages on the other hand contain the
+information related to a given command or event.
+
+This means that there is no direct corrolation between the STP version
+and the version of a given service protocol. For instance it is
+possible to send XML messages as they are in core-2.3 or lower in STP/1
+and also the new Protocol Buffer inspired messages in core-2.4 over STP/0.
+However there are a couple of exceptions to this that needs to be handled
+which are explained in the following sub-sections.
+
+The responsibility for the compatability conversion is up to the
+Opera running STP/1. If the Opera host being debugged runs STP/1
+it must allow an STP/0 client/proxy to connect and transform
+message to STP/0. If the Opera proxy runs STP/1 it must be able
+to connect to an STP/0 and convert messages accordingly.
+
+For the compatibility layer to work properly the client must also be aware
+of the STP/0 <-> STP/1 conversion. They are:
+
+1. The client must not use the STP version to determine the capability of the
+Opera host. Instead it must read out the core version to determine the
+structure of the service messages.
+The core version will be sent as part of the *services list as a special
+service named core-<maj>-<min> where <maj>-<min> is the major and minor
+version of the Opera core, e.g. "core-2-3".
+
+2. Names of the commands which will use the names according to the core
+version, the same goes for response and event names.
+
+3. Requests in core-2.4 and up always result in a response at some point,
+so the client should always use a tag when sending requests. If not the
+response will be sent to all connected clients.
+
+4. Structure of all commands and events are determined by core version.
+For instance for core-2.4 the structure is simplified and streamlined
+to be compatible with Protocol Buffers and JSON output.
+
+5. Errors in core-2.4 are handled by the Status fields, see sub-section for
+more detail.
+
+Format
+------
+
+The first big exception is that messages in must be sent as XML only,
+this is the only format used in core-2.3 and lower. For STP/1 this
+means hardcoding the format as "xml" in the STP/1 header.
+The exception would be the internal "scope" service which sends commands
+as text only, this is mapped to the "scope" format in STP/1.
+
+Tag
+---
+
+In core-2.3 and lower the message could contain a <tag> entry in the XML.
+This was sent by the client and was included in the response, this allowed
+the client to know which response belonged to which request.
+In core-2.4 the tag is part of the STP layer and must not be part of the
+XML.
+
+Going from STP/0 to STP/1 the <tag> entry must be extracted and replaced
+with spaces. The tag value is then inserted in the corresponding Tag
+field in STP/1.
+From STP/1 to STP/0 the processes is reversed and the <tag> value is
+inserted into the XML.
+
+Service
+-------
+
+In STP/0 the service is represented as name while in STP/1 it is only
+a numerical ID.
+
+Going from STP/0 to STP/1 the service name must be converted to a
+numerical ID, this is done by looking up the service object (C++)
+using the name and then extracting the ID from the service.
+From STP/1 to STP/0 the mapping is reverse, the service object is
+found using the ID and the name is extracted and put in the STP/0
+header.
+
+Command
+-------
+
+In STP/0 the command is represented in the root node in the XML while
+in STP/1 it is a numerical ID and part of the STP/1 header.
+
+Going from STP/0 to STP/1 the command is extracted from the XML and
+matched against the known commands in the specific service. The ID
+of the command is then used in the STP/1 header.
+From STP/1 to STP/0 the command is looked up using the ID and the
+name extracted and placed in the root node of the XML.
+
+Also response sent from core-2.4 will use the same name for the
+request and the response, this means that the client will not
+receive any XML messages with the suffix -reply anymore.
+
+Status
+------
+
+The status is a new concept in STP/1 and provides the client a
+general way of knowing the result of a request.
+
+Going from STP/0 to STP/1 is not really possible since neither STP/0
+nor the message itself convey this information, in this case it is
+entirely up the client to know if an error occured or not.
+From STP/1 to STP/0 the status code will be inserted into the
+root node of the XML as an attribute called "status". This way the
+status code does not disturb the general message structure and
+can be retrieved from a client using a DOM operation.
+If the status is 0 (OK) then it will not be set in the XML.
+
+Encoding
+--------
+
+STP/0 encodes everything as UTF-16. STP/1 on the other hand has a special
+varint encoded header and encodes the XML as UTF-8.
+
+Examples
+--------
+
+Services: ecmascript-debugger,window-manager,http-logger
+
+Example 1: Getting the window list.
+
+Request STP/0::
+
+  44 window-manager <list-windows></list-windows>
+
+Request STP/1::
+
+  ServiceID: 1
+  CommandID: 3 (ListWindows)
+  Tag:       0
+  Status:    0
+  Format:    XML
+  Message:   <default></default>
+
+Response STP/1:
+  ServiceID: 1
+  CommandID: 3 (ListWindows)
+  Tag:       0
+  Status:    0
+  Format:    XML
+  Message:   <list-windows><window-info><window-id>42</window-id><title>Opera.com</title><window-type>normal</window-type><opener-id>0</opener-id></window-info></list-windows>
+
+Response STP/0::
+
+  177 window-manager <list-windows><window-info><window-id>42</window-id><title>Opera.com</title><window-type>normal</window-type><opener-id>0</opener-id></window-info></list-windows>
+
+Example 2: Setting filters
+
+Request STP/0::
+
+  115 window-manager <modify-filter><tag>1</tag><clear-filter>1</clear-filter><include-id>42</include-id></modify-filter>
+
+Request STP/1::
+
+  ServiceID: 1
+  CommandID: 5 (ModifyFilter)
+  Tag:       1
+  Status:    0
+  Format:    XML
+  Message:   <modify-filter>            <clear-filter>1</clear-filter><include-id>42</include-id></modify-filter>
+
+Response STP/1:
+  ServiceID: 1
+  CommandID: 5 (ModifyFilter)
+  Tag:       1
+  Status:    0
+  Format:    XML
+  Message:   <default></default>
+
+Response STP/0::
+
+  58 window-manager <modify-filter><tag>1</tag></modify-filter>
+
+Example 2: Setting filters with unknown command
+
+Request STP/0::
+
+  101 window-manager <filter><tag>1</tag><clear-filter>1</clear-filter><include-id>42</include-id></filter>
+
+Response STP/0::
+
+  186 window-manager <filter status="5"><tag>1</tag><clear-filter>1</clear-filter><include-id>42</include-id></filter>
+
+Note: Status 5 is "Command Not Found"
