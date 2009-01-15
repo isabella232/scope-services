@@ -219,6 +219,78 @@ node_list = Message("NodeList",
                     fields=[Field(Proto.Message,  "nodes", 1, q=Quantifier.Repeated, message=node_info)
                            ])
 
+css_index_map = Message("CssIndexMap",
+                    fields=[Field(Proto.String,  "property", 1, q=Quantifier.Repeated)
+                           ])
+
+css_stylesheet = Message("Stylesheet", is_global=False,
+                         fields=[Field(Proto.Uint32,  "objectID",    1)
+                                ,Field(Proto.Bool,    "isDisabled",  2) # TODO: Should it be isEnabled?
+                                ,Field(Proto.String,  "href",        3)
+                                ,Field(Proto.String,  "title",       4)
+                                ,Field(Proto.String,  "type",        5)
+                                ,Field(Proto.String,  "media",       6, q=Quantifier.Repeated)
+                                ,Field(Proto.Uint32,  "ownerNodeID", 7, q=Quantifier.Optional)
+                                ,Field(Proto.Uint32,  "ownerRuleID", 8, q=Quantifier.Optional)
+                                ,Field(Proto.Uint32,  "parentStylesheetID", 9, q=Quantifier.Optional)
+                                ])
+
+css_stylesheet_list = Message("CssStylesheetList",
+                              fields=[Field(Proto.Message,  "stylesheets", 1, q=Quantifier.Repeated, message=css_stylesheet)
+                                     ])
+
+css_stylesheet_selection = Message("CssStylesheetSelection",
+                                   fields=[Field(Proto.Uint32,  "stylesheetID",    1)
+                                          ])
+
+
+css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
+                              fields=[Field(Proto.Uint32,  "type",                1) 
+# Type values:
+# 0 - UNKNOWN
+# 1 - STYLE
+# 2 - CHARSET
+# 3 - IMPORT
+# 4 - MEDIA
+# 5 - FONT_FACE
+# 6 - PAGE
+# 7 - NAMESPACE // Not supported
+                                     ,Field(Proto.Uint32,  "stylesheetID",        2)
+                                     ,Field(Proto.Uint32,  "ruleID",              3)
+
+                                     # Common to FONT_FACE, PAGE and STYLE
+                                     ,Field(Proto.Uint32,  "indexes",             4, q=Quantifier.Repeated)
+                                     ,Field(Proto.String,  "values",              5, q=Quantifier.Repeated)
+                                     ,Field(Proto.Bool,    "priorities",          6, q=Quantifier.Repeated)
+
+                                     # Common to STYLE and PAGE
+                                     ,Field(Proto.String,  "selectors",           7, q=Quantifier.Repeated, comment="0..1 for PAGE and 0..* for STYLE")
+                                     ,Field(Proto.Uint32,  "specificities",       8, q=Quantifier.Repeated, comment="1..1 for PAGE and 0..* for STYLE")
+
+                                     # Common to MEDIA and IMPORT
+                                     ,Field(Proto.String,  "media",               9, q=Quantifier.Repeated)
+
+                                     # For MEDIA
+                                     ,Field(Proto.Message, "rules",              10, q=Quantifier.Repeated)
+
+                                     # For IMPORT
+                                     ,Field(Proto.String,  "href",               11, q=Quantifier.Optional)
+                                     ,Field(Proto.Uint32,  "importStylesheetID", 12, q=Quantifier.Optional)
+
+                                     # For PAGE
+                                     ,Field(Proto.Uint32,  "pseudoClass",        13, q=Quantifier.Optional)
+
+                                     # For CHARSET
+                                     ,Field(Proto.String,  "charset",            14, q=Quantifier.Optional)
+                                     ])
+# Must be set separately due to recursion
+css_stylesheet_rule["rules"].message = css_stylesheet_rule
+css_stylesheet_rule.updateCount({})
+
+css_stylesheet_rules = Message("CssStylesheetRules",
+                               fields=[Field(Proto.Message, "rules",  1, q=Quantifier.Repeated, message=css_stylesheet_rule)
+                                      ])
+
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
@@ -243,5 +315,10 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(19, "OnThreadStoppedAt", thread_stopinfo)
                                ,Event(20, "OnHandleEvent",     dom_event)
                                ,Event(21, "OnObjectSelected",  object_selection)
+
+                               # CSS inspector, should be moved to separate service
+                               ,Request(22, "CssGetIndexMap",        False,                    css_index_map)
+                               ,Request(22, "CssGetAllStylesheets",  runtime_id,               css_stylesheet_list)
+                               ,Request(22, "CssGetStylesheet",      css_stylesheet_selection, css_stylesheet_rules)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
