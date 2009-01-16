@@ -87,9 +87,10 @@ eval_data = Message("EvalData",
                            ])
 
 eval_result = Message("EvalResult",
-                      fields=[Field(Proto.String, "status",    2)
-                             ,Field(Proto.String, "type",      3) # TODO Make an enum
-                             ,Field(Proto.String, "value",     4, q=Quantifier.Optional, comment="Only present for `Object`, `Number`, `String` or `Boolean`")
+                      fields=[Field(Proto.String, "status",    1)
+                             ,Field(Proto.String, "type",      2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
+                             ,Field(Proto.String, "value",     3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
+                             ,Field(Proto.Uint32, "objectID",  4, q=Quantifier.Optional, comment="Only present for `Object`")
                              ])
 
 examine_list = Message("ExamineList",
@@ -240,9 +241,9 @@ css_stylesheet_list = Message("CssStylesheetList",
                                      ])
 
 css_stylesheet_selection = Message("CssStylesheetSelection",
-                                   fields=[Field(Proto.Uint32,  "stylesheetID",    1)
+                                   fields=[Field(Proto.Uint32,  "runtimeID",     1)
+                                          ,Field(Proto.Uint32,  "stylesheetID",  2)
                                           ])
-
 
 css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
                               fields=[Field(Proto.Uint32,  "type",                1) 
@@ -291,6 +292,41 @@ css_stylesheet_rules = Message("CssStylesheetRules",
                                fields=[Field(Proto.Message, "rules",  1, q=Quantifier.Repeated, message=css_stylesheet_rule)
                                       ])
 
+css_element_selection = Message("CssElementSelection",
+                                fields=[Field(Proto.Uint32,  "runtimeID",  1)
+                                       ,Field(Proto.Uint32,  "objectID",   2)
+                                       ])
+
+css_style_decl = Message("StyleDeclaration", is_global=False,
+                         fields=[Field(Proto.Uint32,  "origin",        1) # 1 = USER-AGENT, 2=LOCAL, 3=AUTHOR, 4=ELEMENT
+
+                                # Common to all origins
+                                ,Field(Proto.Uint32,  "indexes",       2, q=Quantifier.Repeated)
+                                ,Field(Proto.String,  "values",        3, q=Quantifier.Repeated)
+                                ,Field(Proto.Bool,    "priorities",    4, q=Quantifier.Repeated)
+                                ,Field(Proto.Uint32,  "statuses",      5, q=Quantifier.Repeated) # 0 = overwritten, 1 = standard
+
+                                # Common to AUTHOR and LOCAL
+                                ,Field(Proto.String,  "selector",      6, q=Quantifier.Optional)
+                                ,Field(Proto.Uint32,  "specificity",   7, q=Quantifier.Optional)
+
+                                # For AUTHOR
+                                ,Field(Proto.Uint32,  "stylesheetID",  8, q=Quantifier.Optional)
+                                ,Field(Proto.Uint32,  "ruleID",        9, q=Quantifier.Optional)
+                                ,Field(Proto.Uint32,  "ruleType",     10, q=Quantifier.Optional)
+                                ])
+
+css_node_style = Message("NodeStyle", is_global=False,
+                         fields=[Field(Proto.Uint32,  "objectID",     1) 
+                                ,Field(Proto.String,  "elementName",  2)
+                                ,Field(Proto.Message, "styles",       3, q=Quantifier.Repeated, message=css_style_decl)
+                                ])
+
+css_node_decls = Message("CssStyleDeclarations",
+                         fields=[Field(Proto.String,  "computedStyles",  1, q=Quantifier.Repeated)
+                                ,Field(Proto.Message, "nodeStyles",      2, q=Quantifier.Repeated, message=css_node_style)
+                                ])
+
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
@@ -317,8 +353,9 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(21, "OnObjectSelected",  object_selection)
 
                                # CSS inspector, should be moved to separate service
-                               ,Request(22, "CssGetIndexMap",        False,                    css_index_map)
-                               ,Request(22, "CssGetAllStylesheets",  runtime_id,               css_stylesheet_list)
-                               ,Request(22, "CssGetStylesheet",      css_stylesheet_selection, css_stylesheet_rules)
+                               ,Request(22, "CssGetIndexMap",          False,                    css_index_map)
+                               ,Request(23, "CssGetAllStylesheets",    runtime_id,               css_stylesheet_list)
+                               ,Request(24, "CssGetStylesheet",        css_stylesheet_selection, css_stylesheet_rules)
+                               ,Request(25, "CssGetStyleDeclarations", css_element_selection,    css_node_decls)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
