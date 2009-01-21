@@ -119,6 +119,7 @@ resource. When a new tab requests that resource, a meta-request occurs.
     
     RAW-RESPONSE-HEADER ::= "<raw-response-header>" TEXT "</raw-response-header>" ;
     
+    # It's possible, and legal, to get several headers with the same name
     PARSED-HEADERS ::= "<parsed-headers>"
                          HEADER*
                        "</parsed-headers>" ;
