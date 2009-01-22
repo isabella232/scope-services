@@ -61,8 +61,9 @@ dom_event = Message("DomEvent",
                            ])
 
 object_selection = Message("ObjectSelection",
-                    fields=[Field(Proto.Uint32, "objectID", 1)
-                           ,Field(Proto.Uint32, "windowID", 2)
+                    fields=[Field(Proto.Uint32, "objectID",  1)
+                           ,Field(Proto.Uint32, "windowID",  2)
+                           ,Field(Proto.Uint32, "runtimeID", 3, q=Quantifier.Optional)
                            ])
 
 thread_mode = Message("ThreadMode",
@@ -357,5 +358,7 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(23, "CssGetAllStylesheets",    runtime_id,               css_stylesheet_list)
                                ,Request(24, "CssGetStylesheet",        css_stylesheet_selection, css_stylesheet_rules)
                                ,Request(25, "CssGetStyleDeclarations", css_element_selection,    css_node_decls)
+
+                               ,Request(26, "GetSelectedObject",       False,                    object_selection)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
