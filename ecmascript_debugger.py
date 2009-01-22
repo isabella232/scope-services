@@ -72,11 +72,20 @@ thread_mode = Message("ThreadMode",
                              ,Field(Proto.String, "mode",      3)
                              ])
 
-property_data = Message("Property",
-                        fields=[Field(Proto.String, "name",     1)
-                               ,Field(Proto.String, "type",     2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
-                               ,Field(Proto.String, "value",    3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
-                               ,Field(Proto.Uint32, "objectID", 4, q=Quantifier.Optional, comment="Only present for `Object`")
+object_value = Message("ObjectValue",
+                      fields=[Field(Proto.Uint32,  "objectID",    1)
+                             ,Field(Proto.Bool,    "isCallable",  2)
+                             ,Field(Proto.Bool,    "isFunction",  3)
+                             ,Field(Proto.String,  "type",        4, comment="type, function or object") # TODO Make it an enum
+                             ,Field(Proto.Uint32,  "prototypeID", 5, q=Quantifier.Optional)
+                             ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, comment="Name of class (object) or function")
+                             ])
+
+eval_property = Message("Property", is_global=False,
+                        fields=[Field(Proto.String, "name",      1)
+                               ,Field(Proto.String, "type",      2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
+                               ,Field(Proto.String, "value",     3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
+                               ,Field(Proto.Uint32, "objectID",  4, q=Quantifier.Optional, comment="Only present for `Object`")
                                ])
 
 eval_data = Message("EvalData",
@@ -84,14 +93,14 @@ eval_data = Message("EvalData",
                            ,Field(Proto.Uint32,  "threadID",   2)
                            ,Field(Proto.Uint32,  "frameID",    3)
                            ,Field(Proto.String,  "scriptData", 4)
-                           ,Field(Proto.Message, "properties", 5, q=Quantifier.Repeated, message=property_data)
+                           ,Field(Proto.Message, "properties", 5, q=Quantifier.Repeated, message=eval_property)
                            ])
 
 eval_result = Message("EvalResult",
-                      fields=[Field(Proto.String, "status",    1)
-                             ,Field(Proto.String, "type",      2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
-                             ,Field(Proto.String, "value",     3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
-                             ,Field(Proto.Uint32, "objectID",  4, q=Quantifier.Optional, comment="Only present for `Object`")
+                      fields=[Field(Proto.String,  "status",       1)
+                             ,Field(Proto.String,  "type",         2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
+                             ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
+                             ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, comment="Only present for `Object`")
                              ])
 
 examine_list = Message("ExamineList",
@@ -105,17 +114,19 @@ frame_selection = Message("FrameSelection",
                                  ,Field(Proto.Uint32, "frameID",   3)
                                  ])
 
-object_data = Message("Object",
-                      fields=[Field(Proto.Uint32,  "objectID",    1)
-                             ,Field(Proto.Bool,    "isCallable",  2)
-                             ,Field(Proto.Bool,    "isFunction",  3)
-                             ,Field(Proto.String,  "type",        4, comment="type, function or object") # TODO Make it an enum
-                             ,Field(Proto.Uint32,  "prototypeID", 5, q=Quantifier.Optional)
-                             ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, comment="Name of class (object) or function")
-                             ,Field(Proto.Message, "properties",  7, q=Quantifier.Repeated, message=property_data)
+property_data = Message("Property", is_global=False,
+                        fields=[Field(Proto.String,  "name",         1)
+                               ,Field(Proto.String,  "type",         2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
+                               ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
+                               ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, comment="Only present for `Object`")
+                               ])
+
+object_data = Message("ObjectInfo",
+                      fields=[Field(Proto.Message, "value",       1, message=object_value)
+                             ,Field(Proto.Message, "properties",  2, q=Quantifier.Repeated, message=property_data)
                              ])
 
-object_info = Message("ObjectInfo",
+object_info = Message("ObjectList",
                       fields=[Field(Proto.Message, "objects", 1, q=Quantifier.Repeated, message=object_data)
                              ])
 
@@ -176,7 +187,7 @@ backtrace_frame = Message("BacktraceFrame",
                                   ,Field(Proto.Uint32,  "argumentObject", 2)
                                   ,Field(Proto.Uint32,  "variableObject", 3)
                                   ,Field(Proto.Uint32,  "thisObject",     4)
-                                  ,Field(Proto.Message, "object",         5, q=Quantifier.Optional, message=object_data) # TODO: Spec says repeated, while the code only assumes one (optional)
+                                  ,Field(Proto.Message, "objectValue",    5, q=Quantifier.Optional, message=object_value) # TODO: Spec says repeated, while the code only assumes one (optional)
                                   ,Field(Proto.Uint32,  "scriptID",       6, q=Quantifier.Optional)
                                   ,Field(Proto.Uint32,  "lineNumber",     7, q=Quantifier.Optional)
                                   ])
