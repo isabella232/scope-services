@@ -342,7 +342,7 @@ css_node_decls = Message("CssStyleDeclarations",
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
-                               ,Request(3,  "Eval",                eval_data,           eval_result)
+                               ,Request(3,  "Eval",                eval_data,           eval_result, async=True)
                                ,Request(4,  "ExamineObjects",      examine_list,        object_info)
                                ,Request(5,  "SpotlightObject",     spotlight_selection, False)
                                ,Request(6,  "AddBreakpoint",       breakpoint_pos,      False)
