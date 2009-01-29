@@ -1,0 +1,138 @@
+# Scope console logger specification draft
+
+:Author:  Rune Halvorsen <runeh@opera.com>
+:Version: 0.1
+:Date:    29 jan. 2009
+
+[fbconsole]: http://getfirebug.com/console.html "Firebug console API"
+[CORE-12727]: https://bugs.opera.com/browse/CORE-12727
+
+## Summmary
+
+The console log api exposes logging and profiling methods to the javascript
+environment. This document specifies what scope protocol events will result
+from those methods.
+
+## Supported methods
+
+The following interface should madea available on the `console` object when
+logging is enabled.
+
+    interface Console {
+        /* plain logging methods. Implemented in FF and Chrome/safari */
+        void log( object, [object 2..n] )
+        void warn( object, [object 2..n] )
+        void error( object, [object 2..n] )
+    
+        /* the rest is only available in ff with firebug */
+        void debug(object, [object 2..n]) 
+
+        void group(object, [object 2..n])
+        void groupEnd()
+    
+        /* fancy logging methods */
+        void dir(object)
+        void dirxml(node)
+    }
+
+The authoritative documentation is located [on the firebug site][fbconsole].
+
+
+In short: log, warn, error and debug will emit a log message. The arguments
+can be of any type. If they are objects, they will be inspectable directly
+in the debugger. If the first argument is a string it may contain formatting
+characters to embed links to the following arguments in the string. The only
+legal format characters are %s for string and %o for object hyperlink. The
+mozilla documentation also mentions %d and %i for integers and %f for floats,
+but these are not implemented. An example of using the format string would be:
+
+    var id = "foo";
+    console.log("the element with id: %s is %o", foo, document.getElementById(foo));
+
+The `group` and `groupEnd` methods manage grouping of log messages through
+indentation. `console.group("request log starts")` will emit the text
+"request log starts" in the debugger. All following log messages will
+be intented by one level until `console.groupEnd()` is called.
+
+`dir` and `dirxml` provide human readable of complex objects. `dir(object)`
+will emit a list of an list of all properties of the object. The properties
+may in turn be interactive, as in; you can collapse and expand them.
+`dirxml(node)` emits the xml source of an element.
+
+
+## Implementation note
+
+The protocol makes no distinction between the "normal" log calls and the
+`xml` and `dirxml` calls. The only difference between them is how they are
+presented on the client side.
+
+There is defined an optional severity element. This is not specified in
+the mozilla console log but is included for completeness sake. If it is
+not present, its vaue should be assumed to be 0.
+
+The GROUP-RESET message is supposed to indicate that there is no longer any
+open groups for the window. This will have to be sent on reload.
+
+## BNF
+
+
+PROTOCOL ::= EVENT* ;
+
+EVENT ::= LOG-ENTRY
+        | GROUP-START
+        | GROUP-END
+        | GROUP-RESET
+
+GROUP-START ::= "<group-start>"
+                  WINDOW-ID
+                  GROUP-NAME
+                "</group-start>" ;
+
+GROUP-END ::= "<group-end>"
+                WINDOW-ID
+              "</group-end>" ;
+
+GROUP-RESET ::= "<group-reset>"
+                  WINDOW-ID
+                "</group-reset>" ;
+
+LOG-ENTRY ::= "<log-entry>"
+                WINDOW-ID
+                LOG-ENTRY-TYPE
+                SEVERITY?
+                VALUE-DATA*
+              "<log-entry>" ;
+
+SEVERITY ::= "<severity>"
+               UNSIGNED
+             "</severity>" ;
+
+LOG-ENTRY-TYPE :: = "<log-entry-type>"
+                      ( "log" | "warn" | "error" | "debug" | "dir" | "dirxml" )
+                    "</log-entry-type>" ;
+
+# The followng xml is from the ecma protocol spec!
+
+WINDOW-ID ::= "<window-id>" UNSIGNED "</window-id>" ;
+
+
+VALUE-DATA ::= "<value-data>"
+                   DATA-TYPE
+                   ( OBJECT-VALUE | STRING )?
+               "</value-data>" ;
+
+DATA-TYPE ::= "<data-type>"
+                ( "number" | "boolean" | "string" | "null" | "undefined" | "object" )
+              "</data-type>" ;
+
+OBJECT-VALUE ::= "<object-value>"
+                   OBJECT-ID
+                   PROTOTYPE-ID?
+                   OBJECT-ATTRIBUTES
+                   NAME?
+                 "</object-value>" ;
+
+UNSIGNED ::= [0-9]+ ;
+
+TEXT ::= BASE64-ENCODED-DATA | textual-data ;
+
