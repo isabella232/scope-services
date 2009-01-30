@@ -68,7 +68,7 @@ presented on the client side.
 
 There is defined an optional severity element. This is not specified in
 the mozilla console log but is included for completeness sake. If it is
-not present, its vaue should be assumed to be 0.
+not present, its value should be assumed to be 0.
 
 The GROUP-RESET message is supposed to indicate that there is no longer any
 open groups for the window. This will have to be sent on reload.
@@ -82,6 +82,7 @@ EVENT ::= LOG-ENTRY
         | GROUP-START
         | GROUP-END
         | GROUP-RESET
+        ;
 
 GROUP-START ::= "<group-start>"
                   WINDOW-ID
@@ -101,7 +102,7 @@ LOG-ENTRY ::= "<log-entry>"
                 LOG-ENTRY-TYPE
                 SEVERITY?
                 VALUE-DATA*
-              "<log-entry>" ;
+              "</log-entry>" ;
 
 SEVERITY ::= "<severity>"
                UNSIGNED
