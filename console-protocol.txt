@@ -73,6 +73,12 @@ not present, its value should be assumed to be 0.
 The GROUP-RESET message is supposed to indicate that there is no longer any
 open groups for the window. This will have to be sent on reload.
 
+The firefox implementation of dirxml does nothing when handed an object that
+is not an element. I'm unsure of what we should be doing in this case. It's
+easy to completely ignore the call or just print some debug text saying that
+the argument was false. The alternative is to do argument checking on the
+core side.
+
 ## BNF
 
 
