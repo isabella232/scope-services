@@ -3,8 +3,8 @@
 =============================
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
-:Version: 0.7
-:Date:    24th September 2008
+:Version: 0.8
+:Date:    11th February 2008
 
 Changelog
 =========
@@ -23,6 +23,8 @@ Changelog
     callback.
 0.6 Revised and simplified several aspects after discussions.
 0.7 Minor changes to status, client id and version numbers
+0.8 Cleaned up document to make it match the implementation and
+    added information on the handshake phase.
 === =================================================================
 
 EBNF
@@ -33,6 +35,15 @@ The following common EBNF entries are defined::
   PB-UINT32      ::= <32bit unsigned encoded as Protocol Buffer varint>
   PB-ZERO-UINT32 ::= <0 encoded as Protocol Buffer varint>
   DIGIT          ::= "0"-"9"
+
+Unified Message Structure
+=========================
+
+This is a new specification which describes how messages are structured in
+core-2.4 and higher. It is abbreviated as UMS and will be referenced
+throughout the document.
+
+UMS is described in further details in a separate document.
 
 Protocols
 =========
@@ -77,8 +88,6 @@ The flow of the transport protocol currently looks like this::
 STP is used between the Opera host and the proxy as well as between the proxy
 and clients speaking STP.
 
-Currently used by the Python scope client (pyscope).
-
 Scope HTTP Adapter Protocol
 ---------------------------
 
@@ -113,20 +122,21 @@ EcmaScript Debugger Protocol
 
 Uses XML for the ecmascript part. Also has CSS inspector which can respond in
 XML and XML+JSON. Requests are all in XML.
-Version: 3
+Version: 5
 
 Problems
 ========
 
 The current protocol is based around sending Unicode strings to and from the
-clients. This makes it very hard to support sending binary data.
-Also the encoding is predetermined (UTF-16) and cannot be changed to better
-suit the transported data.
+clients, which makes it hard to send binary data. Also the encoding is
+hardcoded to UTF-16 for the entire message (STP and payload), this represents
+uneccessary overhead for sending data which is often in US-ASCII only.
 
 XML is used as primary format which is inefficient when transporting lots
 of data, lightweight alternatives are needed. XML also affects the decoding
 process of some clients since it has to first decode it to a DOM tree and
-then extract interesting parts using the DOM interface.
+then extract interesting parts using the DOM interface which is slow and
+cumbersome.
 The format is also predeterminded by each service and there is no way
 to change dynamically. For instance Javascript based clients will be
 able to decode the responses more quickly if it is sent as JSON.
@@ -135,9 +145,10 @@ There is no standard way to tie (ie. a tag) a response to a previous
 request, this is currently embedded in the content of the request
 which is specific to each service and each command in the service. For
 instance if you receive an error message there is no information about
-what request caused this error. There is also a chance of tag-conflicts
-when multiple clients are in use, a better system for handling the tags
-is needed.
+what request caused this error, due to the error handler being outside
+of the service implementation and has no knowledge of the <tag> entry.
+There is also a chance of tag-conflicts when multiple clients are in use,
+a better system for handling the tags is needed.
 
 The protocol was designed to handle multiple clients with the use of
 the proxy. However there are currently problems with multiple clients
@@ -218,8 +229,8 @@ in this case a mobile phone::
   |         |
   +---------+
 
-Other clients can communicate directly using STP, here for is the Python
-client used for internal development::
+Other clients can communicate directly using STP, here the Python client 
+is shown::
 
   +-------+ STP/0 +-------+  STP/0   +---------+
   |       | 7001  |       |   8001   |         |
@@ -237,7 +248,7 @@ will be defined to either provide a break between each version change or
 provide only incremental changes for each version.
 
 The transport protocol is the fundemental part and changes to it will be hard
-to do incrementally so there is only a need to for breaks between versions.
+to do incrementally so there is only a need for breaks between versions.
 This means that clients must immediately disconnect if they encounter a
 version they do not know how to handle.
 
@@ -254,7 +265,7 @@ version increases. For this to be possible the following rules apply:
    parameters cannot change or be removed.
 3. If a command requires a change of behaviour (or parameter change) a new
    command must be made and the existing one must be kept.
-4. The new and optional parameters to commands can be used to trigger extend
+4. The new and optional parameters to commands can be used to trigger extended
    functionality, or alternative behaviour. However this must be confined to
    the client that request the command.
 5. The order of fields can never be changed.
@@ -274,38 +285,80 @@ determine available features on a global scale.
 Opera host
 ----------
 
-The host will only support the latest version of the STP. If it detects any
-other protocols it will simply disconnect.
+The host will support both the new protocol and the old. If not all nodes on
+the communication channel can speak the new protocol it will fallback to STP/0
+and use a special compatibility layer to ensure the messages can be sent and
+received.
+
+When STP/0 is in use it will still use the Unified Message Structure for the
+message content, but the format will be hardcoded to XML and the <tag> field
+will be inserted and events/responses and parsed and removed from requests.
+
+The host will first send out the service list using the old syntax (*services),
+then it will wait for the first request from the client. If the client sends
+the new handshake the version to use is determined in the handshake message,
+otherwise it means and older client is connecting and the host will switch
+to STP/0 and XML formatted messages.
 
 Proxy
 -----
 
-The proxy will follow the same guidelines as the Opera host in regards to STP
-and will only allow the newest version to be used for the host and client
-connection.
+The proxy will also support both protocol versions, the version that will
+be used is determined by the client, unless the host is running core-2.3 or
+lower in which case all communication is done using STP/0.
+To ensure that old proxies are detected the proxy will also report the proxy
+version number to any connecting clients using a meta service. The version
+number of the new proxy will be "2.0".
+
+Client detection and handshake is handled in the same manner as the host.
+The proxy will also ensure that once the STP version is determined it will
+not allow clients that tries to communicate in a different version.
+
+The HTTP API as it is today will be removed from the external proxy.
+A new API will be made using a totally separate implementation, a spec
+will be made to describe the new API.
 
 Client
 ------
 
-Any compatibility with STP version 0 is left to the client. If the client
-decides it can communicate with both versions depending on what the host
-offers. If the client finds a host with a version it does not support it must
-disconnect.
+New clients will need to decide the version of the protocol to use. If the host
+and proxy supports STP/1 then it can choose to initiate this by performing
+the new handshake.
+If STP/1 cannot be used then the client must fallback to the STP/0 using
+XML only.
+
+In addition to checking the transport protocol version it must also check the
+core version of the host. If the host has core-2.4 or higher it means it
+supports the new Unified Message Structure. This affects how the messages
+are constructed, ie. names of fields and structure.
+
+In short the following setups will be encountered:
+
+1. STP/1 and UMS
+2. STP/0 and UMS formatted as XML
+3. STP/0 and old XML structures core-2.3
+
+Newer clients that does not need to consider backwards compatibility will only
+need to support case #1.
 
 Dragonfly
 ---------
 
-This client will need to maintain backwards compatibility. This means that it
-must check the version the proxy/host reports and load the corresponding code.
-Since Dragonfly is an HTTP client it will only need to adapt to the new way of
-sending the TAG_ and service/command identifiers.
+Dragonfly cannot control the transport protocol version that will be used
+and must adhere to the message structure that will be in use. Dragonfly
+will need to read out the STP and core version and decide from that how
+messages are to be formatted and parsed.
+If UMS is available and core-2.4 or higher is used in the host then DF will
+use JSON as the selected format, otherwise it will use XML and structure
+the messages either in the old format or the new format (UMS) depending
+on the core version.
 
-STP v1
-======
+STP/1
+=====
 
 The new transport message is defined as::
 
-  CONNECTION     ::= PROTOCOL-VERSION MESSAGES
+  CONNECTION     ::= SERVICES HANDSHAKE MESSAGES
   MESSAGES       ::= MESSAGE*
   MESSAGE        ::= MESSAGE-HEADER MESSAGE-BODY
   MESSAGE-HEADER ::= SERVICE
@@ -325,31 +378,39 @@ The new transport message is defined as::
 
 Each message is encoded using Protocol Buffer binary encoding.
 The result is that the overhead of each message overhead is
-kept to a minimum, the smallest overhead is 7 bytes (includes
-chunked data overhead) and the largest is 21 byte (excludes
+kept to a minimum, the smallest overhead is 5 bytes (excludes
+chunked data overhead) and the largest is 21 bytes (excludes
 chunked data overhead). The average will be most likely be
-around 7 to 14 bytes and depends on how much data is
-transferred.
+around 5 to 12 bytes.
 
-PROTOCOL-VERSION
-----------------
+SERVICES
+--------
 
-PROTOCOL-VERSION is only sent once per active connection and used to establish the version of the subsequent messages.
-The version consists of magic string and a single unsigned integer::
+The very first data that is sent by the host is a list of services.
+This data is encoded in UTF-16-BE (UTF-16 Big Endian) and is the
+same format as it was in STP/0, this ensures compatibility with older
+clients::
 
-  PROTOCOL-VERSION ::= "STP/" VERSION LF
-  VERSION          ::= DIGIT+
+  SERVICES     ::= SIZE SP "*services" SP SERVICE-LIST
+  SERVICE-LIST ::= SERVICE-NAME { "," SERVICE }
+  SERVICE-NAME ::= <any character except comma>
+  SIZE         ::= DIGIT+
 
-The following versions are defined:
 
-== ================================================================= 
-0  The first version which used the UTF-16, there was no notion of
-    version in this protocol so it will never be sent.
-1  First version of the new protocol.
-== =================================================================
+HANDSHAKE
+---------
 
-If the client detects a version it cannot handle it must immediately
-disconnect.
+The handshake allows the client to configure the required STP version
+before any messages are sent. The client must decide on the desired STP
+version, chosen among the available versions in the SERVICES entry.
+
+The client will then send a request that looks like::
+
+  HANDSHAKE ::= "*hello" SP "STP/" VER
+  VER       ::= "0" | "1"
+
+The encoding of the handshake is in the same manner as the *services
+entry, ie. UTF-16-BE with a SIZE prefix.
 
 SERVICE
 -------
@@ -409,14 +470,14 @@ The TYPE value is used to identifiy the format of the message
 body, this also determines the encoding used on the message
 body.
 
-=====  ====================  ========
-Code   Description           Encoding
-=====  ====================  ========
-0      Protocol Buffer       OCTET
-1      JSON structures       UTF-8
-2      XML structures        UTF-8
-3      Internal "scope"      UTF-8
-=====  ====================  ========
+=====  =====================  ========
+Code   Description            Encoding
+=====  =====================  ========
+0      Protocol Buffer (UMS)  OCTET
+1      JSON structures (UMS)  UTF-8
+2      XML structures (UMS)   UTF-8
+3      Internal "scope"       UTF-8
+=====  =====================  ========
 
 CID-FIELD
 ---------
@@ -464,8 +525,9 @@ the underlying format, this allows the proxy to properly filter responses back
 to the correct client and it also makes it easier for the clients to handle
 responses since it can map the tag value to a response handler.
 
-TAG is an unsigned integer in the range 1 to 2^31-1. The client is free to
-reuse the Tag value as long as there is no current open requests using it.
+TAG is an unsigned integer in the range 1 to 2^31-1 and does not interfere
+with tags used by other clients. The client is free to reuse the Tag value as
+long as there is no current open requests using it.
 
 Tag values are only needed for requests/responses, if a service sends out an
 event the Tag header is set to 0.
@@ -476,9 +538,7 @@ CHUNKED-BODY
 Identifying the length/end of the message will no longer be done using
 a Count value at the beginning. Instead the message body will be sent using
 chunked encoding, that means sending over multiple chunks where each chunk
-is preceded by a chunk size. This allows for better streaming of data when
-the size is not known beforehand. For instance when encoding to UTF-8 the
-exact size cannot be known without first going over all characters.
+is preceded by a chunk size.
 
 Chunked encoding will only be used for the message body.
 
@@ -490,145 +550,103 @@ The structure is::
   CHUNK-SIZE   ::= PB-UINT32
   CHUNK-DATA   ::= CHUNK-SIZE(OCTET)
 
-Changes
-=======
+Message flow
+============
 
-Client changes
---------------
+Before the STP/1 message flow can start an initialization phase is needed.
+This phase is performed between the two connecting parts, this would mean
+between the host and proxy as well as proxy to any clients. This phase
+is used to determine the basic capabilites of the host and choose the
+STP version to use for messages across all connected nodes.
 
-The client cannot know the version of the host or proxy until a detection
-scheme is performed. This needs to be done by all STP clients
-(not HTTP/Javascript clients), even those who will not support version 0.
-The detection is done by looking for UTF-16 data in the first part of the
-message, this part is always UTF-16 in v0 and always US-ASCII in v1+.
-To detect UTF-16 the client must check for a series of Unicode characters
-making up the old COUNT header. This header consists of one or more digits
-(U+0030 - U+0039) followed by a space (U+0020) terminator. To detect the new
-version it will contain "STP/" followed by a version number, e.g. "STP/1".
-If any other data is found the protocol is unknown and the client must
-disconnect.
+When the client connects to a host or proxy it will receive a list of services.
+Some of these services are meta-services and is used to determine capabilities
+such as possible STP versions. For instance the host might send back::
 
-In addition the client must make sure it follows the compatability guidelines,
-this means checking version numbers (global or per service) and detect
-incremental changes vs changes that break the command structures.
+  *services scope,ecmascript-debugger,window-manager,m-stp-1,m-core-2.4
 
-HTTP client changes
--------------------
+This reports back on the STP version available through the service "m-stp-1".
+It also reports the core version in use, in this case core-2.4 ("m-core-2.4").
 
-Since the HTTP clients already use HTTP as the transport mechanism they do
-not have to do anything in regards to encoding, that will be handled by the
-proxy.
+Following is a set of examples of the message flow between a client, proxy
+and host, the following symbols are used::
 
-Sending the new headers is done using existing HTTP headers or as custom
-X-OPSCOPE-* headers, e.g::
+  ~~~~~~~~~> Handshake
+  ~ ~ ~ ~ ~> Handshake response
+  ---------> Command
+  - - - - -> Response
+  =========> Event
 
-  POST /ecmascript-debugger
-  Content-Type: text/xml
-  X-OPSCOPE-TAG: 5
+The client must then initiate the handshake which also determines the STP
+version to use, for instance like this::
 
-The following shows a list of STP headers and their mapping to HTTP.
-
-==================  =================
-STP name            HTTP header
-==================  =================
-Service ID          X-OPSCOPE-SERVICE
-Command ID          X-OPSCOPE-COMMAND
-Tag                 X-OPSCOPE-TAG
-CID-FIELD           X-OPSCOPE-CLIENT-MASK
-Type                Content-Type*
-Status              X-OPSCOPE-STATUS
-==================  =================
-
-* The STP type is converted to a suitable Content-Type
-
-Receving responses is the same as posting requests but uses the HTTP GET method.
-
-Javascript client changes
--------------------------
-
-Note: The Javascript API will be refined at a later stage.
-
-To detect the presence of the new JS API the client must check for the new
-parameter to the `connected` callback mentioned below. It will contain the
-version of the protocol in use. When the new version has been established
-the client must act differently when using the existing JS methods, the
-changes are as follows:
-
-scopeAddClient stays the same, however the callbacks are changed::
-
-  scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
-
-The `connected` callback receives the new hello message as an associative array.
-Secondly it receives a new `version` parameter which contains the version of
-the protocol (not the same as scope version) as as a number.
-
-  connected(services: array, version: array)
+              Host               client
   
-TODO: Update the `services` parameter with the new "hello" message
+  *services     ~~~~~~~~~~~~~~~~~>
+                <~~~~~~~~~~~~~~~~~  *hello STP/1
+  *hello STP/1  ~ ~ ~ ~ ~ ~ ~ ~ ~>
 
-The `receive` callback has extra arguments.
-`command` is the name of the command/event.
-`status` is a number containing the status code.
-`type` is the type of the message, if type is "es_object" then
-message contains native Javascript objects, otherwise it is a string
-and the type is the format::
+A typical message flow between a client, proxy and host looks like this::
 
-  receive(service: string, command: string, status: integer, type: string, message: array|string)
-
-The `quit` callback has no changes::
-
-  quit()
-
-Example code::
-
-  var connected = function(services, version)
-  {
-    if (version != 1)
-      alert("Client can only work with version 1");
-  }
-
-  var receive = function(service, status, type, message)
-  {
-    if (status == 0)
-    {
-      /*...*/
-    }
-  }
-
-  var quit = function()
-  {
-  }
-
-  opera.scopeAddClient(connected, receive, quit, 0)
-
-scopeEnableService has no changes::
-
-  scopeEnableService(service: string)
-
-scopeTransmit will now request data from services in native Javascript objects,
-if that is not supported the service will respond with a string and correct type.
-The request format is now also Javascript objects which can contain arrays,
-numbers, strings and booleans. The final parameter is a callback object which
-will be called when there is a response to the request, if there is no
-response tied directly to the request the callback is not needed. This
-callback behaves in the same way as the `receive` callback above. The full
-syntax is::
-
-  scopeTransmit(service: string, command: string, message: array[, response: callback])
+              Opera               proxy                 client
   
-Example code::
+  handshake       <~~~~~~~~~~~~~~~~     ~ ~ ~ ~ ~ ~ ~ ~ ~>  handshake
+  scope.OnConnect ================>
+                                        =================>  scope.OnConnect
+                                        <-----------------  scope.Enable
+  scope.Enable    <----------------
+                  - - - - - - - - >
+                                        - - - - - - - - ->  scope.Enable
 
-  var cssIndexReply = function(service, command, status, type, message)
-  {
-  }
-  scopeTransmit("ecmascript-debugger", "css-get-index-list", [], cssIndexReply)
+  messages        <-------------------  - - - - - - - - ->  messages
+  events          =======================================>
+                                    ....
+                                        <-----------------  scope.Quit
+  scope.Disable   <----------------
+                  - - - - - - - - >
+                                        - - - - - - - - ->  scope.Disable
+  scope.Quit      <----------------
+  scope.OnQuit    ================>
+                                        =================>  scope.OnQuit
 
-Proxy changes
+An STP/0 client will initiate the message flow as described in
+`Scope Transport Protocol`_.
+
+Meta services
 -------------
 
-The proxy will use the same version-detection scheme as the other clients
-to determine the version used in the Opera host. However it will not allow
-version 0 to be used, instead it will disconnect.
+Meta services are sent along the regular service list to report back version
+numbers and other useful information to the clients, this can then be used
+to determine the capabilities of the transport layer and host itself.
+All meta services consists of a prefix followed by one or more values, this
+means that matching of meta services must be done on the prefix only. The
+prefix will always start with "m-" which allows clients to differentiate
+between these services and real services.
 
-The HTTP server will be extended to transform the new headers into proper
-HTTP headers.
+The following meta services are defined:
+
+STP versions is determined by the "m-stp-" meta service and contains a
+semi-colon delimited list of available versions of the transport protocol for
+the client to choose from. The client must choose one of them and send the
+information in the handshake, if another client to an existing connection the
+version list will be reduced to one value which is the current STP version in
+use. It is defined as::
+
+  META-STP ::= "m-stp-" NUMBER { ";" NUMBER }
+  NUMBER   ::= DIGIT+
+
+Core version is determined by the "m-core-" meta service and contains the
+core version after the prefix. This core version can be used to determine
+the structure of the messages and how the services will act.
+It is defined as::
+
+  META-CORE ::= "m-core-" VERSION
+  VERSION   ::= DIGIT+ ("." DIGIT+)*
+
+Proxy version is determined by the "m-proxy-" meta service and contains the
+proxy version after the prefix. This can be used to determine the capabilities
+of the proxy and whether it understand STP/1 or not.
+It is defined as::
+
+  META-PROXY ::= "m-proxy-" VERSION
+  VERSION   ::= DIGIT+ ("." DIGIT+)*
