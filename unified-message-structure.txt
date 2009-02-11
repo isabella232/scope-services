@@ -1,0 +1,227 @@
+===========================
+ Unified Message Structure
+===========================
+
+:Author:  Jan Borsodi <jborsodi@opera.com>
+:Version: 0.1
+:Date:    11th February 2008
+
+Unified Message Structure, or UMS for short, is a system for defining message
+structures in a generic format which can be export to and imported from
+multiple formats.
+
+The main requirement for the system was to be able to work with XML, JSON and
+Protocol Buffers. This is possible by defining a sub-set of all supported
+formats.
+
+In addition the system is also meant to assist with code-generation of parsers
+and serializers for various languages, reducing the need for manually
+crafted code.
+
+The main component are the messages, they define a set of fields which make
+up the message. Each field defines a specific type (e.g integer or string)
+as well as information on whether it is required, optional or repeated, in
+addition to meta-information like name and a number.
+The structure of the message is defined by the name and tag of each field
+as well as the order of the fields.
+Name is important for XML, tag for Protocol Buffers and order for JSON.
+The tag is a number which is unique to that field within each message, tags
+are defined the range 1 to (2^31)-1.
+The name is a non-empty string written in camel-case.
+
+A tool written in Python is available for dealing with UMS data:
+http://dvcs.vlab.osa/cgi-bin/hgwebdir.cgi/home/jborsodi/opprotoc/
+Note: URL will change when a proper name is found.
+
+Types
+=====
+
+The types in the system are based upon the types in Protocol Buffers which
+consists of a set of integer types, boolean, string and binary.
+Nested messages are also possible with a special type called Message.
+
+More details on types can be read in the Protocol Buffer documentation:
+http://code.google.com/apis/protocolbuffers/docs/proto.html
+
+Note: Currently floating point numbers are not supported due to the
+      different nature of floating numbers between different processors.
+Note: 64 bit types are not yet supported due to incomplete support for
+      them in the Opera core.
+
+TODO: Support enums, they are basically sent as numbers but require some
+      extra handling in generated code.
+TODO: Perhaps the types should be split up into basic type, and constraints.
+      e.g. integer with constraint positive numbers (32bit)
+
+Quantifier
+==========
+
+TODO: Find a better name for this?
+
+The quantifier defines whether the field is required or not. If the field
+is not required it can be defined as either optional or as being repeated.
+A repeated field with zero elements and an optional field which is missing
+are considered the same.
+
+Syntax
+======
+
+The syntax for defining messages is based upon the Protocol Buffers syntax:
+http://code.google.com/apis/protocolbuffers/docs/proto.html
+
+Note: Currently there is no parser for this and everything written in pure
+      Python. A parser will be added once STP/1 and UMS stabilizes.
+
+Supported formats
+=================
+
+UMS is designed to work with XML, JSON and Protocol Buffers. XML and JSON
+are text-based formats while Protocol Buffers is an efficient binary format.
+
+XML
+---
+
+XML is the least efficient format to use among the supported ones and is
+mainly kept as a way for getting output that is easy-to-read, for instance
+for debugging or inspection.
+
+The important parts for XML encoding is the name of the fields. The names
+are converted to XML elements, the name is converted from camel-case to
+lowercase with dash as delimiters between words.
+
+For instance this structure::
+
+  message DummyData {
+    required int32 id = 1;
+    required string name = 2;
+    repeated int32 fib = 3;
+  }
+
+Would be encoded like this::
+
+  <dummy-data>
+    <id>1</id>
+    <name>foo</name>
+    <fib>1</fib>
+    <fib>1</fib>
+    <fib>2</fib>
+    <fib>3</fib>
+    <fib>5</fib>
+  </dummy-data>
+
+All integer types are encoded/decode as textual numbers, size and sign is
+checked for when decoding numbers.
+Boolean type is encoded/decoded as a textual number with 0 being false and
+1 being true, other values are not allowed.
+Strings are encoded as UTF-8 XML text.
+Binary data is encoded as UTF-8 XML text containing the base-64 representation
+of the binary data.
+Messages are encoded as a new XML element containing the new fields, the name
+of the element is taken from the message, missing fields are skipped.
+Repeated types are encoded as repeated XML elements, one after another.
+
+JSON
+----
+
+JSON uses the order of the fields to pack messages into JSON lists. Lists
+were chosen to cut down on the amount of information that is needed to send.
+
+All integer types are encoded/decode as textual numbers, size and sign is
+checked for when decoding numbers.
+Boolean type is encoded/decoded as a textual number with 0 being false and
+1 being true, other values are not allowed.
+Strings are encoded as UTF-8 JSON strings, 
+Binary data is encoded as JSON strings containing the base-64 representation
+of the binary data.
+Messages are encoded as JSON lists with the order of the fields being kept.
+Missing elements are sent as the null type, in addition trailing elements
+which are missing are cut off from the list.
+Repeated types are encoded as JSON lists.
+
+For more details on JSON see RFC 4627:
+http://www.ietf.org/rfc/rfc4627.txt?number=4627
+or visit http://json.org
+
+For instance this structure::
+
+  message DummyData {
+    required int32 id = 1;
+    required string name = 2;
+    repeated int32 fib = 3;
+  }
+
+Could be encoded like this::
+
+  [1,"foo",[1,1,2,3,5]]
+
+Using more optional fields::
+
+  message DummyData {
+    required int32 id = 1;
+    optional string name = 2;
+    message SubData {
+      required uint32 field1 = 1;
+      optional uint32 field2 = 2;
+      optional uint32 field3 = 3;
+    }
+    required SubData msg = 4;
+  }
+
+Could be encoded like this::
+
+  [1,null,[4]]
+
+While this would be just as valid::
+
+  [1,null,[4,null,null]]
+
+Protocol Buffers
+----------------
+
+PB is the most efficient way to transport data for languages that excel
+at encoding/decoding binary data (e.g. C/C++). Other languages like Javascript
+and Python might be better off with using JSON.
+
+PB is explained in detail at the main site:
+http://code.google.com/apis/protocolbuffers/docs/overview.html
+
+Code generation
+===============
+
+The system supports code generation of the message structures and encoders/
+decoders for them.
+
+C++
+---
+
+The C++ generator translates the message structures into C++ classes, this
+allows C++ code to interact with messages using native structures. Encoding
+and decoding is handled as a separate layer and is generated.
+
+TODO: More details on the generated C++ code.
+
+Note: We do not use the protoc compiler from Protocol Buffers since the
+      generated code is not compatible with the limited C++ usage in
+      the Opera core.
+
+Javascript
+----------
+
+Code generation for JS is designed around the fact that JS code will
+use JSON for formatting messages on the wire, this means that there
+is little need for encoding/decoding of data. Extended code generation
+is available when RPC (services) are in use.
+
+To aid in debugging incoming JSON data the system can generate code that
+outputs JSON data to a human-readable form.
+
+Python
+------
+
+TODO: Either use similar style as Javascript or allow for proper classes
+      to be made for the different messages.
+
+Java
+----
+
+TODO: Need to figure what is needed here for the various java projects.
