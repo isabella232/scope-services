@@ -4,7 +4,7 @@
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
 :Version: 0.8
-:Date:    11th February 2008
+:Date:    11th February 2009
 
 Changelog
 =========
@@ -282,23 +282,69 @@ Finally a global version for scope is defined, this will use the current core
 version. This allows clients with more complex service dependencies a way to
 determine available features on a global scale.
 
-Opera host
-----------
+Transport layer
+---------------
 
-The host will support both the new protocol and the old. If not all nodes on
-the communication channel can speak the new protocol it will fallback to STP/0
-and use a special compatibility layer to ensure the messages can be sent and
-received.
+The transport layer will support both the new protocol (STP/1) and the old
+(STP/1). If not all nodes on the transport layer can speak the new protocol
+it will fallback to STP/0 and use a special compatibility layer to ensure
+that messages still can be transported correctly.
 
 When STP/0 is in use it will still use the Unified Message Structure for the
-message content, but the format will be hardcoded to XML and the <tag> field
-will be inserted and events/responses and parsed and removed from requests.
+message content, but the format will be restricted to XML and JSON.
+Additionally the payload will be modified to contain the extra fields which
+are unique to STP/1, when decoding the reverse is applied to make the real
+payload appear as it was originally. Encoding of message will also change
+to UTF-16-BE to be compatible with STP/0.
+
+For JSON the real payload is wrapped in a new list and looks like::
+
+  [<command-name>, <tag>, <status>, <payload>]
+
+For instance::
+
+  ["get-window-list", 5, 0, [...]]
+
+If an error occured it might look like::
+
+  ["get-window-list", 5, 1, [...]]
+
+For XML the extra fields are inserted into the XML. The *tag* is added as the
+first sub-element, *status* is added as an attribute to the root element and
+the *command-name* is used in the root element. In short the only difference
+from the XML used is core-2.3 and lower is the new *status* attribute.
+The new XML structure looks like::
+
+  <[command-name] status="[status]">
+    <tag>[tag]</tag>
+    ...
+  </[command-name]>
+
+The tag element will only be present for requests/responses and status
+attribute will only be added when there is an error.
+
+For instance a request might look like::
+
+  <get-window-list>
+    <tag>5</tag>
+    ...
+  </get-window-list>
+
+If an error occured it could look like::
+
+  <get-window-list status="1">
+    <tag>5</tag>
+    ...
+  </get-window-list>
+
+Opera host
+----------
 
 The host will first send out the service list using the old syntax (*services),
 then it will wait for the first request from the client. If the client sends
 the new handshake the version to use is determined in the handshake message,
 otherwise it means and older client is connecting and the host will switch
-to STP/0 and XML formatted messages.
+to STP/0 and XML/JSON formatted messages.
 
 Proxy
 -----
@@ -323,9 +369,8 @@ Client
 
 New clients will need to decide the version of the protocol to use. If the host
 and proxy supports STP/1 then it can choose to initiate this by performing
-the new handshake.
-If STP/1 cannot be used then the client must fallback to the STP/0 using
-XML only.
+the new handshake. If STP/1 cannot be used then the client must fallback to
+STP/0 using XML or JSON only.
 
 In addition to checking the transport protocol version it must also check the
 core version of the host. If the host has core-2.4 or higher it means it
@@ -335,8 +380,8 @@ are constructed, ie. names of fields and structure.
 In short the following setups will be encountered:
 
 1. STP/1 and UMS
-2. STP/0 and UMS formatted as XML
-3. STP/0 and old XML structures core-2.3
+2. STP/0 and UMS formatted as JSON or XML
+3. STP/0 and old XML structures (core-2.3)
 
 Newer clients that does not need to consider backwards compatibility will only
 need to support case #1.
@@ -348,10 +393,9 @@ Dragonfly cannot control the transport protocol version that will be used
 and must adhere to the message structure that will be in use. Dragonfly
 will need to read out the STP and core version and decide from that how
 messages are to be formatted and parsed.
-If UMS is available and core-2.4 or higher is used in the host then DF will
-use JSON as the selected format, otherwise it will use XML and structure
-the messages either in the old format or the new format (UMS) depending
-on the core version.
+
+When it is possible Dragonfly will stick to JSON as the format for message,
+this would mean case #1 and #2 as described in the section Client_.
 
 STP/1
 =====
@@ -563,10 +607,10 @@ When the client connects to a host or proxy it will receive a list of services.
 Some of these services are meta-services and is used to determine capabilities
 such as possible STP versions. For instance the host might send back::
 
-  *services scope,ecmascript-debugger,window-manager,m-stp-1,m-core-2.4
+  *services scope,ecmascript-debugger,window-manager,m-stp-1,core-2.4
 
 This reports back on the STP version available through the service "m-stp-1".
-It also reports the core version in use, in this case core-2.4 ("m-core-2.4").
+It also reports the core version in use, in this case core-2.4 ("core-2.4").
 
 Following is a set of examples of the message flow between a client, proxy
 and host, the following symbols are used::
@@ -593,6 +637,10 @@ A typical message flow between a client, proxy and host looks like this::
   handshake       <~~~~~~~~~~~~~~~~     ~ ~ ~ ~ ~ ~ ~ ~ ~>  handshake
   scope.OnConnect ================>
                                         =================>  scope.OnConnect
+                                        <-----------------  scope.Configure
+  scope.Configure <----------------
+                  - - - - - - - - >
+                                        - - - - - - - - ->  scope.Configure
                                         <-----------------  scope.Enable
   scope.Enable    <----------------
                   - - - - - - - - >
@@ -619,34 +667,32 @@ Meta services are sent along the regular service list to report back version
 numbers and other useful information to the clients, this can then be used
 to determine the capabilities of the transport layer and host itself.
 All meta services consists of a prefix followed by one or more values, this
-means that matching of meta services must be done on the prefix only. The
-prefix will always start with "m-" which allows clients to differentiate
-between these services and real services.
+means that matching of meta services must be done on the prefix only.
 
 The following meta services are defined:
 
-STP versions is determined by the "m-stp-" meta service and contains a
+STP versions is determined by the "stp-" meta service and contains a
 semi-colon delimited list of available versions of the transport protocol for
 the client to choose from. The client must choose one of them and send the
 information in the handshake, if another client to an existing connection the
 version list will be reduced to one value which is the current STP version in
 use. It is defined as::
 
-  META-STP ::= "m-stp-" NUMBER { ";" NUMBER }
+  META-STP ::= "stp-" NUMBER { ";" NUMBER }
   NUMBER   ::= DIGIT+
 
-Core version is determined by the "m-core-" meta service and contains the
+Core version is determined by the "core-" meta service and contains the
 core version after the prefix. This core version can be used to determine
 the structure of the messages and how the services will act.
 It is defined as::
 
-  META-CORE ::= "m-core-" VERSION
+  META-CORE ::= "core-" VERSION
   VERSION   ::= DIGIT+ ("." DIGIT+)*
 
-Proxy version is determined by the "m-proxy-" meta service and contains the
+Proxy version is determined by the "proxy-" meta service and contains the
 proxy version after the prefix. This can be used to determine the capabilities
 of the proxy and whether it understand STP/1 or not.
 It is defined as::
 
-  META-PROXY ::= "m-proxy-" VERSION
+  META-PROXY ::= "proxy-" VERSION
   VERSION   ::= DIGIT+ ("." DIGIT+)*
