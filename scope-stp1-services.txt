@@ -4,40 +4,29 @@
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
 :Version: 0.2
-:Date:    25th September 2008
+:Date:    26th Feburary 2009
 
 Changelog
 =========
 
 === =================================================================
 0.1 Moved all doc not related to STP to this document.
+0.2 Finished details on "scope" service.
 === =================================================================
+
+EBNF
+====
+
+The following common EBNF entries are defined::
+
+  LF             ::= 0x0A
+  DIGIT          ::= "0"-"9"
+  NUMBER         ::= DIGIT+
+  IDENTIFIER     ::= ALPHA (ALPHA | DIGIT | "-")*
+  ALPHA          ::= "a"-"z" | "A"-"Z"
 
 Commands and Events
 ===================
-
-Commands (Request/Response) and Events are all sent as STP messages. STP v1
-now takes responsibility for transporting the the synchronization tag and
-the name of the command, instead the Command structure is now only the data.
-All commands are be defined in a unified structure which will allow the
-commands to be transported in multiple formats, all depending on the clients
-choice.
-The structure is based on Protocol Buffers (PB) where the PB message is a list
-of fields. Each field consists of::
-
-- A basic type, restricted to integer (with variations), float/double, bool, string and binary data.
-- A numerical identifier (unique per PB message).
-- A textual identifier (unique per PB message).
-
-In addition to this we will also ensure that the order of fields are kept,
-this is important for formats which cannot easily convey the ID nor the name.
-Currently this is needed for JSON support.
-
-Arrays/lists are possible with the use of repeated fields and complex
-structure with the use of sub-messages.
-
-More details on Protocol Buffer and the wire format can be read at:
-http://code.google.com/apis/protocolbuffers/
 
 System commands
 ===============
@@ -61,10 +50,7 @@ Whenever a client enables a service the service will be able to differentiate
 between them with a unique client ID. The service can keep track of which
 clients are active and send back information to specific clients if it wants.
 It can also deny new clients to be active if one already is active.
-There should be a new C++ API available to unify the way clients are handled,
-services that don't need this differentation can work as they did earlier.
-
-If a service denies a client access it must respond with the status 1 (Conflict).
+If a service denies a client it responds with the status 1 (Conflict).
 
 Services
 ========
@@ -77,8 +63,66 @@ deviates from the other services in that it uses a special plain-text format
 for sending out events and receiving commands. This is required for sending
 out and receiving messages before the clients preference of formats is known.
 
-Event: hello
-^^^^^^^^^^^^
+Commands:
+
+  ================= =========
+  Name              CommandID
+  ================= =========
+  Handshake         4
+  Enable            5
+  Disable           6
+  Configure         7
+  Info              8
+  Quit              9
+  ================= =========
+
+Events:
+
+  ================= =========
+  Name              CommandID
+  ================= =========
+  OnServices        0
+  OnConnect         1 # OnHello
+  OnQuit            2
+  OnConnectionLost  3
+  ================= =========
+
+Event: OnServices
+^^^^^^^^^^^^^^^^^
+
+CommandID: 0
+
+STP/0: *services <service-list>
+
+This event is the first that is sent from the host (and proxy) and contains
+all the available services. It is always sent encoded as an STP/0 message.
+
+Command: Handshake
+^^^^^^^^^^^^^^^^^^
+
+CommandID: 4
+
+STP/0: *handshake <ver>
+
+This command is initiated by the client to choose the STP version to use
+for all communication. Once the response is received the communication can
+switch to the chosen version.
+This command is always encoded as an STP/0 message.
+
+It is defined as::
+
+  HANDSHAKE          ::= STP-VERSION
+
+The response is defined as::
+
+  HANDSHAKE-RESPONSE ::= STP-VERSION
+
+Event: OnHello
+^^^^^^^^^^^^^^
+
+CommandID: 1
+
+STP/0: Not available for STP/0
 
 This event is sent when the client connects and provides with enough
 information to determine available services and their features.
@@ -121,53 +165,80 @@ it would do::
   else:
     print "We do not support service version %d.%d" % (major, minor)
 
-Command: configure
-^^^^^^^^^^^^^^^^^^
+Event: OnQuit
+^^^^^^^^^^^^^
 
-This commands allows the client to configure their global preferences
-and must be sent before any services are enabled, after they are enabled
-this command cannot be used.
+CommandID: 2
 
-The command is defined as::
+STP/0: *hostquit
 
-  CONFIGURE    ::= FORMAT-PREFS LF
-  FORMAT-PREFS ::= "format:" FORMAT
-  FORMAT       ::= "protocol-buffer" | "json" | "xml"
+This event is sent by Opera to the proxy or client when Opera terminates
+operation. No communication with Opera is possible once Opera has sent the
+event. When the proxy receives this message it broadcasts it to all its
+clients.
 
-FORMAT-PREFS specifies which format the client accepts in responses/events.
-For instance a client might prefer JSON structures over XML.
+There is no data in this event.
 
-Command: enable
+Event: OnConnectionLost
+^^^^^^^^^^^^^^^^^^^^^^^
+
+CommandID: 3
+
+STP/0: Not available for STP/0
+
+A special event which is by the proxy (and not the host) when the connection
+to the Opera host is unexpectedly lost, for instance if the Opera host crashes.
+
+There is no data in this event.
+
+Command: Enable
 ^^^^^^^^^^^^^^^
 
-This is used to enable one service.
+CommandID: 5
+
+STP/0: *enable <service>
+
+This is used to enable one service in the host. Note however that the proxy
+behaves differently when STP/0 is in use, then it expects a list of services
+separated by comma. The proxy will then send each service as separate *enable
+call to the host.
+
+Note: The internal "scope" service cannot be enabled since it is always enabled.
 
 It is defined as::
 
-  ENABLE ::= SERVICENAME
+  ENABLE       ::= SERVICENAME
 
-If the service was enable "scope" will respond with a message containing information
-on the enabled service.
-For now it only contains a list of commands, this list is used to map the name of
-the command the the command ID, ie. the first command will have command ID equal to 0,
-the next one will be 1 and so on.
+It will enable the service and report back the result.
 
 The response is defined as::
 
-  ENABLE-RESPONSE ::= "commands:" SP* COMMAND-LIST LF
-  COMMAND-LIST    ::= COMMAND ("," COMMAND)*
+  ENABLE-RESPONSE ::= SERVICENAME
 
-If the service is not found it will return the message with status set
-to "Service Not Found" (6).
+If the service is not found it will return with status "Service Not Found" (6).
+If the service could not be enabled it will return with status
+"Service Not Enabled" (8).
+If the client tries to enable the "scope" service it will return with status
+"Bad Request" (3).
+If the client tries to enable a service before the Configure command has been
+used it will return with status "Bad Request" (3).
 
-Command: disable
+Command: Disable
 ^^^^^^^^^^^^^^^^
 
-This is used to disable one service.
+CommandID: 6
+
+STP/0: *disable <service>
+
+This is used to disable a clients access to one service. If the service
+has other clients connected the service will stay enabled.
+Once the client has been removed the from the service it will no longer
+receive events from it and will be unable to send commands to it.
+The internal "scope" service cannot be disabled since it is always enabled.
 
 It is defined as::
 
-  DISABLE ::= SERVICENAME
+  DISABLE      ::= SERVICENAME
 
 The response is a message containing the disabled service.
 
@@ -175,31 +246,83 @@ It is defined as::
 
   DISABLE-RESPONSE ::= SERVICENAME
 
-If the service is not yet enabled it will return the message with status set
-to "Service Not Enabled" (8).
+
+If the service is not found it will return with status "Service Not Found" (6).
+If the service is not yet enabled it will return with status
+"Service Not Enabled" (8).
+If the client tries to disable the "scope" service it will return with status
+"Bad Request" (3).
+
+Command: Configure
+^^^^^^^^^^^^^^^^^^
+
+CommandID: 7
+
+STP/0: Not available for STP/0
+
+This commands allows the client to configure their global preferences
+and must be sent before any services are enabled, after they are enabled
+this command cannot be used.
+If the client tries to enable a service before configuring the default
+format the command will fail.
+
+The command is defined as::
+
+  CONFIGURE    ::= "format:" FORMAT LF
+  FORMAT       ::= "protocol-buffer" | "json" | "xml"
+
+FORMAT specifies which format the client accepts in events.
+For instance a client might prefer JSON structures over XML.
+
+Note: When the STP/0 compatibility layer is in use only JSON and XML is
+      allowed as default format.
+
+The response contains no data.
+
+If the requested format is not allowed or does not exist it will respond
+with status "Bad Request" (3).
+
+Command: Info
+^^^^^^^^^^^^^
+
+CommandID: 8
+
+STP/0: Not available for STP/0
+
+This is used to get information about one specific service.
+
+It is defined as::
+
+  INFO ::= SERVICENAME
+
+The command list contains all the commands in the service, each command is
+listed with its name and the corresponding command ID (used by STP/1).
+The event list is similar to the command list but is listed for the available
+events.
+
+The response is defined as::
+
+  INFO-RESPONSE ::= "commands:" COMMAND-LIST LF
+                    "events:"   COMMAND-LIST LF
+  COMMAND-LIST  ::= COMMAND ("," COMMAND)*
+  COMMAND       ::= IDENTIFIER "=" NUMBER
+
 If the service is not found it will return the message with status set
 to "Service Not Found" (6).
 
-Command: quit
+Command: Quit
 ^^^^^^^^^^^^^
 
-The quit message is sent to Opera when the proxy terminates operation. No
-communication with the proxy will be possible once it has sent the quit
+CommandID: 9
+
+STP/0: *quit
+
+The quit message is sent to Opera when the proxy or client terminates operation.
+No communication with the proxy will be possible once it has sent the quit
 message. When Opera receives this message it should disable all debugging
 services that are currently enabled. 
 
-The quit message is also sent by Opera to the proxy when Opera terminates
-operation. No communication with Opera is possible once Opera has sent the
-quit message. When the proxy receives this message it broadcasts hostquit
-to all its clients. 
-
-The message does not consists of any data.
-
-Event: hostquit
-^^^^^^^^^^^^^^^
-
-Sent by the proxy to all clients when it receives the quit command from
-the host.
+There is no data in this command and it will not result in a response.
 
 Existing clients
 ================
