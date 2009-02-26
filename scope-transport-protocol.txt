@@ -686,8 +686,8 @@ core version after the prefix. This core version can be used to determine
 the structure of the messages and how the services will act.
 It is defined as::
 
-  META-CORE ::= "core-" VERSION
-  VERSION   ::= DIGIT+ ("." DIGIT+)*
+  META-CORE    ::= "core-" DASH-VERSION
+  DASH-VERSION ::= DIGIT+ ("-" DIGIT+)*
 
 Proxy version is determined by the "proxy-" meta service and contains the
 proxy version after the prefix. This can be used to determine the capabilities
