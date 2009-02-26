@@ -2,6 +2,7 @@ Host Spotlight UI Spec
 ***********************
 
 see also spotlight-objects spec for term definitions
+see also screenshots http://kaleidoscope.vlab.osa/~chrisk/screenshots-spotlight/
 
 Types of spotlight
 
