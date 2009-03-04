@@ -130,9 +130,21 @@ object_info = Message("ObjectList",
                       fields=[Field(Proto.Message, "objects", 1, q=Quantifier.Repeated, message=object_data)
                              ])
 
+spotlight_box = Message("SpotlightBox", is_global=False, doc="Color is encoded as RGBA with 8 bits for each channel.",
+                        fields=[Field(Proto.Uint32, "boxType",    1, doc="Valid values:\n  0: dimension\n  1: padding\n  2: border\n  3: margin")
+                               ,Field(Proto.Uint32, "fillColor",  2, q=Quantifier.Optional)
+                               ,Field(Proto.Uint32, "frameColor", 3, q=Quantifier.Optional, doc="Drawn with 1px width inside the box")
+                               ,Field(Proto.Uint32, "gridColor",  4, q=Quantifier.Optional, doc="Drawn with 1px width inside the box over the whole document")
+                               ]) 
+
+spotlight_object = Message("SpotlightObject", doc="The drawing order is box, reference-box-frame, box-frame, grid.",
+                              fields=[Field(Proto.Uint32,  "objectID",       1)
+                                     ,Field(Proto.Bool,    "scrollIntoView", 2, doc="Chooses whether the given object should be scrolled into view or not.")
+                                     ,Field(Proto.Message, "boxes",          3, q=Quantifier.Repeated, message=spotlight_box)
+                                     ]) 
+
 spotlight_selection = Message("SpotlightSelection",
-                              fields=[Field(Proto.Uint32, "objectID",       1)
-                                     ,Field(Proto.Bool,   "scrollIntoView", 2, q=Quantifier.Optional, default=False)
+                              fields=[Field(Proto.Message, "spotlightObjects", 1, q=Quantifier.Repeated, message=spotlight_object)
                                      ]) 
 
 breakpoint_pos = Message("BreakpointPosition", # TODO: Perhaps it is better to create one Command per break-type?
@@ -344,7 +356,7 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
                                ,Request(3,  "Eval",                eval_data,           eval_result, async=True)
                                ,Request(4,  "ExamineObjects",      examine_list,        object_info)
-                               ,Request(5,  "SpotlightObject",     spotlight_selection, False)
+                               ,Request(5,  "SpotlightObjects",    spotlight_selection, False)
                                ,Request(6,  "AddBreakpoint",       breakpoint_pos,      False)
                                ,Request(7,  "RemoveBreakpoint",    breakpoint_id,       False)
                                ,Request(8,  "AddEventHandler",     event_handler,       False)
