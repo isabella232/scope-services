@@ -68,7 +68,6 @@ Commands:
   ================= =========
   Name              CommandID
   ================= =========
-  Handshake         4
   Enable            5
   Disable           6
   Configure         7
@@ -82,7 +81,7 @@ Events:
   Name              CommandID
   ================= =========
   OnServices        0
-  OnConnect         1 # OnHello
+  OnConnect         1
   OnQuit            2
   OnConnectionLost  3
   ================= =========
@@ -97,28 +96,8 @@ STP/0: *services <service-list>
 This event is the first that is sent from the host (and proxy) and contains
 all the available services. It is always sent encoded as an STP/0 message.
 
-Command: Handshake
-^^^^^^^^^^^^^^^^^^
-
-CommandID: 4
-
-STP/0: *handshake <ver>
-
-This command is initiated by the client to choose the STP version to use
-for all communication. Once the response is received the communication can
-switch to the chosen version.
-This command is always encoded as an STP/0 message.
-
-It is defined as::
-
-  HANDSHAKE          ::= STP-VERSION
-
-The response is defined as::
-
-  HANDSHAKE-RESPONSE ::= STP-VERSION
-
-Event: OnHello
-^^^^^^^^^^^^^^
+Event: OnConnect
+^^^^^^^^^^^^^^^^
 
 CommandID: 1
 

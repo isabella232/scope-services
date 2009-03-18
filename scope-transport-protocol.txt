@@ -448,13 +448,19 @@ The handshake allows the client to configure the required STP version
 before any messages are sent. The client must decide on the desired STP
 version, chosen among the available versions in the SERVICES entry.
 
-The client will then send a request that looks like::
+The client will then send an "*enable" request with the specific
+stp service::
 
-  HANDSHAKE ::= "*hello" SP "STP/" VER
-  VER       ::= "0" | "1"
+  HANDSHAKE-REQ ::= "*enable" SP "stp-" VER
+  VER           ::= "1"
+  HANDSHAKE     ::= "STP/1"
 
-The encoding of the handshake is in the same manner as the *services
-entry, ie. UTF-16-BE with a SIZE prefix.
+The handshake request is encoded as an STP/0 message while the response
+is sent as plain US-ASCII.
+For now there is only one version to enable, ie. STP/1.
+
+Once the handshake is sent the client must swith to the specific STP
+version and parse messages in the new format.
 
 SERVICE
 -------
@@ -622,13 +628,13 @@ and host, the following symbols are used::
   =========> Event
 
 The client must then initiate the handshake which also determines the STP
-version to use, for instance like this::
+version to use, for instance to enable STP version 1::
 
               Host               client
   
-  *services     ~~~~~~~~~~~~~~~~~>
-                <~~~~~~~~~~~~~~~~~  *hello STP/1
-  *hello STP/1  ~ ~ ~ ~ ~ ~ ~ ~ ~>
+  *services     =================>
+                <~~~~~~~~~~~~~~~~~  *enable stp-1
+  STP/1         ~ ~ ~ ~ ~ ~ ~ ~ ~>
 
 A typical message flow between a client, proxy and host looks like this::
 
