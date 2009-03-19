@@ -453,7 +453,7 @@ stp service::
 
   HANDSHAKE-REQ ::= "*enable" SP "stp-" VER
   VER           ::= "1"
-  HANDSHAKE     ::= "STP/1"
+  HANDSHAKE     ::= "STP/1" LF
 
 The handshake request is encoded as an STP/0 message while the response
 is sent as plain US-ASCII.
@@ -634,7 +634,7 @@ version to use, for instance to enable STP version 1::
   
   *services     =================>
                 <~~~~~~~~~~~~~~~~~  *enable stp-1
-  STP/1         ~ ~ ~ ~ ~ ~ ~ ~ ~>
+  STP/1\n       ~ ~ ~ ~ ~ ~ ~ ~ ~>
 
 A typical message flow between a client, proxy and host looks like this::
 
