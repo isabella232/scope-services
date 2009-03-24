@@ -286,7 +286,7 @@ Transport layer
 ---------------
 
 The transport layer will support both the new protocol (STP/1) and the old
-(STP/1). If not all nodes on the transport layer can speak the new protocol
+(STP/0). If not all nodes on the transport layer can speak the new protocol
 it will fallback to STP/0 and use a special compatibility layer to ensure
 that messages still can be transported correctly.
 
@@ -330,9 +330,9 @@ For instance a request might look like::
     ...
   </get-window-list>
 
-If an error occured it could look like::
+If an error occured the response would look like::
 
-  <get-window-list status="1">
+  <get-window-list-response status="1">
     <tag>5</tag>
     ...
   </get-window-list>
