@@ -147,6 +147,11 @@ spotlight_selection = Message("SpotlightSelection",
                               fields=[Field(Proto.Message, "spotlightObjects", 1, q=Quantifier.Repeated, message=spotlight_object)
                                      ]) 
 
+spotlight_object_selection = Message("SpotlightObjectSelection",
+                                     fields=[Field(Proto.Uint32, "objectID",       1)
+                                            ,Field(Proto.Bool,   "scrollIntoView", 2, doc="Chooses whether the given object should be scrolled into view or not.")
+                                            ]) 
+
 breakpoint_pos = Message("BreakpointPosition", # TODO: Perhaps it is better to create one Command per break-type?
                          fields=[Field(Proto.Uint32, "breakpointID", 1)
                                 ,Field(Proto.String, "type",         2) # TODO: enum, "line", "function", "event"
@@ -369,7 +374,8 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
                                ,Request(3,  "Eval",                eval_data,           eval_result, async=True)
                                ,Request(4,  "ExamineObjects",      examine_list,        object_info)
-                               ,Request(5,  "SpotlightObjects",    spotlight_selection, False)
+                               ,Request(5,  "SpotlightObject",     spotlight_object_selection, False)
+                               ,Request(27, "SpotlightObjects",    spotlight_selection, False)
                                ,Request(6,  "AddBreakpoint",       breakpoint_pos,      False)
                                ,Request(7,  "RemoveBreakpoint",    breakpoint_id,       False)
                                ,Request(8,  "AddEventHandler",     event_handler,       False)
