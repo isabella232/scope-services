@@ -11,7 +11,7 @@ scope = Service(
     commands=[
         Event(0,  "OnServices",  scope_message),
         Event(1,  "OnConnect",  scope_message),
-        Event(2,  "COnQuit",  scope_message),
+        Event(2,  "OnQuit",  scope_message),
         Event(3,  "OnConnectionLost",  scope_message),
         Request(4,  "Enable",       scope_message,      scope_message),
         Request(5,  "Disable",       scope_message,      scope_message),

@@ -208,9 +208,22 @@ backtrace_frames = Message("BacktraceFrameList",
                            fields=[Field(Proto.Message, "frames", 1, q=Quantifier.Repeated, message=backtrace_frame)
                                   ])
 
-dom_traversal = Message("DomTraversal",
+dom_traversal = Message("DomTraversal", 
                         fields=[Field(Proto.Uint32,  "objectID",  1)
-                               ,Field(Proto.String,  "traversal", 2) # TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
+                               ,Field(Proto.String,  "traversal", 2, doc = """\
+traversal on off:  
+- parent-node-chain-with-children
+    take the parent node chain for the target node.
+    add for each node in that chain all children, 
+    and for all children there first child,
+    if that is a text node and the only node, 
+    starting with the document node.
+- children
+    get node data for all children in their flow
+- node
+    get node data for that node
+- subtree
+    get node data for the subtree in the flow of it""") # TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
                                ])
 
 attribute = Message("Attribute", is_global=False,
