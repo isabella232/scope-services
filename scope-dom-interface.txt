@@ -59,7 +59,7 @@ was chosen it would contain "stp-0-json".
 
 The signature of the callback is::
 
-  connected(services: array)
+  connected(services: string)
   
 The `receive` callback exists in two version, one for `STP/0` where only
 the service name and message payload is known.
