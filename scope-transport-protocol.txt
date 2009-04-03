@@ -3,8 +3,8 @@
 =============================
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
-:Version: 0.8
-:Date:    11th February 2009
+:Version: 0.9
+:Date:    3rd April 2009
 
 Changelog
 =========
@@ -25,6 +25,9 @@ Changelog
 0.7 Minor changes to status, client id and version numbers
 0.8 Cleaned up document to make it match the implementation and
     added information on the handshake phase.
+0.9 Moved most of the logic away from the proxies and into the host.
+    Changed STP message to be defined as a proto message which allows
+    for more flexibility, it also has a new prefix.
 === =================================================================
 
 EBNF
@@ -33,6 +36,7 @@ EBNF
 The following common EBNF entries are defined::
 
   PB-UINT32      ::= <32bit unsigned encoded as Protocol Buffer varint>
+  PB-UINT64      ::= <64bit unsigned encoded as Protocol Buffer varint>
   PB-ZERO-UINT32 ::= <0 encoded as Protocol Buffer varint>
   DIGIT          ::= "0"-"9"
 
@@ -297,6 +301,8 @@ are unique to STP/1, when decoding the reverse is applied to make the real
 payload appear as it was originally. Encoding of message will also change
 to UTF-16-BE to be compatible with STP/0.
 
+TODO: Figure out we should a common header or not.
+
 For JSON the real payload is wrapped in a new list and looks like::
 
   [<command-name>, <tag>, <status>, <payload>]
@@ -352,17 +358,16 @@ Proxy
 The proxy will also support both protocol versions, the version that will
 be used is determined by the client, unless the host is running core-2.3 or
 lower in which case all communication is done using STP/0.
-To ensure that old proxies are detected the proxy will also report the proxy
-version number to any connecting clients using a meta service. The version
-number of the new proxy will be "2.0".
 
 Client detection and handshake is handled in the same manner as the host.
-The proxy will also ensure that once the STP version is determined it will
-not allow clients that tries to communicate in a different version.
+The proxy will also ensure that only one client is allowed to connect until
+the STP version is determined. After the version is set additional client
+connections are allowed but they will be forced to follow the STP version
+in use or disconnect.
 
-The HTTP API as it is today will be removed from the external proxy.
-A new API will be made using a totally separate implementation, a spec
-will be made to describe the new API.
+The HTTP API as it is today will be removed from the external proxy as it
+is only used for internal development of Dragonfly. A separate implementation
+will be made for development purposes only.
 
 Client
 ------
@@ -400,32 +405,27 @@ this would mean case #1 and #2 as described in the section Client_.
 STP/1
 =====
 
-The new transport message is defined as::
+The new transport layer is defined as::
 
   CONNECTION     ::= SERVICES HANDSHAKE MESSAGES
   MESSAGES       ::= MESSAGE*
-  MESSAGE        ::= MESSAGE-HEADER MESSAGE-BODY
-  MESSAGE-HEADER ::= SERVICE
-                     COMMAND
-                     TYPE-FIELD
-                     CID-FIELD
-                     TAG
-  # The uint32 is the index value of the services list
-  # Service index #0 is reserved for the internal "scope" service.
-  SERVICE        ::= PB-UINT32
-  # The uint32 is the value of the command (in the given service).
-  COMMAND        ::= PB-UINT32
-  TYPE-FIELD     ::= PB-UINT32
-  CID-FIELD      ::= PB-UINT32
-  TAG            ::= PB-UINT32
-  MESSAGE-BODY   ::= CHUNKED-BODY
 
-Each message is encoded using Protocol Buffer binary encoding.
-The result is that the overhead of each message overhead is
-kept to a minimum, the smallest overhead is 5 bytes (excludes
-chunked data overhead) and the largest is 21 bytes (excludes
-chunked data overhead). The average will be most likely be
-around 5 to 12 bytes.
+This shows that the original STP/0 service list SERVICES is the first
+entry to be sent. Next after comes a handshake which results in the handshake
+response `HANDSHAKE` followed by the actual transport messages.
+
+The outer layer of the transport message is defined as::
+
+  MESSAGE        ::= "STP" STP-VER STP-SIZE STP-DATA
+  STP-VER        ::= \x00 | \x01 # STP version in binary (1 byte)
+  STP-SIZE       ::= PB-UINT64
+  STP-DATA       ::= STP-SIZE(OCTET)
+
+This allows for multiple versions of a message to be sent, each message is
+uniquely identified by the string "STP" followed by a version number. The
+size of the entire message is followed by the data of the message, this
+allows any decoder to check the version and skip data that it does not
+understand. The decoding of STP-DATA depends on the version.
 
 SERVICES
 --------
@@ -439,7 +439,6 @@ clients::
   SERVICE-LIST ::= SERVICE-NAME { "," SERVICE }
   SERVICE-NAME ::= <any character except comma>
   SIZE         ::= DIGIT+
-
 
 HANDSHAKE
 ---------
@@ -462,41 +461,114 @@ For now there is only one version to enable, ie. STP/1.
 Once the handshake is sent the client must swith to the specific STP
 version and parse messages in the new format.
 
-SERVICE
+STP1-DATA
+---------
+
+For STP/1 messages STP-DATA is defined as::
+
+  STP1-DATA      ::= STP1-TYPE MESSAGE-HEADER
+  STP1-TYPE      ::= PB-UINT32 # 1 = command, 2 = response, 3 = event, 4 = error
+  MESSAGE-HEADER ::= HEADER-SIZE HEADERS
+  HEADER-SIZE    ::= PB-UINT32
+  HEADERS        ::= PB-MESSAGE
+
+HEADERS is a PB encoded message containing all the remaining fields for the
+header. Any decoder must ignore fields it does not understand, proxies must
+also ensure these fields are transported to the client/host.
+
+The headers are defined using a Protocol Buffer message::
+
+    message TransportMessage
+    {
+      required string service = 1;
+      required uint32 commandID = 2;
+      required uint32 format = 3;
+      optional uint32 status = 4;
+      optional uint32 tag = 5;
+      optional uint32 clientID = 6;
+      optional string uuid = 7;
+      required binary payload = 8;
+    }
+
+Some of the fields are optional and will be present depending on the type of
+STP message, for commands the message will be::
+
+    message Command
+    {
+      required string service = 1;
+      required uint32 commandID = 2;
+      required uint32 format = 3;
+      optional uint32 tag = 5;
+      required binary payload = 8;
+
+      // either clientID or uuid must be sent
+      optional uint32 clientID = 6;
+      optional string uuid = 7;
+    }
+
+For responses the message is defined as::
+
+    message Response
+    {
+      required string service = 1;
+      required uint32 commandID = 2;
+      required uint32 format = 3;
+      optional uint32 tag = 5;
+      required binary payload = 8;
+
+      // either clientID or uuid must be sent
+      optional uint32 clientID = 6;
+      optional string uuid = 7;
+    }
+
+For events it looks like::
+
+    message Event
+    {
+      required string service = 1;
+      required uint32 commandID = 2;
+      required uint32 format = 3;
+      required binary payload = 8;
+
+      // Events can only be sent to clients that has received a clientID value
+      optional uint32 clientID = 6;
+    }
+
+For errors the message contains::
+
+    message Error
+    {
+      required string service = 1;
+      required uint32 commandID = 2;
+      required uint32 format = 3;
+      optional uint32 status = 4;
+      optional uint32 tag = 5;
+      required binary payload = 8;
+
+      // either clientID or uuid must be sent
+      optional uint32 clientID = 6;
+      optional string uuid = 7;
+    }
+
+service
 -------
 
-SERVICE is sent as a number in the range 0 to 2^32-1 and represents the index
-of the service in the initial "hello" message. The value 0 is reserved for the
-internal "scope" service, this means you can communicate with this service even
-if you don't have the full list.
+The field `service` is the name of the service on the host as reported in
+the initial `\*services` message.
 
-COMMAND
--------
+commandID
+---------
 
-COMMAND value is a number in the range 0 to 2^32-1 and corresponds to a given
-command in the specific service. The command value is unique in the specific
-service only and is guaranteed to stay the same for all future releases.
+The field `commandID` is a number in the range 0 to 2^32-1 and corresponds to a
+given command in the specific service. The command value is unique in the
+specific service only and is guaranteed to stay the same for all future releases.
 
-TYPE-FIELD
-----------
-
-TYPE-FIELD is a bitfield consisting of the type and status::
-
-  TYPE-FIELD
-  {
-    STATUS   uint32 : 5;
-    TYPE     uint32 : 2; # 2 bits for TYPE_
-  }
-
-This ensures it is not longer than 7 bits and can be
-encoded as 1 byte with varint.
-
-STATUS
+status
 ------
 
-The STATUS value is used to send back information to the client when errors
-occurs. The default of 0 means that there was no problems, and is also the
-same value sent by the clients to the host.
+The field `status` is used to send back information to the client when errors
+occurs. This field is optional and is only sent when the STP1-TYPE is an
+error message.
 
 ==== ==========================
 Code Description
@@ -513,12 +585,13 @@ Code Description
 9    Service Already Enabled
 ==== ==========================
 
-TYPE
-----
+TODO: Add more error codes as needed.
 
-The TYPE value is used to identifiy the format of the message
-body, this also determines the encoding used on the message
-body.
+format
+------
+
+The field `format` is used to identifiy the format of the message body, this
+also determines the encoding used on the message body.
 
 =====  =====================  ========
 Code   Description            Encoding
@@ -526,48 +599,41 @@ Code   Description            Encoding
 0      Protocol Buffer (UMS)  OCTET
 1      JSON structures (UMS)  UTF-8
 2      XML structures (UMS)   UTF-8
-3      Internal "scope"       UTF-8
 =====  =====================  ========
 
-CID-FIELD
----------
+clientID
+--------
 
-CID-FIELD is a bitfield (32 bit) containing the client IDs (CID) which
-will receive the message. Each bit represents a client and the ones which
-are to receive the message will have the bit set to 1. If there are no client
-bits set, in other words the entire field is 0, then the message is sent to
-all clients. In practice the bitfield will have multiple bits set only for
-events which are to be sent to multiple clients, for responses to a previous
-request only the bit for the corresponding client will be present.
+The field `clientID` is used to represent a client using a numerical ID.
+This ID will be valid for one connection and must be reattained when a new
+connection is achieved. See also the `uuid` field.
 
-On the host side the bitfield is used as one unique client ID (CID), if more
-bits are set it will deny the request. The CID ensures there are no crashes
-with tag values between multiple clients accessing the same service. This
-means that the same TAG_ can be used by two clients connected to the same
-service as long as both have a different CID.
-This header is not needed when connecting to the Opera host directly since
-only one client is possible. However when connecting to the proxy, it will
-take care of assigning a unique ID to each client connection and add the CID
-header to all requests going to the Opera host. If the Opera host receives a
-request with a given CID it will respond with the same value.
-Events and responses going from the host to the proxy will be forwarded the
-corresponding clients according to the bitfield, the bitfield will not be
-modified.
+This field will be filled in by the client when it sends commands to the host,
+and will be present in the responses and errors.
 
-For instance if a bitfield with the value %110 is received the proxy will
-transmit the message to client 2 (%010) and client 3 (%100), both will
-receive %110 in the bitfield.
+uuid
+----
 
-In practice any client connecting to the proxy does not have to care about the
-CID, it can be read from the first message it receives from the proxy but it
-serves no specific purpose other than for debugging.
+The field `uuid` represents a Universal Unique ID which globally identifies a
+given client. This field will only be used when the client does not yet have
+a `clientID`, which means the initial connection to the host.
+The client must fill in a unique string which represents the client, the host
+will then use this string in any responses going to the client.
 
-TAG
+It is recommended that the client generates an MD5 or SHA1 based upon a random
+value and the current date. This will then even allow running the same client
+multiple times.
+
+For instance the client could send a string like this::
+
+  "md5:d41d8cd98f00b204e9800998ecf8427e"
+
+tag
 ---
 
-TAG represent a synchronization value which is sent by the client to bind the
-request to a response from the host. A value of 0 means there is no
-synchronization involved and is used for events.
+The field `tag` represent a synchronization value which is sent by the client to
+bind the request to a response from the host. This field is only used when a
+previous tag was sent from the client, so any events will not have this field.
 
 The tag system will be part of the protocol API and provides a standardized
 way of doing synchronization. The tag value can be read without knowledge of
@@ -579,26 +645,13 @@ TAG is an unsigned integer in the range 1 to 2^31-1 and does not interfere
 with tags used by other clients. The client is free to reuse the Tag value as
 long as there is no current open requests using it.
 
-Tag values are only needed for requests/responses, if a service sends out an
-event the Tag header is set to 0.
+payload
+-------
 
-CHUNKED-BODY
-------------
-
-Identifying the length/end of the message will no longer be done using
-a Count value at the beginning. Instead the message body will be sent using
-chunked encoding, that means sending over multiple chunks where each chunk
-is preceded by a chunk size.
-
-Chunked encoding will only be used for the message body.
-
-The structure is::
-
-  CHUNKED-BODY ::= CHUNK* LAST-CHUNK
-  CHUNK        ::= CHUNK-SIZE CHUNK-DATA
-  LAST-CHUNK   ::= PB-ZERO-UINT32
-  CHUNK-SIZE   ::= PB-UINT32
-  CHUNK-DATA   ::= CHUNK-SIZE(OCTET)
+The body (or payload) of the message depends on the `format` field but is always
+sent in the `payload` field. This means that the payload can only be decoded
+once the `format` has been found, otherwise it must be treated as pure binary
+data.
 
 Message flow
 ============
@@ -613,10 +666,10 @@ When the client connects to a host or proxy it will receive a list of services.
 Some of these services are meta-services and is used to determine capabilities
 such as possible STP versions. For instance the host might send back::
 
-  *services scope,ecmascript-debugger,window-manager,m-stp-1,core-2.4
+  *services scope,ecmascript-debugger,window-manager,stp-1,core-2-4
 
-This reports back on the STP version available through the service "m-stp-1".
-It also reports the core version in use, in this case core-2.4 ("core-2.4").
+This reports back on the STP version available through the service "stp-1".
+It also reports the core version in use, in this case core-2.4 ("core-2-4").
 
 Following is a set of examples of the message flow between a client, proxy
 and host, the following symbols are used::
@@ -635,18 +688,18 @@ version to use, for instance to enable STP version 1::
   *services     =================>
                 <~~~~~~~~~~~~~~~~~  *enable stp-1
   STP/1\n       ~ ~ ~ ~ ~ ~ ~ ~ ~>
+                <~~~~~~~~~~~~~~~~~  scope.Connect
+  scope.Connect ~ ~ ~ ~ ~ ~ ~ ~ ~>
 
 A typical message flow between a client, proxy and host looks like this::
 
               Opera               proxy                 client
   
   handshake       <~~~~~~~~~~~~~~~~     ~ ~ ~ ~ ~ ~ ~ ~ ~>  handshake
-  scope.OnConnect ================>
-                                        =================>  scope.OnConnect
-                                        <-----------------  scope.Configure
-  scope.Configure <----------------
+                                        <-----------------  scope.Connect
+  scope.Connect   <----------------
                   - - - - - - - - >
-                                        - - - - - - - - ->  scope.Configure
+                                        - - - - - - - - ->  scope.Connect
                                         <-----------------  scope.Enable
   scope.Enable    <----------------
                   - - - - - - - - >
@@ -655,13 +708,16 @@ A typical message flow between a client, proxy and host looks like this::
   messages        <-------------------  - - - - - - - - ->  messages
   events          =======================================>
                                     ....
-                                        <-----------------  scope.Quit
-  scope.Disable   <----------------
+                                        <-----------------  scope.Disconnect
+  scope.Disconnect<----------------
                   - - - - - - - - >
-                                        - - - - - - - - ->  scope.Disable
-  scope.Quit      <----------------
-  scope.OnQuit    ================>
-                                        =================>  scope.OnQuit
+                                        - - - - - - - - ->  scope.Disconnect
+
+If the client disconnects the socket without telling the host/proxy then
+proxy will disconnect all clients on the given socket connection, for instance::
+
+  scope.Disconnect <----------------  scope.Disconnect
+                   - - - - - - - - >
 
 An STP/0 client will initiate the message flow as described in
 `Scope Transport Protocol`_.
@@ -677,15 +733,26 @@ means that matching of meta services must be done on the prefix only.
 
 The following meta services are defined:
 
-STP versions is determined by the "stp-" meta service and contains a
-semi-colon delimited list of available versions of the transport protocol for
-the client to choose from. The client must choose one of them and send the
-information in the handshake, if another client to an existing connection the
-version list will be reduced to one value which is the current STP version in
-use. It is defined as::
+STP versions is determined by the "stp-" meta service. The host will send
+meta-service per version it supports, this means that the client must choose
+among the reported versions and use that. If there is only one STP version
+sent then it means that another client has already decided which version to
+use, the new client must then either start using the selected version or
+disconnect if it does not support it.
 
-  META-STP ::= "stp-" NUMBER { ";" NUMBER }
+The service is defined as::
+
+  META-STP ::= "stp-" NUMBER
   NUMBER   ::= DIGIT+
+
+In addition the host will also report the STP/0 version using a special suffix
+to specify the format for the compatibility messages. The host will report::
+
+  stp-0-json,stp-0-xml
+
+`stp-0-json` means that the body is formatted using JSON but the entire message
+is sent over STP/0 using the compatibility layer. `stp-0-xml` is the same but
+the format is XML.
 
 Core version is determined by the "core-" meta service and contains the
 core version after the prefix. This core version can be used to determine
@@ -694,11 +761,3 @@ It is defined as::
 
   META-CORE    ::= "core-" DASH-VERSION
   DASH-VERSION ::= DIGIT+ ("-" DIGIT+)*
-
-Proxy version is determined by the "proxy-" meta service and contains the
-proxy version after the prefix. This can be used to determine the capabilities
-of the proxy and whether it understand STP/1 or not.
-It is defined as::
-
-  META-PROXY ::= "proxy-" VERSION
-  VERSION   ::= DIGIT+ ("." DIGIT+)*
