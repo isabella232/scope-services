@@ -541,7 +541,6 @@ For errors the message contains::
       required uint32 format = 3;
       optional uint32 status = 4;
       optional uint32 tag = 5;
-      required binary payload = 8;
 
       // either clientID or uuid must be sent
       optional uint32 clientID = 6;
