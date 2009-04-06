@@ -466,10 +466,8 @@ STP1-DATA
 
 For STP/1 messages STP-DATA is defined as::
 
-  STP1-DATA      ::= STP1-TYPE MESSAGE-HEADER
+  STP1-DATA      ::= STP1-TYPE HEADERS
   STP1-TYPE      ::= PB-UINT32 # 1 = command, 2 = response, 3 = event, 4 = error
-  MESSAGE-HEADER ::= HEADER-SIZE HEADERS
-  HEADER-SIZE    ::= PB-UINT32
   HEADERS        ::= PB-MESSAGE
 
 HEADERS is a PB encoded message containing all the remaining fields for the
