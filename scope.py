@@ -55,7 +55,7 @@ error_info = Message("ErrorInfo",
                             ])
 
 window_manager = Service("Scope", version="1.0", coreRelease="2.4",
-                         commands=[Request(3, "Connect",    client_info,       host_info, cpp_send_message=True)
+                         commands=[Request(3, "Connect",    client_info,       host_info)
                                   ,Request(4, "Disconnect", client_id,         False)
                                   ,Request(5, "Enable",     service_selection, False)
                                   ,Request(6, "Disable",    service_selection, False)
