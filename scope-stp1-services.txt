@@ -77,6 +77,7 @@ Commands:
   Disable           6
   Info              7
   Quit              8
+  Reset             10
   ================= =========
 
 Events:
@@ -359,6 +360,19 @@ services that are currently enabled.
 It is defined as::
 
   command Quit(Default) returns Default;
+
+Command: Reset
+^^^^^^^^^^^^^
+
+CommandID: 10
+
+This resets the state of the host without disconnecting the network connection.
+This means resetting the STP version in use, disabling all services and
+await a new handshake to be started by a client.
+
+It is defined as::
+
+  command Reset(Default) returns Default;
 
 Existing clients
 ================
