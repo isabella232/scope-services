@@ -231,7 +231,7 @@ CommandID: 4
 
 Disconnects the client by resetting any settings and disabling any services
 the client used. This command is primarily meant by proxies which must be
-sent if a sockect connection with an active client closes.
+sent if a socket connection with an active client closes.
 If the client is able to then it should send command itself.
 
 Note:
