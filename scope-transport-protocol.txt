@@ -508,7 +508,7 @@ The headers are defined using a Protocol Buffer message::
       optional uint32 tag = 5;
       optional uint32 clientID = 6;
       optional string uuid = 7;
-      required binary payload = 8;
+      required bytes payload = 8;
     }
 
 Some of the fields are optional and will be present depending on the type of
@@ -519,8 +519,8 @@ STP message, for commands the message will be::
       required string service = 1;
       required uint32 commandID = 2;
       required uint32 format = 3;
-      optional uint32 tag = 5;
-      required binary payload = 8;
+      required uint32 tag = 5;
+      required bytes  payload = 8;
 
       // either clientID or uuid must be sent
       optional uint32 clientID = 6;
@@ -534,8 +534,8 @@ For responses the message is defined as::
       required string service = 1;
       required uint32 commandID = 2;
       required uint32 format = 3;
-      optional uint32 tag = 5;
-      required binary payload = 8;
+      required uint32 tag = 5;
+      required bytes  payload = 8;
 
       // either clientID or uuid must be sent
       optional uint32 clientID = 6;
@@ -549,7 +549,7 @@ For events it looks like::
       required string service = 1;
       required uint32 commandID = 2;
       required uint32 format = 3;
-      required binary payload = 8;
+      required bytes  payload = 8;
 
       // Events can only be sent to clients that has received a clientID value
       optional uint32 clientID = 6;
