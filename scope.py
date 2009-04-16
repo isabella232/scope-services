@@ -61,6 +61,7 @@ window_manager = Service("Scope", version="1.0", coreRelease="2.4",
                                   ,Request(6, "Disable",    service_selection, False)
                                   ,Request(7, "Info",       service_selection, service_info)
                                   ,Request(8, "Quit",       False,             False)
+                                  ,Request(10, "Reset",     False,             False)
                                   ,Event(0, "OnServices",       service_list)
                                   ,Event(1, "OnQuit",           False)
                                   ,Event(2, "OnConnectionLost", False)
