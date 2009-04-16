@@ -417,15 +417,19 @@ response `HANDSHAKE` followed by the actual transport messages.
 The outer layer of the transport message is defined as::
 
   MESSAGE        ::= "STP" STP-VER STP-SIZE STP-DATA
-  STP-VER        ::= \x00 | \x01 # STP version in binary (1 byte)
+  STP-VER        ::= BYTE
   STP-SIZE       ::= PB-UINT64
-  STP-DATA       ::= STP-SIZE(OCTET)
+  STP-DATA       ::= STP-SIZE * BYTE
 
 This allows for multiple versions of a message to be sent, each message is
 uniquely identified by the string "STP" followed by a version number. The
 size of the entire message is followed by the data of the message, this
 allows any decoder to check the version and skip data that it does not
 understand. The decoding of STP-DATA depends on the version.
+
+An STP/1 message will then look like::
+
+  MESSAGE        ::= "STP" \x01 STP-SIZE STP1-DATA
 
 SERVICES
 --------
@@ -469,6 +473,25 @@ For STP/1 messages STP-DATA is defined as::
   STP1-DATA      ::= STP1-TYPE HEADERS
   STP1-TYPE      ::= PB-UINT32 # 1 = command, 2 = response, 3 = event, 4 = error
   HEADERS        ::= PB-MESSAGE
+
+STP1-TYPE represents which type of STP/1 message is found in the HEADERS
+which is represented by the protocol buffer message TransportMessage.
+The type tells one what fields one can expect in the HEADERS and maps to
+a specific protocol buffer message.
+
+The following types are defined:
+
+========= =============
+STP1-TYPE Proto message
+========= =============
+1         Command
+2         Response
+3         Event
+4         Error
+========= =============
+
+Other types can be added in the future so any unknown type should be ignored
+by clients and passed on by proxies.
 
 HEADERS is a PB encoded message containing all the remaining fields for the
 header. Any decoder must ignore fields it does not understand, proxies must
