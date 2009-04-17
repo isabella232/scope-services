@@ -6,6 +6,10 @@ client_info = Message("ClientInfo",
                               Field(Proto.String, "uuid", 2)
                              ])
 
+connection_info = Message("ConnectionInfo",
+                          fields=[Field(Proto.Uint32,  "clientID",  1)
+                                 ])
+
 service = Message("Service",
                   fields=[Field(Proto.String, "name",          1)
                          ,Field(Proto.String, "version",       2)
@@ -33,13 +37,12 @@ service_selection = Message("ServiceSelection",
                                    ])
 
 host_info = Message("HostInfo",
-                      fields=[Field(Proto.Uint32,  "clientID",        1)
-                             ,Field(Proto.Uint32,  "stpVersion",      2)
-                             ,Field(Proto.String,  "coreVersion",     3)
-                             ,Field(Proto.String,  "platform",        4)
-                             ,Field(Proto.String,  "operatingSystem", 5)
-                             ,Field(Proto.String,  "userAgent",       6)
-                             ,Field(Proto.Message, "services",        7, message=service, q=Quantifier.Repeated)
+                      fields=[Field(Proto.Uint32,  "stpVersion",      1)
+                             ,Field(Proto.String,  "coreVersion",     2)
+                             ,Field(Proto.String,  "platform",        3)
+                             ,Field(Proto.String,  "operatingSystem", 4)
+                             ,Field(Proto.String,  "userAgent",       5)
+                             ,Field(Proto.Message, "services",        6, message=service, q=Quantifier.Repeated)
                              ])
 
 client_id = Message("ClientID",
@@ -55,13 +58,14 @@ error_info = Message("ErrorInfo",
                             ])
 
 window_manager = Service("Scope", version="1.0", coreRelease="2.4",
-                         commands=[Request(3, "Connect",    client_info,       host_info)
+                         commands=[Request(3, "Connect",    client_info,       connection_info)
                                   ,Request(4, "Disconnect", client_id,         False)
                                   ,Request(5, "Enable",     service_selection, False)
                                   ,Request(6, "Disable",    service_selection, False)
                                   ,Request(7, "Info",       service_selection, service_info)
                                   ,Request(8, "Quit",       False,             False)
                                   ,Request(10, "Reset",     False,             False)
+                                  ,Request(11, "HostInfo",  False,             host_info)
                                   ,Event(0, "OnServices",       service_list)
                                   ,Event(1, "OnQuit",           False)
                                   ,Event(2, "OnConnectionLost", False)
