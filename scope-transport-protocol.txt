@@ -3,32 +3,34 @@
 =============================
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
-:Version: 0.9
-:Date:    3rd April 2009
+:Version: 0.10
+:Date:    22nd April 2009
 
 Changelog
 =========
 
-=== =================================================================
-0.1 Initial ideas
-0.2 Protocol supports backwards compatibility with old clients.
-0.3 Added overview of all protocols, formats and clients.
-    Simplified protocol due to relaxed compatibility requirements.
-    Changed header structure slightly.
-    Added more details on HTTP and Javascript clients.
-0.4 Fixed inconsistencies and mistakes in protocol and examples.
-    Details on existing * commands.
-0.5 Replaced `tag` in Javascript client with a callback.
-    Moved version checking in Javascript client to the `connect`
-    callback.
-0.6 Revised and simplified several aspects after discussions.
-0.7 Minor changes to status, client id and version numbers
-0.8 Cleaned up document to make it match the implementation and
-    added information on the handshake phase.
-0.9 Moved most of the logic away from the proxies and into the host.
-    Changed STP message to be defined as a proto message which allows
-    for more flexibility, it also has a new prefix.
-=== =================================================================
+===  =================================================================
+0.1  Initial ideas
+0.2  Protocol supports backwards compatibility with old clients.
+0.3  Added overview of all protocols, formats and clients.
+     Simplified protocol due to relaxed compatibility requirements.
+     Changed header structure slightly.
+     Added more details on HTTP and Javascript clients.
+0.4  Fixed inconsistencies and mistakes in protocol and examples.
+     Details on existing * commands.
+0.5  Replaced `tag` in Javascript client with a callback.
+     Moved version checking in Javascript client to the `connect`
+     callback.
+0.6  Revised and simplified several aspects after discussions.
+0.7  Minor changes to status, client id and version numbers
+0.8  Cleaned up document to make it match the implementation and
+     added information on the handshake phase.
+0.9  Moved most of the logic away from the proxies and into the host.
+     Changed STP message to be defined as a proto message which allows
+     for more flexibility, it also has a new prefix.
+0.10 Reworked the handshake part to allow different STP versions per
+     network connection.
+===  =================================================================
 
 EBNF
 ====
@@ -427,9 +429,17 @@ size of the entire message is followed by the data of the message, this
 allows any decoder to check the version and skip data that it does not
 understand. The decoding of STP-DATA depends on the version.
 
-An STP/1 message will then look like::
+An STP/1 message will look like::
 
   MESSAGE        ::= "STP" \x01 STP-SIZE STP1-DATA
+
+In addition it is now possible to pass STP/0 messages over the STP/1 protocol.
+This is done by setting the STP-VER to 0 and passing the STP/0 data after that.
+The fields COUNT and SEPARATOR found in STP/0 will be skipped as the size is
+already present in the STP/1 layer, this means we only transfer the KEYWORD
+and DATA. An STP/0 message wrapped in STP/1 will then look like::
+
+  MESSAGE        ::= "STP" \x00 STP-SIZE KEYWORD TERMINATOR DATA
 
 SERVICES
 --------
@@ -447,23 +457,30 @@ clients::
 HANDSHAKE
 ---------
 
-The handshake allows the client to configure the required STP version
-before any messages are sent. The client must decide on the desired STP
-version, chosen among the available versions in the SERVICES entry.
+The handshake is needed to agree on the STP version in use over a socket
+connection, typicall this is done between the host and the proxy as
+well as the proxy and the client. Each network connection can have a different
+STP version in use and any proxies will ensure that messages are routed according
+to the STP version.
+For instance if a client that only supports STP/0 connects to a host supporting
+STP/1 through a proxy, the proxy will take care of delivering STP/0 messages
+over the STP/1 transport layer.
 
-The client will then send an "*enable" request with the specific
-stp service::
+The side which receives the SERVICES message, aka network client, must choose
+a valid STP version from this list and initiate that.
+
+The network client will then send an "*enable" request with the specific
+stp service which is defined as::
 
   HANDSHAKE-REQ ::= "*enable" SP "stp-" VER
-  VER           ::= "1"
-  HANDSHAKE     ::= "STP/1" LF
+  VER           ::= "0" | "1"
+  HANDSHAKE     ::= "STP/" VER LF
 
-The handshake request is encoded as an STP/0 message while the response
-is sent as plain US-ASCII.
-For now there is only one version to enable, ie. STP/1.
+The handshake request is encoded in STP/0 while the response is sent as plain
+US-ASCII. For now there is only two versions to enable, STP/0 and STP/1.
 
-Once the handshake is sent the client must swith to the specific STP
-version and parse messages in the new format.
+Once the handshake is sent the network client and network host must switch to
+the specific STP version and parse and send messages in the specific format.
 
 STP1-DATA
 ---------
@@ -720,10 +737,6 @@ A typical message flow between a client, proxy and host looks like this::
   scope.Connect   <----------------
                   - - - - - - - - >
                                         - - - - - - - - ->  scope.Connect
-                                        <-----------------  scope.Enable
-  scope.Enable    <----------------
-                  - - - - - - - - >
-                                        - - - - - - - - ->  scope.Enable
 
   messages        <-------------------  - - - - - - - - ->  messages
   events          =======================================>
