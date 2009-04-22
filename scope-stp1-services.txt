@@ -4,7 +4,7 @@
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
 :Version: 0.3
-:Date:    3rd April 2009
+:Date:    22nd April 2009
 
 Changelog
 =========
@@ -77,7 +77,7 @@ Commands:
   Disable           6
   Info              7
   Quit              8
-  Reset             10
+  HostInfo          10
   ================= =========
 
 Events:
@@ -172,7 +172,7 @@ Note:
 
 The command is defined as::
 
-  command Connect(ClientInfo) returns HostInfo;
+  command Connect(ClientInfo) returns ConnectionInfo;
 
   message ClientInfo
   {
@@ -180,46 +180,13 @@ The command is defined as::
       required string uuid = 2; // Unique ID for the client
   }
 
-  message HostInfo
+  message ConnectionInfo
   {
       required uint32 clientID = 1;
-      required uint32 stpVersion = 2;
-      required string coreVersion = 3;
-      required string platform = 4;
-      required string operatingSystem = 5;
-      required string userAgent = 6;
-      repeated Service services = 7;
-  }
-  
-  message Service
-  {
-      required string name = 1;
-      required string version = 2;
-      required uint32 activeClients = 3;
-      required uint32 maxClients = 4;
   }
 
-The command responds with the new client ID as well as information on
-available services, version and other relevant information.
-
-The `version` field contains the major and minor version number of the service,
-the first number is the major version the second is the minor, any additional
-numbers/strings are not of relevance but can be shown to the end-user if wanted.
-
-The major version determines major changes (ie. compatibility breaks) while
-the minor version determines incremental changes (ie. backwards compatible).
-The client must check these two numbers to ensure it is able to communicate
-properly with the service, if the major version is different from the
-versions the client is compatible with or the minor version is less than
-the required version it must disconnect.
-
-Lets says a client supports version 1.6 and up and also version 2.0 and up,
-it would do::
-
-  if major == 1 and minor >= 6 or major == 2:
-    print "We support service version %d.%d" % (major, minor)
-  else:
-    print "We do not support service version %d.%d" % (major, minor)
+The command responds with the new client ID which is to be used by all
+subsequent commands. This client ID is also used when sending out events.
 
 If the requested format is not allowed or does not exist it will respond
 with status "Bad Request" (3).
@@ -361,18 +328,56 @@ It is defined as::
 
   command Quit(Default) returns Default;
 
-Command: Reset
-^^^^^^^^^^^^^
+Command: HostInfo
+-----------------
 
 CommandID: 10
 
-This resets the state of the host without disconnecting the network connection.
-This means resetting the STP version in use, disabling all services and
-await a new handshake to be started by a client.
+This commands is used to get information about the host.
 
-It is defined as::
+The command is defined as::
 
-  command Reset(Default) returns Default;
+  command Connect(Default) returns HostInfo;
+
+  message HostInfo
+  {
+      required uint32  stpVersion = 1;
+      required string  coreVersion = 2;
+      required string  platform = 3;
+      required string  operatingSystem = 4;
+      required string  userAgent = 5;
+      repeated Service services = 6;
+  }
+  
+  message Service
+  {
+      required string name = 1;
+      required string version = 2;
+      required uint32 activeClients = 3;
+      required uint32 maxClients = 4;
+  }
+
+The command responds with information on available services, version and
+other relevant information.
+
+The `version` field contains the major and minor version number of the service,
+the first number is the major version the second is the minor, any additional
+numbers/strings are not of relevance but can be shown to the end-user if wanted.
+
+The major version determines major changes (ie. compatibility breaks) while
+the minor version determines incremental changes (ie. backwards compatible).
+The client must check these two numbers to ensure it is able to communicate
+properly with the service, if the major version is different from the
+versions the client is compatible with or the minor version is less than
+the required version it must disconnect.
+
+Lets says a client supports version 1.6 and up and also version 2.0 and up,
+it would do::
+
+  if major == 1 and minor >= 6 or major == 2:
+    print "We support service version %d.%d" % (major, minor)
+  else:
+    print "We do not support service version %d.%d" % (major, minor)
 
 Existing clients
 ================
