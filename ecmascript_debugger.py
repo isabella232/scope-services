@@ -262,6 +262,15 @@ node_list = Message("NodeList",
                     fields=[Field(Proto.Message,  "nodes", 1, q=Quantifier.Repeated, message=node_info)
                            ])
 
+parse_error_info = Message("DomParseError",
+                           fields=[Field(Proto.Uint32,  "runtimeID",   1)
+                                  ,Field(Proto.Uint32,  "scriptID",    2)
+                                  ,Field(Proto.Uint32,  "lineNumber",  3)
+                                  ,Field(Proto.Uint32,  "offset",      4)
+                                  ,Field(Proto.String,  "context",     5)
+                                  ,Field(Proto.String,  "description", 6)
+                                  ])
+
 css_index_map = Message("CssIndexMap",
                     fields=[Field(Proto.String,  "property", 1, q=Quantifier.Repeated)
                            ])
@@ -394,6 +403,7 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(19, "OnThreadStoppedAt", thread_stopinfo)
                                ,Event(20, "OnHandleEvent",     dom_event)
                                ,Event(21, "OnObjectSelected",  object_selection)
+                               ,Event(27, "OnParseError",      parse_error_info)
 
                                # CSS inspector, should be moved to separate service
                                ,Request(22, "CssGetIndexMap",          False,                    css_index_map)
