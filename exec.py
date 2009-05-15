@@ -33,9 +33,23 @@ get_action_list = Message("ActionInfoList", doc="List all valid `Action` `name`s
                                              ]
                                      ))])
 
+area = Message("area",
+               fields=[Field(Proto.Int32, "x", 1),
+                       Field(Proto.Int32, "y", 2),
+                       Field(Proto.Int32, "w", 3),
+                       Field(Proto.Int32, "h", 4)])
+
+screenwatcher_data = Message("ScreeWatcher",
+                             fields=[Field(Proto.Uint32, "timeOut", 1),
+                                     Field(Proto.Message, "area", 2, message = area),
+                                     Field(Proto.String, "md5", 3, q=Quantifier.Repeated),
+                                     Field(Proto.Uint32, "windowId", 4, q=Quantifier.Optional)])
+
+
 exec_service = Service("Exec", version="2.0", coreRelease="2.4",
                        doc="""The Opera Exec protocol can be used to control an Opera instance from\nthe outside, and various operations can be initiated. This\nfunctionality is mainly useful for QA testing.""",
                        commands=[Request(1, "Exec", exec_data, False),
-                                 Request(2, "GetActionInfoList", False, get_action_list)
+                                 Request(2, "GetActionInfoList", False, get_action_list),
+                                 Request(3, "SetupScreenWatcher", screenwatcher_data, False)
                                 ],
                        cpp_class="OpScopeExec", cpp_hfile="modules/scope/src/scope_exec.h")
