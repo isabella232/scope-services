@@ -293,57 +293,9 @@ Transport layer
 
 The transport layer will support both the new protocol (STP/1) and the old
 (STP/0). If not all nodes on the transport layer can speak the new protocol
-it will fallback to STP/0 and use a special compatibility layer to ensure
-that messages still can be transported correctly.
-
-When STP/0 is in use it will still use the Unified Message Structure for the
-message content, but the format will be restricted to XML and JSON.
-Additionally the payload will be modified to contain the extra fields which
-are unique to STP/1, when decoding the reverse is applied to make the real
-payload appear as it was originally. Encoding of message will also change
-to UTF-16-BE to be compatible with STP/0.
-
-TODO: Figure out we should a common header or not.
-
-For JSON the real payload is wrapped in a new list and looks like::
-
-  [<command-name>, <tag>, <status>, <payload>]
-
-For instance::
-
-  ["get-window-list", 5, 0, [...]]
-
-If an error occured it might look like::
-
-  ["get-window-list", 5, 1, [...]]
-
-For XML the extra fields are inserted into the XML. The *tag* is added as the
-first sub-element, *status* is added as an attribute to the root element and
-the *command-name* is used in the root element. In short the only difference
-from the XML used is core-2.3 and lower is the new *status* attribute.
-The new XML structure looks like::
-
-  <[command-name] status="[status]">
-    <tag>[tag]</tag>
-    ...
-  </[command-name]>
-
-The tag element will only be present for requests/responses and status
-attribute will only be added when there is an error.
-
-For instance a request might look like::
-
-  <get-window-list>
-    <tag>5</tag>
-    ...
-  </get-window-list>
-
-If an error occured the response would look like::
-
-  <get-window-list-response status="1">
-    <tag>5</tag>
-    ...
-  </get-window-list>
+it will fallback to STP/0 and encode the message so that it can be transpored
+over STP/0 until it can reach the destination where it can be decoded into
+a real STP/1 message. This is known as `Extended STP/0`_.
 
 Opera host
 ----------
@@ -352,7 +304,7 @@ The host will first send out the service list using the old syntax (*services),
 then it will wait for the first request from the client. If the client sends
 the new handshake the version to use is determined in the handshake message,
 otherwise it means and older client is connecting and the host will switch
-to STP/0 and XML/JSON formatted messages.
+to `Extended STP/0`_.
 
 Proxy
 -----
@@ -360,12 +312,6 @@ Proxy
 The proxy will also support both protocol versions, the version that will
 be used is determined by the client, unless the host is running core-2.3 or
 lower in which case all communication is done using STP/0.
-
-Client detection and handshake is handled in the same manner as the host.
-The proxy will also ensure that only one client is allowed to connect until
-the STP version is determined. After the version is set additional client
-connections are allowed but they will be forced to follow the STP version
-in use or disconnect.
 
 The HTTP API as it is today will be removed from the external proxy as it
 is only used for internal development of Dragonfly. A separate implementation
@@ -377,7 +323,7 @@ Client
 New clients will need to decide the version of the protocol to use. If the host
 and proxy supports STP/1 then it can choose to initiate this by performing
 the new handshake. If STP/1 cannot be used then the client must fallback to
-STP/0 using XML or JSON only.
+`Extended STP/0`_.
 
 In addition to checking the transport protocol version it must also check the
 core version of the host. If the host has core-2.4 or higher it means it
@@ -387,8 +333,8 @@ are constructed, ie. names of fields and structure.
 In short the following setups will be encountered:
 
 1. STP/1 and UMS
-2. STP/0 and UMS formatted as JSON or XML
-3. STP/0 and old XML structures (core-2.3)
+2. STP/0 and UMS formatted as JSON or XML, AKA `Extended STP/0`_
+3. STP/0 and old XML structures (core-2.3 and lower)
 
 Newer clients that does not need to consider backwards compatibility will only
 need to support case #1.
@@ -794,3 +740,54 @@ It is defined as::
 
   META-CORE    ::= "core-" DASH-VERSION
   DASH-VERSION ::= DIGIT+ ("-" DIGIT+)*
+
+Extended STP/0
+==============
+
+When STP/0 is in use it will still use the Unified Message Structure for the
+message content, but the format will be restricted to XML and JSON as it is
+will require to much encoding overhead to binary protocols like protocol
+buffer into UTF-16BE.
+
+The basics of the STP/0 transport is in sending a size, service
+name and a payload, only the size and service name is interesting for any
+existing proxies (2.3 or lower), this means that it is possible to change
+what the payload actually contains and let the receive decode it.
+
+The extended STP/0 transport will change the payload to contain the extra
+fields required by an STP/1 message but it will encoded to be compatible with
+UTF-16BE, ie. it will be sent as pure text. The payload will consists of two
+things, the STP/1 header and the real payload, the header can then be decoded
+before the actual payload is sent to the next layer.
+
+Definition::
+
+  STP          ::= COUNT TERMINATOR "scope" TERMINATOR DATA
+  TERMINATOR   ::= " "
+  COUNT        ::= "0"-"9"+
+  KEYWORD      ::= COMMAND | SERVICE
+  COMMAND      ::= "*" COMMAND-NAME
+  COMMAND-NAME ::= "services" | "enable" | "disable" | "quit" | "hostquit"
+  SERVICE      ::= ^[ ,]+
+
+  DATA         :: = "STP/" VERSION TERMINATOR HEADER-SIZE TERMINATOR HEADER PAYLOAD
+  VERSION      ::= INT
+  HEADER-SIZE  ::= INT
+  HEADER       ::= "[" SERVICE-NAME "," STP-TYPE "," COMMAND-ID "," FORMAT ("," CLIENT-ID ("," TAG ("," STATUS ("," UUID)? )? )? )? "]"
+  SERVICE-NAME ::= <json-string>
+  STP-TYPE     ::= <json-int>
+  COMMAND-ID   ::= <json-int>
+  FORMAT       ::= <json-int>
+  CLIENT-ID    ::= <json-int>
+  TAG          ::= <json-int>
+  STATUS       ::= <json-int>
+  UUID         ::= <json-string>
+  INT          ::= "0"-"9"+
+
+Now messages must always be sent to the  "scope" service, this ensures that
+there is only one service that needs to be enabled in the old proxies. This
+means that a client must first enable the "scope" service by sending
+"*enabled scope" or use the appropriate (DOM) API, this call will be ignored
+by STP enabled hosts. After this is sent the client must encode all outgoing
+STP/1 messages according to the definition and send it to the "scope" service.
+The host will recognize this extended format and decode as an STP/1 message.
