@@ -85,31 +85,30 @@ XML is the least efficient format to use among the supported ones and is
 mainly kept as a way for getting output that is easy-to-read, for instance
 for debugging or inspection.
 
-The important parts for XML encoding is the name of the fields. The names
-are converted to XML elements, the name is converted from camel-case to
-lowercase with dash as delimiters between words.
+The messages and fields are transformed into XML elements with the same
+name as in the the protocol definition.
 
 For instance this structure::
 
   message DummyData {
     required int32 id = 1;
-    required string name = 2;
+    required string firstName = 2;
     repeated int32 fib = 3;
   }
 
 Would be encoded like this::
 
-  <dummy-data>
+  <DummyData>
     <id>1</id>
-    <name>foo</name>
+    <firstName>foo</firstName>
     <fib>1</fib>
     <fib>1</fib>
     <fib>2</fib>
     <fib>3</fib>
     <fib>5</fib>
-  </dummy-data>
+  </DummyData>
 
-All integer types are encoded/decode as textual numbers, size and sign is
+All integer types are encoded/decoded as textual numbers, size and sign is
 checked for when decoding numbers.
 Boolean type is encoded/decoded as a textual number with 0 being false and
 1 being true, other values are not allowed.
@@ -118,7 +117,38 @@ Binary data is encoded as UTF-8 XML text containing the base-64 representation
 of the binary data.
 Messages are encoded as a new XML element containing the new fields, the name
 of the element is taken from the message, missing fields are skipped.
-Repeated types are encoded as repeated XML elements, one after another.
+Repeated fields results in repeated elements using the name of the field, for
+instance::
+
+  message DummyData {
+    repeated int32 value = 1;
+  }
+
+  <DummyData>
+    <value>1</value>
+    <value>10</value>
+  </DummyData>
+
+Where as repeated sub-messages results in one element for the field and
+repeated child elements containing the sub-message. For instance::
+
+  message DummyData {
+    message SubMessage {
+        required int32 value = 1;
+    }
+    repeated SubMessage list = 1;
+  }
+
+  <DummyData>
+    <list>
+      <SubMessage>
+        <value>4>
+      </SubMessage>
+      <SubMessage>
+        <value>10>
+      </SubMessage>
+    </list>
+  </DummyData>
 
 JSON
 ----
