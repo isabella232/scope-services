@@ -9,28 +9,28 @@
 Changelog
 =========
 
-===  =================================================================
-0.1  Initial ideas
-0.2  Protocol supports backwards compatibility with old clients.
-0.3  Added overview of all protocols, formats and clients.
-     Simplified protocol due to relaxed compatibility requirements.
-     Changed header structure slightly.
-     Added more details on HTTP and Javascript clients.
-0.4  Fixed inconsistencies and mistakes in protocol and examples.
-     Details on existing * commands.
-0.5  Replaced `tag` in Javascript client with a callback.
-     Moved version checking in Javascript client to the `connect`
-     callback.
-0.6  Revised and simplified several aspects after discussions.
-0.7  Minor changes to status, client id and version numbers
-0.8  Cleaned up document to make it match the implementation and
-     added information on the handshake phase.
-0.9  Moved most of the logic away from the proxies and into the host.
-     Changed STP message to be defined as a proto message which allows
-     for more flexibility, it also has a new prefix.
-0.10 Reworked the handshake part to allow different STP versions per
-     network connection.
-===  =================================================================
+====  =================================================================
+0.1   Initial ideas
+0.2   Protocol supports backwards compatibility with old clients.
+0.3   Added overview of all protocols, formats and clients.
+      Simplified protocol due to relaxed compatibility requirements.
+      Changed header structure slightly.
+      Added more details on HTTP and Javascript clients.
+0.4   Fixed inconsistencies and mistakes in protocol and examples.
+      Details on existing * commands.
+0.5   Replaced `tag` in Javascript client with a callback.
+      Moved version checking in Javascript client to the `connect`
+      callback.
+0.6   Revised and simplified several aspects after discussions.
+0.7   Minor changes to status, client id and version numbers
+0.8   Cleaned up document to make it match the implementation and
+      added information on the handshake phase.
+0.9   Moved most of the logic away from the proxies and into the host.
+      Changed STP message to be defined as a proto message which allows
+      for more flexibility, it also has a new prefix.
+0.10  Reworked the handshake part to allow different STP versions per
+      network connection.
+====  =================================================================
 
 EBNF
 ====
@@ -300,7 +300,7 @@ a real STP/1 message. This is known as `Extended STP/0`_.
 Opera host
 ----------
 
-The host will first send out the service list using the old syntax (*services),
+The host will first send out the service list using the old syntax (\*services),
 then it will wait for the first request from the client. If the client sends
 the new handshake the version to use is determined in the handshake message,
 otherwise it means and older client is connecting and the host will switch
@@ -415,7 +415,7 @@ over the STP/1 transport layer.
 The side which receives the SERVICES message, aka network client, must choose
 a valid STP version from this list and initiate that.
 
-The network client will then send an "*enable" request with the specific
+The network client will then send an "\*enable" request with the specific
 stp service which is defined as::
 
   HANDSHAKE-REQ ::= "*enable" SP "stp-" VER
@@ -787,7 +787,7 @@ Definition::
 Now messages must always be sent to the  "scope" service, this ensures that
 there is only one service that needs to be enabled in the old proxies. This
 means that a client must first enable the "scope" service by sending
-"*enabled scope" or use the appropriate (DOM) API, this call will be ignored
+"\*enabled scope" or use the appropriate (DOM) API, this call will be ignored
 by STP enabled hosts. After this is sent the client must encode all outgoing
 STP/1 messages according to the definition and send it to the "scope" service.
 The host will recognize this extended format and decode as an STP/1 message.
