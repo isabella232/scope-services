@@ -39,7 +39,7 @@ of the STP/0 <-> STP/1 conversion. They are:
 1. The client must not use the STP version to determine the capability of the
 Opera host. Instead it must read out the core version to determine the
 structure of the service messages.
-The core version will be sent as part of the *services list as a special
+The core version will be sent as part of the \*services list as a special
 service named core-<maj>-<min> where <maj>-<min> is the major and minor
 version of the Opera core, e.g. "core-2-3".
 

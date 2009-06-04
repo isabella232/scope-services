@@ -48,15 +48,16 @@ Service: Scope
 This is a special service which is always present and always enabled.
 
 This service replaces the special commands used in STP/0 (started with an asterix).
-The only command that is fully compatible with STP/0 is "*services" (OnServices)
-which is actually sent as STP/0 only. In addition "*enable" is mapped to the
-Enable, "*disable" to Disable, "*hostquit" to OnQuit and "*quit" to Quit.
+The only command that is fully compatible with STP/0 is "\*services" (OnServices)
+which is actually sent as STP/0 only. In addition "\*enable" is mapped to the
+Enable, "\*disable" to Disable, "\*hostquit" to OnQuit and "\*quit" to Quit.
 The system takes care of mapping it to the correct format when sending and
 receiving them. However the payload of these messages is no longer the same,
 they must now be sent using UMS, this means using either JSON or XML when
 sending over STP/0.
 
 The STP/0 commands are::
+
   *services <service-list>
   *hostquit
   *enable <service>
