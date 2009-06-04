@@ -169,7 +169,7 @@ which are missing are cut off from the list.
 Repeated types are encoded as JSON lists.
 
 For more details on JSON see RFC 4627:
-http://www.ietf.org/rfc/rfc4627.txt?number=4627
+http://www.ietf.org/rfc/rfc4627.txt
 or visit http://json.org
 
 For instance this structure::
