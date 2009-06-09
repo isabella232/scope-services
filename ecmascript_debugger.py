@@ -130,7 +130,19 @@ object_info = Message("ObjectList",
                       fields=[Field(Proto.Message, "objects", 1, q=Quantifier.Repeated, message=object_data)
                              ])
 
-spotlight_box = Message("SpotlightBox", is_global=False, comment="Colors are encoded as RGBA with 8 bits for each channel.",
+spotlight_box = Message("SpotlightBox", is_global=False, 
+                            doc="""Colors are encoded as RGBA with 8 bits for each channel.
+encoded_color = ( red << 24 ) + ( green << 16 ) + ( blue << 8 ) + ( alpha ) 
+with red, green, blue and alpha in a range of 0 - 255
+e.g.:
+
+    red     4278190335
+    green     16711935
+    blue         65535
+    yellow  4294902015
+    cyan      16777215
+    magenta 4278255615"""
+                            ,
                         fields=[Field(Proto.Uint32, "boxType",    1, doc="Valid values:\n  0: dimension\n  1: padding\n  2: border\n  3: margin")
                                ,Field(Proto.Uint32, "fillColor",  2, q=Quantifier.Optional)
                                ,Field(Proto.Uint32, "frameColor", 3, q=Quantifier.Optional, comment="Drawn with 1px width inside the box")
