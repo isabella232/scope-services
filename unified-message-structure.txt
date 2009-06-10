@@ -85,70 +85,112 @@ XML is the least efficient format to use among the supported ones and is
 mainly kept as a way for getting output that is easy-to-read, for instance
 for debugging or inspection.
 
-The messages and fields are transformed into XML elements with the same
-name as in the the protocol definition.
+Types
+^^^^^
 
-For instance this structure::
+- All integer types are encoded/decoded as textual numbers, size and sign is
+  checked for when decoding numbers. For instance::
 
-  message DummyData {
-    required int32 id = 1;
-    required string firstName = 2;
-    repeated int32 fib = 3;
+    0
+    1
+    -1
+    65536
+
+- *double* and *float* are encoded similar to integers but allows for
+  fractions. For instance::
+
+    0
+    3.14
+    -200.6
+
+- *bool* is encoded/decoded as a textual number with **0** being **false** and **1** being
+  **true**, other values are not allowed.
+- *string* is encoded as UTF-8 XML text with XML entities for certain
+  characters. For instance::
+
+    Foo
+    &lt;element&gt;
+
+- *bytes* is encoded as UTF-8 XML text containing the base-64 representation
+  of the binary data.
+
+Structure
+^^^^^^^^^
+
+The name of the message is used in the root element of the XML_ structure.
+Each field in the message is placed as a sub-element with the same name as the
+field. If the field is optional and missing no element is made, same with
+repeated fields which are empty.
+
+A message representing a *user*::
+
+  message User {
+    required int32  id = 1;
+    required bool   isActive = 2;
+    required string firstName = 3;
+    required string lastName = 4;
+    required float  height = 5;
+    optional uint32 age = 6;
   }
 
-Would be encoded like this::
+would be encoded like this::
 
-  <DummyData>
-    <id>1</id>
-    <firstName>foo</firstName>
-    <fib>1</fib>
-    <fib>1</fib>
-    <fib>2</fib>
-    <fib>3</fib>
-    <fib>5</fib>
-  </DummyData>
+  <User>
+    <id>42</id>
+    <isActive>1</isActive>
+    <firstName>John</firstName>
+    <lastName>Doe</lastName>
+    <height>1.80</height>
+  </User>
 
-All integer types are encoded/decoded as textual numbers, size and sign is
-checked for when decoding numbers.
-Boolean type is encoded/decoded as a textual number with 0 being false and
-1 being true, other values are not allowed.
-Strings are encoded as UTF-8 XML text.
-Binary data is encoded as UTF-8 XML text containing the base-64 representation
-of the binary data.
-Messages are encoded as a new XML element containing the new fields, the name
-of the element is taken from the message, missing fields are skipped.
-Repeated fields results in repeated elements using the name of the field, for
-instance::
+For repeated fields the element also contains a sub-element for each item
+in the repeated field, the name of the sub-element is *item*.
 
-  message DummyData {
-    repeated int32 value = 1;
+For instance representing a height map like this::
+
+  message HeightMap {
+    required uint32 width = 1;
+    required uint32 height = 2;
+    repeated int32  values = 3;
   }
 
-  <DummyData>
-    <value>1</value>
-    <value>10</value>
-  </DummyData>
+would result in this::
 
-Where as repeated sub-messages results in one element for the field and
-repeated child elements containing the sub-message. For instance::
+  <HeightMap>
+    <width>2</width>
+    <height>2</height>
+    <values>
+     <item>1</item>
+     <item>10</item>
+     <item>7</item>
+     <item>3</item>
+    </values>
+  </HeightMap>
 
-  message DummyData {
-    message SubMessage {
-        required int32 value = 1;
+The same is true for nested messages, each *item* will contain the fields
+for the sub-message::
+
+  message PhoneBook {
+    message PhoneNumber {
+        required string number = 1;
+        optional string extension = 2;
     }
-    repeated SubMessage list = 1;
+    repeated PhoneNumber phoneNumbers = 1;
   }
 
-  <DummyData>
-    <list>
-      <SubMessage>
-        <value>4>
-      </SubMessage>
-      <SubMessage>
-        <value>10>
-      </SubMessage>
-    </list>
-  </DummyData>
+would end up as::
+
+  <PhoneBook>
+    <phoneNumbers>
+      <item>
+        <number>12345678</number>
+        <extension>+47</extension>
+      </item>
+      <item>
+        <number>555-768</number>
+      </item>
+    </phoneNumbers>
+  </PhoneBook>
 
 JSON
 ----
@@ -255,3 +297,6 @@ Java
 ----
 
 TODO: Need to figure what is needed here for the various java projects.
+
+
+.. XML: http://www.w3.org/XML/
