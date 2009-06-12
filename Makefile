@@ -1,7 +1,6 @@
 # All text files written in restructured text needs to go in the following list
 SRC=host-spotlight-ui-spec.txt \
 	scope-dom-interface.txt \
-	scope-stp0-compatibility.txt \
 	scope-stp1-services.txt \
 	scope-transport-protocol.txt \
 	unified-message-structure.txt
