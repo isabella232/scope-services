@@ -752,7 +752,7 @@ buffer into UTF-16BE.
 The basics of the STP/0 transport is in sending a size, service
 name and a payload, only the size and service name is interesting for any
 existing proxies (2.3 or lower), this means that it is possible to change
-what the payload actually contains and let the receive decode it.
+what the payload actually contains and let the receiver decode it.
 
 The extended STP/0 transport will change the payload to contain the extra
 fields required by an STP/1 message but it will encoded to be compatible with
@@ -787,7 +787,7 @@ Definition::
 Now messages must always be sent to the  "scope" service, this ensures that
 there is only one service that needs to be enabled in the old proxies. This
 means that a client must first enable the "scope" service by sending
-"\*enabled scope" or use the appropriate (DOM) API, this call will be ignored
+"\*enable scope" or use the appropriate (DOM) API, this call will be ignored
 by STP enabled hosts. After this is sent the client must encode all outgoing
 STP/1 messages according to the definition and send it to the "scope" service.
 The host will recognize this extended format and decode as an STP/1 message.
