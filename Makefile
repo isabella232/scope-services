@@ -12,7 +12,7 @@ all: $(HTML)
 
 $(OUTDIR)/%.html: %.txt
 	@mkdir -p $(OUTDIR)
-	rst2html --stylesheet-path="coredoc.css" --link-stylesheet $? > $@
+	rst2html --initial-header-level=2 --stylesheet-path="coredoc.css" --link-stylesheet $? > $@
 
 clean:
 	rm -f $(HTML)
