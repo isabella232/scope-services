@@ -103,7 +103,7 @@ the STP communication to HTTP request/responses. The major difference is how
 requests and responses/events are handled. In HTTP the request/response is
 synchronous and you cannot receive data without asking for it.
 
-Currently used by Dragonfly when loaded trough the proxy
+Currently used by Opera Dragonfly when loaded trough the proxy
 (/file/ecma-debugger/client.xml)
 
 Scope Javascript Protocol
@@ -115,7 +115,7 @@ down to only send the KEYWORD and DATA elements.
 All of this handled by the the opera.scopeTransmit and opera.scopeAddClient
 JS functions.
 
-Currently used by the builtin Dragonfly client for the desktop 9.5 release.
+Currently used by the builtin Opera Dragonfly client for the desktop 9.5 release.
 
 Service Protocols
 =================
@@ -192,21 +192,21 @@ css-inspector (of esd) XML/XML+JSON   4
 To get a better overview a few examples follows which displays how the various
 protocols communicate.
 
-A typical developer setup with Dragonfly communicating with the Proxy using
+A typical developer setup with Opera Dragonfly communicating with the Proxy using
 the HTTP adapter protocol::
 
   +-------+ STP/0 +-------+ HTTP/1.1 +-----------+
-  |       | 7001  |       |   8002   |           |
+  |       | 7001  |       |   8002   |   Opera   |
   | Scope |<----->| Proxy +<-------->| Dragonfly |
   |       |       |       |          |           |
   +-------+       +-------+          +-----------+
 
-The common usage scenario with Dragonfly connecting to Opera using
+The common usage scenario with Opera Dragonfly connecting to Opera using
 the internal javascript methods. Internally these methods will
 communicate with scope using an internal socket (will be changed)::
 
   +-------+ +----------+            +-----------+
-  |       | | Opera    | Javascript |           |
+  |       | | Opera    | Javascript |   Opera   |
   | Scope | | Internal |<---------->| Dragonfly |
   |       | | "Proxy"  |            |           |
   +-------+ +----------+            +-----------+
@@ -216,11 +216,11 @@ communicate with scope using an internal socket (will be changed)::
         STP/0
      49152-65535
 
-Another setup with Dragonfly for remote debugging on an embedded device,
+Another setup with Opera Dragonfly for remote debugging on an embedded device,
 in this case a mobile phone::
 
   +-------+ +----------+            +-----------+
-  |       | | Opera    | Javascript |           |
+  |       | | Opera    | Javascript |   Opera   |
   | Scope | | Internal |<---------->| Dragonfly |
   |       | | "Proxy"  |            |           |
   +-------+ +----------+            +-----------+
@@ -314,8 +314,8 @@ be used is determined by the client, unless the host is running core-2.3 or
 lower in which case all communication is done using STP/0.
 
 The HTTP API as it is today will be removed from the external proxy as it
-is only used for internal development of Dragonfly. A separate implementation
-will be made for development purposes only.
+is only used for internal development of Opera Dragonfly. A separate
+implementation will be made for development purposes only.
 
 Client
 ------
@@ -339,15 +339,15 @@ In short the following setups will be encountered:
 Newer clients that does not need to consider backwards compatibility will only
 need to support case #1.
 
-Dragonfly
----------
+Opera Dragonfly
+---------------
 
-Dragonfly cannot control the transport protocol version that will be used
-and must adhere to the message structure that will be in use. Dragonfly
+Opera Dragonfly cannot control the transport protocol version that will be used
+and must adhere to the message structure that will be in use. Opera Dragonfly
 will need to read out the STP and core version and decide from that how
 messages are to be formatted and parsed.
 
-When it is possible Dragonfly will stick to JSON as the format for message,
+When it is possible Opera Dragonfly will stick to JSON as the format for message,
 this would mean case #1 and #2 as described in the section Client_.
 
 STP/1
