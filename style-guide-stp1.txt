@@ -26,12 +26,17 @@ Every HTML must have the following header, placed right after the ``<body>`` tag
 
 And the following footer::
 
-	<div id="footer">© Opera Software ASA</div>
+    <div id="footer">© Opera Software ASA</div>
 
-Deprecation
-+++++++++++
+Some documents have changelogs. These should be removed. We can rely on external changelogs from e.g. Mercurial.
 
-If the document has been deprecated, the following section should appear right below the ``h1``::
+Every document should clearly show the status of the document. It should be one of "Draft", "Discontinued", "In use". If "Discontinued", it should state in which versions it was last available. If "Discontinued" or "In use", it should state in which version it was introduced. This information should be presented as a definition list::
 
-   <p class="deprecated">Deprecated</p>
+     <div class="docdata">
+     <dl>
+        <dt>Status</dt><dd>STATUS</dd>
+        <dt>Introduced</dt><dd>CORE-VERSION</dd>
+        <dt>Last version</dt><dd>CORE-VERSION</dd>
+     </dl>
+     </div>
 
