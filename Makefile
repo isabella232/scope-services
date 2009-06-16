@@ -3,6 +3,7 @@ SRC=host-spotlight-ui-spec.txt \
 	scope-dom-interface.txt \
 	scope-stp1-services.txt \
 	scope-transport-protocol.txt \
+	style-guide-stp1.txt \
 	unified-message-structure.txt
 
 OUTDIR=/var/www/html/scope-interface

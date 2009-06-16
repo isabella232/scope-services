@@ -1,0 +1,18 @@
+Style guide
+===========
+
+This document describes the style that should be used to write protocol
+specifications and documentation for scope and ``STP/1``.
+
+Protocol specifications
+-----------------------
+
+Documentation
+-------------
+
+The layout on an HTML page should consist of one and only one header 
+(``<h1>``), which is the same as the title on the page.
+
+References to ``STP`` versions should be written with a forward slash and in an
+HTML ``<code>`` element, like ``STP/1``.
+
