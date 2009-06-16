@@ -6,7 +6,7 @@ SRC=host-spotlight-ui-spec.txt \
 	style-guide-stp1.txt \
 	unified-message-structure.txt
 
-OUTDIR=/var/www/html/scope-interface
+OUTDIR=out/#/var/www/html/scope-interface
 HTML=$(SRC:%.txt=$(OUTDIR)/%.html)
 
 all: $(HTML)

@@ -16,3 +16,22 @@ The layout on an HTML page should consist of one and only one header
 References to ``STP`` versions should be written with a forward slash and in an
 HTML ``<code>`` element, like ``STP/1``.
 
+Whenever talking about Opera Dragonfly, be sure to include the Opera-prefix.
+
+Every HTML must have the following header, placed right after the ``<body>`` tag::
+
+   <p class="logo">
+      <img src="http://www.opera.com/media/images/logo/ologo_wback.gif">
+   </p>
+
+And the following footer::
+
+	<div id="footer">© Opera Software ASA</div>
+
+Deprecation
++++++++++++
+
+If the document has been deprecated, the following section should appear right below the ``h1``::
+
+   <p class="deprecated">Deprecated</p>
+
