@@ -27,16 +27,15 @@ a proper service called "scope". See `Service: Scope`_ for more details.
 Services and multiple clients
 =============================
 
-Some services allows for multiple clients to be active while others should
+Some services allows multiple clients to be active while others should
 only have one client active at a time.
-For instance the ecmascript debugger involves getting information about new
+For instance, the ECMAScript debugger involves getting information about new
 threads and scripts and can change the current state with breakpoints and
 continuing execution. If two or more clients do this it would be impossible for
-them to know what state the Opera host is in and there can also be conflicting
-requests for instance if both tries to act on stopped threads in different
-ways.
+them to know what state the Opera host is in. There can also be conflicting
+requests if both try to act on stopped threads in different ways.
 
-Whenever a client enables a service the service will be able to differentiate
+Whenever a client enables a service, the service will be able to differentiate
 between them with a unique client ID. The service can keep track of which
 clients are active and send back information to specific clients if it wants.
 It can also deny new clients to be active if one already is active.
@@ -52,8 +51,8 @@ The only command that is fully compatible with STP/0 is "\*services" (OnServices
 which is actually sent as STP/0 only. In addition "\*enable" is mapped to the
 Enable, "\*disable" to Disable, "\*hostquit" to OnQuit and "\*quit" to Quit.
 The system takes care of mapping it to the correct format when sending and
-receiving them. However the payload of these messages is no longer the same,
-they must now be sent using UMS, this means using either JSON or XML when
+receiving them. However the payload of these messages is no longer the same:
+they must now be sent using UMS. This means using either JSON or XML when
 sending over STP/0.
 
 The STP/0 commands are::
@@ -116,7 +115,7 @@ CommandID: 1
 
 This event is sent by Opera to the proxy or client when Opera terminates
 operation. No communication with Opera is possible once Opera has sent the
-event. When the proxy receives this message it broadcasts it to all its
+event. When the proxy receives this message it broadcasts it to all of its
 clients.
 
 The event is defined as::
@@ -128,7 +127,7 @@ Event: OnConnectionLost
 
 CommandID: 2
 
-A special event which is used by the proxy (and not the host) when the connection
+This is a special event which is used by the proxy (and not the host) when the connection
 to the Opera host is unexpectedly lost, for instance if the Opera host crashes.
 
 The event is defined as::
@@ -140,7 +139,7 @@ Event: OnError
 
 CommandID: 9
 
-A generic event for sending out error messages which are not tied to a specific
+This is a generic event for sending out error messages which are not tied to a specific
 command.
 
 The event is defined as::
@@ -160,11 +159,11 @@ CommandID: 3
 This commands is used by the client to initiate connection with the host.
 The host will register the client and respond with a numerical client ID
 which is used for subsequent commands and events.
-The command also specifies the global settings for the client, currently this
+The command also specifies the global settings for the client. Currently this
 means setting the format of all messages for this client.
 
 Repeated use of this command will result in the host resetting any settings
-and services the client used earlier.
+and services that the client used earlier.
 
 Note:
   The uuid field is required both in the STP message and in the payload.
@@ -189,18 +188,18 @@ The command is defined as::
 The command responds with the new client ID which is to be used by all
 subsequent commands. This client ID is also used when sending out events.
 
-If the requested format is not allowed or does not exist it will respond
-with status "Bad Request" (3).
+If the requested format is not allowed or does not exist, it will respond
+with the status "Bad Request" (3).
 
 Command: Disconnect
 -------------------
 
 CommandID: 4
 
-Disconnects the client by resetting any settings and disabling any services
-the client used. This command is primarily meant by proxies which must be
+This disconnects the client by resetting any settings and disabling any services
+the client used. This command is primarily meant for proxies which must be
 sent if a socket connection with an active client closes.
-If the client is able to then it should send command itself.
+If the client is able to do this, then it should send the command itself.
 
 Note:
   The uuid field is required both in the STP message and in the payload.
@@ -223,7 +222,7 @@ CommandID: 5
 
 This is used to enable one service in the host.
 
-Note: The old behaviour of the proxy where it allowed a comma-separated list
+Important note: The old behaviour of the proxy which allowed a comma-separated list
       of services is no longer supported.
 
 It is defined as::
@@ -253,7 +252,7 @@ CommandID: 6
 This is used to disable a clients access to one service. If the service
 has other clients connected the service will stay enabled.
 Once the client has been removed the from the service it will no longer
-receive events from it and will be unable to send commands to it.
+receive events from it, and it will not be able to send commands to it.
 The internal "scope" service cannot be disabled since it is always enabled.
 
 It is defined as::
@@ -309,7 +308,7 @@ It is defined as::
 
 The command list contains all the commands in the service, each command is
 listed with its name and the corresponding command ID (used by STP/1).
-The event list is similar to the command list but is listed for the available
+The event list is similar to the command list, but is listed for the available
 events.
 
 If the service is not found it will return the message with status set
@@ -320,7 +319,7 @@ Command: Quit
 
 CommandID: 8
 
-The quit message is sent to Opera when the proxy or client terminates operation.
+The quit message is sent to Opera when the proxy or client operation is terminated.
 No communication with the proxy will be possible once it has sent the quit
 message. When Opera receives this message it should disable all debugging
 services that are currently enabled. 
@@ -361,19 +360,19 @@ The command is defined as::
 The command responds with information on available services, version and
 other relevant information.
 
-The `version` field contains the major and minor version number of the service,
-the first number is the major version the second is the minor, any additional
+The `version` field contains the major and minor version number of the service.
+The first number is the major version, the second is the minor, and any additional
 numbers/strings are not of relevance but can be shown to the end-user if wanted.
 
 The major version determines major changes (ie. compatibility breaks) while
 the minor version determines incremental changes (ie. backwards compatible).
 The client must check these two numbers to ensure it is able to communicate
 properly with the service, if the major version is different from the
-versions the client is compatible with or the minor version is less than
-the required version it must disconnect.
+versions the client is compatible with, or the minor version is less than
+the required version, it must disconnect.
 
-Lets says a client supports version 1.6 and up and also version 2.0 and up,
-it would do::
+Let us say a client supports version 1.6 and up and also version 2.0 and up.
+It would do::
 
   if major == 1 and minor >= 6 or major == 2:
     print "We support service version %d.%d" % (major, minor)
