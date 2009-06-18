@@ -7,7 +7,7 @@
 :Date:    11th February 2008
 
 Unified Message Structure, or UMS for short, is a system for defining message
-structures in a generic format which can be export to and imported from
+structures in a generic format which can be exported to and imported from
 multiple formats.
 
 The main requirement for the system was to be able to work with XML, JSON and
@@ -18,39 +18,39 @@ In addition the system is also meant to assist with code-generation of parsers
 and serializers for various languages, reducing the need for manually
 crafted code.
 
-The main component are the messages, they define a set of fields which make
-up the message. Each field defines a specific type (e.g integer or string)
-as well as information on whether it is required, optional or repeated, in
+The main component is the messages. They define a set of fields which make
+up the message. Each field defines a specific type (integer or string)
+and information on whether it is required, optional or repeated, in
 addition to meta-information like name and a number.
 The structure of the message is defined by the name and tag of each field
-as well as the order of the fields.
-Name is important for XML, tag for Protocol Buffers and order for JSON.
-The tag is a number which is unique to that field within each message, tags
-are defined the range 1 to (2^31)-1.
+and the order of the fields.
+Name is important for XML, tag is important for Protocol Buffers, and order is important for JSON.
+The tag is a number which is unique to that field within each message. Tags
+are defined in the range of 1 to (2^31)-1.
 The name is a non-empty string written in camel-case.
 
 A tool written in Python is available for dealing with UMS data:
 http://dvcs.vlab.osa/cgi-bin/hgwebdir.cgi/home/jborsodi/opprotoc/
-Note: URL will change when a proper name is found.
+Note: The URL will change when a proper name is found.
 
 Types
 =====
 
 The types in the system are based upon the types in Protocol Buffers which
-consists of a set of integer types, boolean, string and binary.
+consist of a set of integer types, boolean, string and binary.
 Nested messages are also possible with a special type called Message.
 
 More details on types can be read in the Protocol Buffer documentation:
 http://code.google.com/apis/protocolbuffers/docs/proto.html
 
 Note:
-      Currently floating point numbers are not supported due to the
+      Currently floating-point numbers are not supported due to the
       different nature of floating numbers between different processors.
 Note:
       64 bit types are not yet supported due to incomplete support for
       them in the Opera core.
 TODO:
-      Support enums, they are basically sent as numbers but require some
+      Support enums are basically sent as numbers but require some
       extra handling in generated code.
 TODO:
       Perhaps the types should be split up into basic type, and constraints.
@@ -74,7 +74,7 @@ The syntax for defining messages is based upon the Protocol Buffers syntax:
 http://code.google.com/apis/protocolbuffers/docs/proto.html
 
 Note:
-      Currently there is no parser for this and everything written in pure
+      Currently there is no parser for this, and everything is written in pure
       Python. A parser will be added once STP/1 and UMS stabilizes.
 
 Supported formats
@@ -86,14 +86,14 @@ are text-based formats while Protocol Buffers is an efficient binary format.
 XML
 ---
 
-XML is the least efficient format to use among the supported ones and is
+XML is the least efficient format to use among the supported ones, and is
 mainly kept as a way for getting output that is easy-to-read, for instance
 for debugging or inspection.
 
 Types
 ^^^^^
 
-- All integer types are encoded/decoded as textual numbers, size and sign is
+- All integer types are encoded/decoded as textual numbers. Size and signs are
   checked for when decoding numbers. For instance::
 
     0
@@ -124,7 +124,7 @@ Structure
 
 The name of the message is used in the root element of the XML_ structure.
 Each field in the message is placed as a sub-element with the same name as the
-field. If the field is optional and missing no element is made, same with
+field. If the field is optional and missing no element is made. It is the same with
 repeated fields which are empty.
 
 A message representing a *user*::
@@ -172,7 +172,7 @@ would result in this::
     </values>
   </HeightMap>
 
-The same is true for nested messages, each *item* will contain the fields
+The same is true for nested messages. Each *item* will contain the fields
 for the sub-message::
 
   message PhoneBook {
@@ -203,15 +203,15 @@ JSON
 JSON uses the order of the fields to pack messages into JSON lists. Lists
 were chosen to cut down on the amount of information that is needed to send.
 
-All integer types are encoded/decode as textual numbers, size and sign is
+All integer types are encoded/decoded as textual numbers. Size and sign are
 checked for when decoding numbers.
 Boolean type is encoded/decoded as a textual number with 0 being false and
-1 being true, other values are not allowed.
-Strings are encoded as UTF-8 JSON strings, 
+1 being true. Other values are not allowed.
+Strings are encoded as UTF-8 JSON strings. 
 Binary data is encoded as JSON strings containing the base-64 representation
 of the binary data.
 Messages are encoded as JSON lists with the order of the fields being kept.
-Missing elements are sent as the null type, in addition trailing elements
+Missing elements are sent as the null type. In addition, trailing elements
 which are missing are cut off from the list.
 Repeated types are encoded as JSON lists.
 
@@ -256,7 +256,7 @@ Protocol Buffers
 ----------------
 
 PB is the most efficient way to transport data for languages that excel
-at encoding/decoding binary data (e.g. C/C++). Other languages like Javascript
+at encoding/decoding binary data (e.g. C/C++). Other languages like JavaScript
 and Python might be better off with using JSON.
 
 PB is explained in detail at the main site:
@@ -266,12 +266,12 @@ Code generation
 ===============
 
 The system supports code generation of the message structures and encoders/
-decoders for them.
+decoders.
 
 C++
 ---
 
-The C++ generator translates the message structures into C++ classes, this
+The C++ generator translates the message structures into C++ classes. This
 allows C++ code to interact with messages using native structures. Encoding
 and decoding is handled as a separate layer and is generated.
 
@@ -286,8 +286,8 @@ Note:
 Javascript
 ----------
 
-Code generation for JS is designed around the fact that JS code will
-use JSON for formatting messages on the wire, this means that there
+Code generation for JavaScript is designed around the fact that JavaScript code will
+use JSON for formatting messages on the wire. This means that there
 is little need for encoding/decoding of data. Extended code generation
 is available when RPC (services) are in use.
 
@@ -298,7 +298,7 @@ Python
 ------
 
 TODO:
-      Either use similar style as Javascript or allow for proper classes
+      Either use a similar style as JavaScript, or allow for proper classes
       to be made for the different messages.
 
 Java
