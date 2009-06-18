@@ -5,8 +5,8 @@ CSS Editing Improvements
 Main Context
 ------------
 
-While the user is editing a property, the changes are reflected immediately in the host. After he
-submits his changes, the whole view in the client is update to reflect the changes, especially in
+When editing a property, the changes are reflected immediately in the host. After those
+changes are submitted the whole view in the client is updated to reflect those changes, especially in
 regard of the overwritten flags.
 
 Issues
@@ -16,7 +16,7 @@ Technically the Styles view in editing mode is an interface to a CSSStyleDeclara
 updating a property means using setPropertyValue(<property-name>, <property-value>, 
 <property-priority>) on that interface. This will always be treated as the last set property in the
 declaration, meaning any order of properties presented to the user is disregarded. Shorthands are 
-accept in that call, but they will be resolved to single properties. Invalid properties or values
+accepted in that call, but they will be resolved to single properties. Invalid properties or values
 have no effect at all. 
 
 Some examples:
@@ -38,8 +38,8 @@ to
      margin-top: 14px;
   }
 
-the margin-top: 14px; will have no effect. 
-On retrieving the matching rules again to reflect the changes this will actually look like:
+The margin-top: 14px; will have no effect. 
+On retrieving the matching rules again to reflect the changes, this will actually look like:
 
   div 
   { 
@@ -50,7 +50,7 @@ On retrieving the matching rules again to reflect the changes this will actually
      margin-left: 0px;
   }
 
-2. a user changes
+2. a user changes:
 
   div 
   { 
@@ -58,7 +58,7 @@ On retrieving the matching rules again to reflect the changes this will actually
      margin-top: 14px;
   }
 
-to
+to:
 
   div 
   { 
@@ -66,7 +66,7 @@ to
      foo: bar;
   }
 
-this will have no effect. 
+This will have no effect. 
 On retrieving the matching rules again to reflect the changes this will actually look like:
 
   div 
@@ -78,24 +78,24 @@ On retrieving the matching rules again to reflect the changes this will actually
 suggestion to solve the issue
 -----------------------------
 
-To reflect the user changes in a better way, we will introduce a "user layer" on the client side 
-in the moment where the user starts to change some rule of the given declaration. This layer will
+To reflect the user changes in a better manner, we will introduce a "user layer" on the client side 
+the moment the user starts to change some rule of the given declaration. This layer will
 reflect exactly the user input.
 
 If the user does create a shorthand property we will scan the declaration for any resolved property
-for that shorthand and submitting them after the update of the current edited property. This will
+for that shorthand, and submit them after the update of the current edited property. This will
 preserve the property order as presented to the user.
 
 On retrieving the matching rules again some kind of diff will be created to reflect the changes. 
 If the user has submitted a valid shorthand, only that shorthand will be displayed with an 
-expanding button. Only if he will expand the shorthand the resolved properties will be displayed.
+expanding button. The resolved properties will only be displayed if the user expands the shorthand.
 
-To still be able to flag properties as overwritten, we will introduce a new flag, partial 
-overwritten for the case that some of the resolved properties of the shorthand are actually 
+To still be able to flag properties as overwritten, we will introduce a new flag which will be partially 
+overwritten in the case that some of the resolved properties of the shorthand are actually 
 overwritten, but not all of them.
 
 If the user has submitted an invalid property or value it will be flagged and displayed as invalid
-( e.g. line-through ) 
+( e.g. line-through ). 
 
 Some examples:
 
@@ -116,7 +116,7 @@ to
      margin-top: 14px;
   }
 
-On retrieveing the matching rules again this will be dispalayed as
+On retrieveing the matching rules again, this will be displayed as:
 
   div 
   { 
@@ -125,7 +125,7 @@ On retrieveing the matching rules again this will be dispalayed as
      margin-top: 14px;
   }
 
-the user can expand that to:
+The user can expand that to:
 
   div 
   { 
@@ -138,7 +138,7 @@ the user can expand that to:
      margin-top: 14px;
   }
 
-2. a user changes
+2. A user changes:
 
   div 
   { 
@@ -146,7 +146,7 @@ the user can expand that to:
      margin-top: 14px;
   }
 
-to
+to:
 
   div 
   { 
@@ -154,7 +154,7 @@ to
      foo: bar;
   }
 
-On retrieveing the matching rules again this will be dispalayed as:
+On retrieveing the matching rules again, this will be dispalayed as:
 
   div 
   { 
