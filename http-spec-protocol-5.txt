@@ -5,28 +5,28 @@ Last modified by runeh@opera.com, 08 dec. 2008
 
 ## Improvements required between p4 and p5:
 
-- Access to information about what Opera knows and thinks about a resource.
-- Access to body of data sent and received
--- But only when required, as in profile vs. debug modes
-- Splitting sets of requests into request contexts, for profiling full page
+- Enable access to information about what Opera knows and thinks about a resource.
+- Enable access to a body of data sent and received
+-- but only when required, as in profile vs. debug modes
+- Enable splitting sets of requests into request contexts, for profiling full page
   loads
 
 ## Observations
 
-There are a some things that are very natural for an http logger to have access
+There are some things that are very natural for an http logger to have access
 to. Some of these are potentially difficult to expose in a nice way because
 of the architecture of Opera. Most importantly, we are interested in showing
 information from the entire lifespan of a request. This may span modules
 in a ways that dictate the structure of the protocol.
 
 
-### What's a meta request?
+### What is a meta request?
 
-A meta request is the highest level request for a resources. It means
+A meta request is the highest level request for a resource. It means
 "There is a resource I need somewhere. Please find it for me". This may or
 may not lead to an actual request. Resources may be cached, or they may
 already be in the browser somewhere because of having been loaded in a
-different tab or window. Consider for instance a favicon.ico file for a site.
+different tab or window. Consider a favicon.ico file for a site.
 Only one instance of it is fetched even though several tabs require the same
 resource. When a new tab requests that resource, a meta-request occurs.
 
@@ -46,15 +46,15 @@ resource. When a new tab requests that resource, a meta-request occurs.
     
     # Events:
     
-    # There will _always_ be fired a meta request event when a resource is requested
+    # A meta request event will _always_ be fired when a resource is requested:
     META-REQUEST ::= "<meta-request>"
                        CONTEXT
                        RESOURCE-ID
                        URL
                      "</meta-request>" ;
 
-    # There _may_ be fired a request event when a resource is requested
-    # If there is a request event there _must_ be a RESPONSE-HEADER and
+    # A request event _may_ be fired when a resource is requested.
+    # If there is a request event, there _must_ be a RESPONSE-HEADER and
     # RESPONSE-FINISHED event.
     REQUEST ::= "<request>"
                   REQUEST-ID
@@ -81,8 +81,8 @@ resource. When a new tab requests that resource, a meta-request occurs.
                             CONTENT-LENGTH
                           "</response-finished>" ;
     
-    # a response-finished event will always be followed by a RESOURCE-DATA
-    # event. The resource may or may not contain the content of the resouce,
+    # A response-finished event will always be followed by a RESOURCE-DATA
+    # event. The resource may or may not contain the content of the resouce
     # depending on the current settings
     # A RESOURCE-DATA event may also be the result of a GET-RESOURCE action
     RESOURCE-DATA ::= "<resource-data>"
@@ -119,7 +119,7 @@ resource. When a new tab requests that resource, a meta-request occurs.
     
     RAW-RESPONSE-HEADER ::= "<raw-response-header>" TEXT "</raw-response-header>" ;
     
-    # It's possible, and legal, to get several headers with the same name
+    # It is possible and legal to get several headers with the same name:
     PARSED-HEADERS ::= "<parsed-headers>"
                          HEADER*
                        "</parsed-headers>" ;
@@ -155,9 +155,9 @@ resource. When a new tab requests that resource, a meta-request occurs.
   requested.
 - The issue of "request context" has not been dealt with in any way. That is, a
   context to which numerous requests belong. This is needed in order to show
-  nice graphs of how long it takes to load a certain web page for instance.
-  A possible sollution would be to introduce a <new-request-context> event. This
-  would contain the window-id as it's content. The event would be raised
+  nice graphs, for instance of how long it takes to load a certain web page.
+  A possible solution would be to introduce a <new-request-context> event. This
+  would contain the window-id as its content. The event would be raised
   whenever a window (as windows are defined in the context of scope) is
-  reloaded or navigation switches from one url to another. Who can opine about
+  reloaded, or navigation switches from one url to another. Who can opine about
   the feasability of getting this from core? Would platform need to be involved?
