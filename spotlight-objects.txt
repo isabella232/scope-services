@@ -4,27 +4,27 @@
  
 ###
 # This is a new version of the SPOTLIGHT-OBJECT command of the ECMAScript debugger protocol.
-# The mockup on  http://kaleidoscope.vlab.osa/tests-and-mockups/highlight-mockup/ is part of this spec.
-# Box means an area on the view-port for a given DOM element. Dimensions refer to CSS definitions.
-# E.g. the dimension box means the area given by the width and height of the element,
-# the padding box includes the padding, the border box the borders and the margin box the margins.
-# The display property like inline, inline-block, etc is currently not taken in regard
-# ( must probably be addressed later ), the elements are always treated as block levels.
-# Borders or grids of a given box are always drawn with 1px with, inside the box dimension.
+# The mockup on http://kaleidoscope.vlab.osa/tests-and-mockups/highlight-mockup/ is part of this spec.
+# Box means an area on the view port for a given DOM element. Dimensions refer to CSS definitions.
+# The dimension box is the area given by the width and height of the element,
+# the padding box includes the padding, the border box includes the borders and the margin box includes the margins.
+# The display properties inline, inline-block, etc., are not currently regarded
+# ( must probably be addressed later ) and the elements are always treated as block levels.
+# Borders or grids of a given box are always drawn with 1px width inside the box dimension.
  
 COMMAND ::= SPOTLIGHT-OBJECTS ;
  
-# with the new spotlight command more then one element can be highlighted.
+# With the new spotlight command, more than one element can be highlighted.
 # This will be used to draw only borders around previously selected elements
 # if the user selects to do so ( try the "lock" checkmark in the mockup ).
 # The drawing order starts with the last SPOTLIGHT-OBJECT.
-# Drawing starts always with clearing everything previously drawn,
-# e.g. with no SPOTLIGHT-OBJECT it's like a clear command.
+# Drawing always starts with the clearing of everything previously drawn,
+# e.g., with no SPOTLIGHT-OBJECT it is similar to a clear command.
 SPOTLIGHT-OBJECTS ::= "<spotlight-objects>"
                           SPOTLIGHT-OBJECT*
                       "</spotlight-objects>" ;
  
-# The drawing order is box, reference-box-frame, box-frame, grid.
+# The drawing order is: box, reference-box-frame, box-frame, grid.
 # OBJECT-ID: see existing spec.
 SPOTLIGHT-OBJECT ::= "<spotlight-object>"
                           OBJECT-ID
@@ -32,7 +32,7 @@ SPOTLIGHT-OBJECT ::= "<spotlight-object>"
                           BOX*
                       "</spotlight-object>" ;
 
-# *-COLOR: The corresponding box is drawn only if the element is present
+# *-COLOR: The corresponding box is drawn only if the element is present:
 BOX ::= "<box>"
             BOX-TYPE
             FILL-COLOR?
@@ -40,17 +40,17 @@ BOX ::= "<box>"
             GRID-COLOR?
         "</box>" ;
 
-# Boolean value to choose whether the given object should be scrolled into view.
+# This is a Boolean value to choose whether the given object should be scrolled into view.
 SCROLL-INTO-VIEW ::= "<scroll-into-view>"
                          ( 0 | 1 )
                      "</scroll-into-view>" ;
 
-# The fill color of a box is always drawn as an XOR of the box the box immediately within it,
-# which is the next "smaller" box:for the margin-box it's the border-box,
-# for the border-box it's the padding-box, for the padding-box t's the dimension-box.
-# See e.g. the "test-negative-margins.html" in the mockup on hovering "margin" area in "Metrics".
-# The XOR will fail in some cases, but in the most ( real world ) cases it will show
-# the actual margin, border or padding dimensions.
+# The fill color of a box is always drawn as a XOR of the box immediately within it,
+# which is the next "smaller" box: for the margin-box it is the border-box,
+# for the border-box it is the padding-box, for the padding-box it is the dimension-box.
+# See the "test-negative-margins.html" page in the mockup on hovering "margin" area in "Metrics".
+# The XOR will fail in some cases, but in most (real world) cases it will show
+# the actual margin, border, or padding dimensions.
 #
 # Valid values:
 #   0: dimension
@@ -61,12 +61,12 @@ BOX-TYPE ::= "<box-type>" ( 0 | 1 | 2 | 3 ) "</box-type>" ;
  
 FILL-COLOR ::= "<fill-color>" COLOR "</fill-color>" ;
  
-# Drawn with 1px width inside the box
+# Drawn with 1px width inside the box:
 FRAME-COLOR ::= "<frame-color>" COLOR "</frame-color>" ;
  
-# Drawn with 1px width inside the box over the whole document
+# Drawn with 1px width inside the box over the whole document:
 GRID-COLOR ::= "<grid-color>" COLOR "</grid-color>" ;
  
-# COLOR is given as an 32 bit unsigned integer, where the 8 most significant bits are the red channel,
+# COLOR is given as a 32 bit unsigned integer, where the 8 most significant bits are the red channel,
 # the 8 next are green, the 8 next are blue, and the 8 least significant bits are alpha channel.
 COLOR ::= unsigned ;
