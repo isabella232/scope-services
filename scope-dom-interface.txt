@@ -5,7 +5,7 @@ Most of the changes related to `STP/1` will be handled by the backend of
 the ``JS``/``DOM`` API. This means that scope will decide features based on what is
 available in the host.
 
-When only `STP/0` is available in host scope will perform these steps.
+When only `STP/0` is available in host, scope will perform these steps.
 
 - Receive initial service list.
 - Initiate `STP/0` fallback if the host runs core-2.4 or higher,
@@ -16,8 +16,8 @@ For `STP/1` scope will perform these steps.
 
 - Receive initial service list.
 - Initiate `STP/1` handshake.
-- Initiating contact with the host to receive client ID (scope.Connect)
-- Selecting format for messages, it will use protocol buffer for `STP/1`
+- Initiating contact with the host to receive a client ID (scope.Connect).
+- When selecting format for messages, it will use protocol buffer for `STP/1`
   and ``JSON`` for `STP/0`.
 
 Determine DOM API version
@@ -25,9 +25,9 @@ Determine DOM API version
   
 The new ``DOM`` API can be detected by checking if the ``stpVersion`` function
 is available on the ``opera`` object. This can be called to get
-the version of the builtin transport layer.
+the version of the built-in transport layer.
 
-For instance calling it on core-2.4 would return::
+For instance, calling it on core-2.4 would return::
 
   "STP/1"
 
@@ -35,14 +35,14 @@ Adding a client
 ---------------
 
 ``scopeAddClient`` is used to register a new client to scope. It will remove any
-existing client before adding the new one as the current.
-The call will initiate contact with scope. If ``port`` is to 0 it will contact
-the builtin scope, otherwise it will use it as a port number on a remote host
-and await connections from it, after this the remote host must start the
+existing client before adding the new one as the current client.
+The call will initiate contact with scope. If ``port`` is set to 0 it will contact
+the built-in scope, otherwise it will use it as a port number on a remote host
+and await connections from it. After this the remote host must start the
 debugger through the URL opera:debug.
 
-The call also register callbacks for when the host is connected, when messages
-are received (responses or events) and when the remote host disconnects.
+The call also registers callbacks when the host is connected, when messages
+are received (responses or events), and when the remote host disconnects.
 
 The signature is::
 
@@ -50,10 +50,10 @@ The signature is::
 
 The ``connected`` callback is called when the service list has been sent from the
 host and is available for the client to look at. For `STP/0` that means right
-after the service list is received, for `STP/1` it will happen after both
+after the service list is received, for `STP/1` it will happen after the
 handshake and client connect phase is complete.
 
-The service list will be modified to only show currently used STP version.
+The service list will be modified to only show the currently used STP version.
 For instance if `STP/1` was chosen it would contain "stp-1" while if `STP/0`
 was chosen it would contain "stp-0-json".
 
@@ -61,7 +61,7 @@ The signature of the callback is::
 
   connected(services: string)
   
-The ``receive`` callback exists in two version, one for `STP/0` where only
+The ``receive`` callback exists in two versions, one of which is `STP/0` where only
 the service name and message payload is known.
 
 The `STP/0` signature is::
@@ -74,20 +74,20 @@ They are:
 
 ``command``:
   The numeric value of the command in use. The actual value is unique per
-  service and can found be looking at the specific service definition.
+  service, and can be found by looking at the specific service definition.
 
 ``status``:
-  The numeric value of the status value, see `STP/1` document for explanation. A
+  The numeric value of the status value. See the `STP/1` document for explanation. A
   value of 0 means everything is ok, while any other value means an error.
 
 ``tag``:
   The synchronization tag that was initially sent to the host. If the command
-  is an even the tag value will be 0.
+  is an even numeric value, the tag value will be 0.
 
-In addition the message payload will decoded by scope and will contain JS
-objects, as opposed to in `STP/0` where the message is just a string.
+In addition the message payload will be decoded by scope, and will contain JavaScript
+objects as opposed to those in `STP/0` where the message is just a string.
 Scope will decode the data from the incoming protocol buffer data by 
-first requesting message definitions from the host and using that to decode.
+first requesting message definitions from the host and then using that to decode.
 
 The `STP/1` signature is::
 
@@ -151,7 +151,7 @@ For `STP/0` the function signature is::
   scopeEnableService(service: string)
 
 For `STP/1` a callback is available which is called when the service has been
-enabled or an error occured. The signature of the callback is the same as
+enabled or an error has occured. The signature of the callback is the same as
 the ``receive`` callback.
 
 The function signature is::
@@ -161,8 +161,8 @@ The function signature is::
 Transmitting data
 -----------------
 
-``scopeTransmit`` will now accept data tto services in native Javascript objects
-if the host is running core-2.4 or higher, if the host is core-2.3 or lower
+``scopeTransmit`` will now accept data into services in native JavaScript objects
+if the host is running core-2.4 or higher. If the host is core-2.3 or lower,
 it will be transmitted as a string as before.
 
 For `STP/0` the signature is::
@@ -174,12 +174,12 @@ For `STP/1` there are extra arguments available which will be put in the
 
 ``command``:
   The numeric value of the command in use. The actual value is unique per
-  service and can found be looking at the specific service definition.
+  service and can be found by looking at the specific service definition.
 
 ``tag``:
-  The synchronization tag which is sent to host and later sent to the
+  The synchronization tag which is sent to the host and later sent to the
   ``receieve`` callback. The tag can contain the values in the range
-  1 to 2^32-1, a value of 0 or negative values are not allowed.
+  1 to 2^32-1. A value of 0 or negative values are not allowed.
 
 The signature is::
 
