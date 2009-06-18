@@ -7,30 +7,30 @@ see also screenshots http://kaleidoscope.vlab.osa/~chrisk/screenshots-spotlight/
 Types of spotlight
 
   - default
-    used on hover elements in the host or on selecting an element in the DOM view
+    This is used on hover elements in the host or on selecting an element in the DOM view.
 
   - Metrics diagram
-    used in DOM > Layout to spotlight a given box ( dimension, padding, border, margin)
+    This is used in DOM > Layout to spotlight a given box ( dimension, padding, border, margin).
 
   - Locked Elements
-    to spotlight all the locked elements
+    This is used to spotlight all the locked elements.
 
 Default Spotlight
-  There is a setting to turn that on or off, present as switch button in the DOM view and as check box in Settings > DOM.
+  There is a setting to turn it on or off. It is present as a switch button in the DOM view, and as check box in Settings > DOM.
   The selected element in the DOM view shall only be highlighted while hovering it.
   Hovering an element in a breadcrumb, either in the status bar or in DOM > Layout, shall also spotlight the element.
 
 Metrics diagram
-  Hovering a given box in DOM > Layout in the Metrics Diagram shall spotlight the according box in the host. The hover color shall be the same color as on the host side.
+  Hovering a given box in DOM > Layout in the Metrics Diagram shall spotlight the corresponding box in the host. The hover color shall be the same color as on the host side.
 
 
 Locked Elements
-  There is a setting to turn on / off lock elements in the tool-bar in DOM view. If turned on all selected ( clicked ) elements shall be spotlighted at once. This is mainly to check relations between elements. On switching off all locked elements shall be cleared.
+  There is a setting to turn on / off lock elements in the tool bar in DOM view. If turned on, all selected ( clicked ) elements shall be spotlighted at once. This is mainly to check relations between elements. When it is switched off, all locked elements shall be cleared.
 
 
 Settings
-  The setting shows by default two color selects for "fill and frame" and "grid". Selecting a color will generate automatically a color schema. There is also a button to switch back to the initial color schema. 
-  The advanced view shows all colors and selects to change them.
+  The setting shows by default two color selects for "fill and frame" and "grid". Selecting a color will automatically generate a color schema. There is also a button to switch back to the initial color schema. 
+  The advanced view shows all colors and the selects to change them.
 
 Keyboard Shortcuts
-  CTRL-I to invert the current used color schema. (works only if the DF window has focus ). The purpose is to be able to switch quickly to an other schema if the current does match e.g. the color schema of the document.
+  Use CTRL-I to invert the current used color schema. (works only if the DF window has focus ). The purpose is to be able to switch quickly to another schema if the current one does match the color schema of the document.
