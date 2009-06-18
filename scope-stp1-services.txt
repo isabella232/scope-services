@@ -10,7 +10,7 @@ Changelog
 =========
 
 === =================================================================
-0.1 Moved all doc not related to STP to this document.
+0.1 Moved all docs not related to STP to this document.
 0.2 Finished details on "scope" service.
 0.3 Made "scope" service use UMS for all commands.
 === =================================================================
@@ -21,7 +21,7 @@ Commands and Events
 System commands
 ===============
 
-All previous system commands (starts with a `*`) will be now be organized in
+All previous system commands (starting with an `*`) will be now be organized in
 a proper service called "scope". See `Service: Scope`_ for more details.
 
 Services and multiple clients
@@ -30,7 +30,7 @@ Services and multiple clients
 Some services allows multiple clients to be active while others should
 only have one client active at a time.
 For instance, the ECMAScript debugger involves getting information about new
-threads and scripts and can change the current state with breakpoints and
+threads and scripts, and can change the current state with breakpoints and
 continuing execution. If two or more clients do this it would be impossible for
 them to know what state the Opera host is in. There can also be conflicting
 requests if both try to act on stopped threads in different ways.
@@ -38,7 +38,7 @@ requests if both try to act on stopped threads in different ways.
 Whenever a client enables a service, the service will be able to differentiate
 between them with a unique client ID. The service can keep track of which
 clients are active and send back information to specific clients if it wants.
-It can also deny new clients to be active if one already is active.
+It can also deny new clients attempting to be active if one already is active.
 If a service denies a client it responds with the status 1 (Conflict).
 
 Service: Scope
@@ -113,7 +113,7 @@ Event: OnQuit
 
 CommandID: 1
 
-This event is sent by Opera to the proxy or client when Opera terminates
+This event is sent by Opera to the proxy or client when Opera terminates its
 operation. No communication with Opera is possible once Opera has sent the
 event. When the proxy receives this message it broadcasts it to all of its
 clients.
@@ -127,7 +127,7 @@ Event: OnConnectionLost
 
 CommandID: 2
 
-This is a special event which is used by the proxy (and not the host) when the connection
+This is a special event which is used by the proxy (and not by the host) when the connection
 to the Opera host is unexpectedly lost, for instance if the Opera host crashes.
 
 The event is defined as::
@@ -158,7 +158,7 @@ CommandID: 3
 
 This commands is used by the client to initiate connection with the host.
 The host will register the client and respond with a numerical client ID
-which is used for subsequent commands and events.
+which is then used for subsequent commands and events.
 The command also specifies the global settings for the client. Currently this
 means setting the format of all messages for this client.
 
@@ -249,7 +249,7 @@ Command: Disable
 
 CommandID: 6
 
-This is used to disable a clients access to one service. If the service
+This is used to disable a client's access to one service. If the service
 has other clients connected the service will stay enabled.
 Once the client has been removed the from the service it will no longer
 receive events from it, and it will not be able to send commands to it.
@@ -266,10 +266,10 @@ It is defined as::
 
 The response contains no data.
 
-If the service is not found it will return with status "Service Not Found" (6).
-If the service is not yet enabled it will return with status
+If the service is not found it will return with a status of "Service Not Found" (6).
+If the service is not yet enabled it will return with a status of
 "Service Not Enabled" (8).
-If the client tries to disable the "scope" service it will return with status
+If the client tries to disable the "scope" service it will return with a status of
 "Bad Request" (3).
 
 Command: Info
@@ -306,7 +306,7 @@ It is defined as::
       required uint32 number = 2;
   }
 
-The command list contains all the commands in the service, each command is
+The command list contains all the commands in the service. Each command is
 listed with its name and the corresponding command ID (used by STP/1).
 The event list is similar to the command list, but is listed for the available
 events.
@@ -357,17 +357,17 @@ The command is defined as::
       required uint32 maxClients = 4;
   }
 
-The command responds with information on available services, version and
+The command responds with information on available services, version, and
 other relevant information.
 
 The `version` field contains the major and minor version number of the service.
 The first number is the major version, the second is the minor, and any additional
 numbers/strings are not of relevance but can be shown to the end-user if wanted.
 
-The major version determines major changes (ie. compatibility breaks) while
+The major version determines major changes (ie. compatibility breaks), while
 the minor version determines incremental changes (ie. backwards compatible).
 The client must check these two numbers to ensure it is able to communicate
-properly with the service, if the major version is different from the
+properly with the service. If the major version is different from the
 versions the client is compatible with, or the minor version is less than
 the required version, it must disconnect.
 
