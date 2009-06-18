@@ -9,13 +9,13 @@
 
 ## Summmary
 
-The console log api exposes logging and profiling methods to the javascript
+The console log api exposes logging and profiling methods to the JavaScript
 environment. This document specifies what scope protocol events will result
 from those methods.
 
 ## Supported methods
 
-The following interface should madea available on the `console` object when
+The following interface should be made available on the `console` object when
 logging is enabled.
 
     interface Console {
@@ -52,11 +52,11 @@ but these are not implemented. An example of using the format string would be:
 The `group` and `groupEnd` methods manage grouping of log messages through
 indentation. `console.group("request log starts")` will emit the text
 "request log starts" in the debugger. All following log messages will
-be intented by one level until `console.groupEnd()` is called.
+be indented by one level until `console.groupEnd()` is called.
 
-`dir` and `dirxml` provide human readable of complex objects. `dir(object)`
-will emit a list of an list of all properties of the object. The properties
-may in turn be interactive, as in; you can collapse and expand them.
+`dir` and `dirxml` provide human readability of complex objects. `dir(object)`
+will emit a list of all properties of the object. The properties
+may in turn be interactive, meaning that you can expand and collapse them.
 `dirxml(node)` emits the xml source of an element.
 
 
@@ -66,14 +66,14 @@ The protocol makes no distinction between the "normal" log calls and the
 `xml` and `dirxml` calls. The only difference between them is how they are
 presented on the client side.
 
-There is defined an optional severity element. This is not specified in
-the mozilla console log but is included for completeness sake. If it is
+An optional severity element is defined. This is not specified in
+the mozilla console log, but is included for completeness sake. If it is
 not present, its value should be assumed to be 0.
 
 The GROUP-RESET message is supposed to indicate that there is no longer any
 open groups for the window. This will have to be sent on reload.
 
-The firefox implementation of dirxml does nothing when handed an object that
+The Firefox implementation of dirxml does nothing when handed an object that
 is not an element. I'm unsure of what we should be doing in this case. It's
 easy to completely ignore the call or just print some debug text saying that
 the argument was false. The alternative is to do argument checking on the
