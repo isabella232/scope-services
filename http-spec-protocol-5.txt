@@ -83,7 +83,7 @@ resource. When a new tab requests that resource, a meta-request occurs.
     
     # A response-finished event will always be followed by a RESOURCE-DATA
     # event. The resource may or may not contain the content of the resouce
-    # depending on the current settings
+    # depending on the current settings.
     # A RESOURCE-DATA event may also be the result of a GET-RESOURCE action
     RESOURCE-DATA ::= "<resource-data>"
                         RESOURCE-ID
