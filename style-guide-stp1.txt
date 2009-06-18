@@ -18,7 +18,7 @@ HTML ``<code>`` element, like ``STP/1``.
 
 Whenever talking about Opera Dragonfly, be sure to include the Opera-prefix.
 
-Every HTML must have the following header, placed right after the ``<body>`` tag::
+Every HTML page must have the following header, placed right after the ``<body>`` tag::
 
    <p class="logo">
       <img src="http://www.opera.com/media/images/logo/ologo_wback.gif">
@@ -28,9 +28,9 @@ And the following footer::
 
     <div id="footer">© Opera Software ASA</div>
 
-Some documents have changelogs. These should be removed. We can rely on external changelogs from e.g. Mercurial.
+Some documents have changelogs. These should be removed. We can rely on external changelogs from Mercurial.
 
-Every document should clearly show the status of the document. It should be one of "Draft", "Discontinued", "In use". If "Discontinued", it should state in which versions it was last available. If "Discontinued" or "In use", it should state in which version it was introduced. This information should be presented as a definition list::
+Every document should clearly show the status of the document. It should be one of "Draft", "Discontinued", or "In use". If "Discontinued", it should state in which versions it was last available. If "Discontinued" or "In use", it should state in which version it was introduced. This information should be presented as a definition list::
 
      <div class="docdata">
      <dl>
