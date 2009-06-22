@@ -16,7 +16,7 @@ It is currently not possible to figure out which actions take parameters (`value
 Optimistically, we have made the `Action` type extendable to include such information later."""
 
 exec_data = Message("ActionList",
-                    fields=[Field(Proto.Message, "ActionList", 1, q=Quantifier.Repeated,
+                    fields=[Field(Proto.Message, "actionList", 1, q=Quantifier.Repeated,
                                   message=Message("Action", is_global=False,
                                                   doc="""Executes a series of actions in the opera host,\neach action consists of a name identifying the\naction and optionally a value for the action.\nThe value depends on the type of action.""",
                                                   fields=[Field(Proto.String, "name",  1, doc=actiondoc)
