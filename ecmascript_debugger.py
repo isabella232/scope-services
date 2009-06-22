@@ -413,7 +413,7 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(19, "OnThreadStoppedAt", thread_stopinfo)
                                ,Event(20, "OnHandleEvent",     dom_event)
                                ,Event(21, "OnObjectSelected",  object_selection)
-                               ,Event(27, "OnParseError",      parse_error_info)
+                               ,Event(28, "OnParseError",      parse_error_info)
 
                                # CSS inspector, should be moved to separate service
                                ,Request(22, "CssGetIndexMap",          False,                    css_index_map)
