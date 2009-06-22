@@ -121,11 +121,11 @@ property_data = Message("Property", is_global=False,
 
 object_data = Message("ObjectInfo",
                       fields=[Field(Proto.Message, "value",       1, message=object_value)
-                             ,Field(Proto.Message, "properties",  2, q=Quantifier.Repeated, message=property_data)
+                             ,Field(Proto.Message, "propertyList",  2, q=Quantifier.Repeated, message=property_data)
                              ])
 
 object_info = Message("ObjectList",
-                      fields=[Field(Proto.Message, "objects", 1, q=Quantifier.Repeated, message=object_data)
+                      fields=[Field(Proto.Message, "objectList", 1, q=Quantifier.Repeated, message=object_data)
                              ])
 
 spotlight_box = Message("SpotlightBox", is_global=False, 
@@ -150,11 +150,11 @@ e.g.:
 spotlight_object = Message("SpotlightObject", comment="The drawing order is box, reference-box-frame, box-frame, grid.",
                               fields=[Field(Proto.Uint32,  "objectID",       1)
                                      ,Field(Proto.Bool,    "scrollIntoView", 2, comment="Chooses whether the given object should be scrolled into view or not.")
-                                     ,Field(Proto.Message, "boxes",          3, q=Quantifier.Repeated, message=spotlight_box)
+                                     ,Field(Proto.Message, "boxList",        3, q=Quantifier.Repeated, message=spotlight_box)
                                      ]) 
 
 spotlight_selection = Message("SpotlightSelection", comment="To highlight elements in the document",
-                              fields=[Field(Proto.Message, "spotlightObjects", 1, q=Quantifier.Repeated, message=spotlight_object)
+                              fields=[Field(Proto.Message, "spotlightObjectList", 1, q=Quantifier.Repeated, message=spotlight_object)
                                      ]) 
 
 spotlight_object_selection = Message("SpotlightObjectSelection",
@@ -220,7 +220,7 @@ backtrace_frame = Message("BacktraceFrame",
                                   ])
 
 backtrace_frames = Message("BacktraceFrameList",
-                           fields=[Field(Proto.Message, "frames", 1, q=Quantifier.Repeated, message=backtrace_frame)
+                           fields=[Field(Proto.Message, "frameList", 1, q=Quantifier.Repeated, message=backtrace_frame)
                                   ])
 
 dom_traversal = Message("DomTraversal", 
@@ -245,7 +245,7 @@ attribute = Message("Attribute", is_global=False,
                     fields=[Field(Proto.String,  "namePrefix", 1)
                            ,Field(Proto.String,  "name",       2)
                            ,Field(Proto.String,  "value",      3)
-#                           ,Field(Proto.Message, "attributes", 4, q=Quantifier.Repeated)
+#                           ,Field(Proto.Message, "attributeList", 4, q=Quantifier.Repeated)
                            ])
 #attribute.fields[3].message = attribute
 
@@ -257,7 +257,7 @@ node_info = Message("NodeInfo",
 
                            # If `type` is 1
                            ,Field(Proto.String,  "namespacePrefix", 5, q=Quantifier.Optional)
-                           ,Field(Proto.Message, "attributes",      6, q=Quantifier.Repeated, message=attribute)
+                           ,Field(Proto.Message, "attributeList",   6, q=Quantifier.Repeated, message=attribute)
                            ,Field(Proto.Uint32,  "childrenLength",  7, q=Quantifier.Optional)
 
                            # If `type` is 3, 4, 7 or 8
@@ -269,7 +269,7 @@ node_info = Message("NodeInfo",
                            ])
 
 node_list = Message("NodeList",
-                    fields=[Field(Proto.Message,  "nodes", 1, q=Quantifier.Repeated, message=node_info)
+                    fields=[Field(Proto.Message,  "nodeList", 1, q=Quantifier.Repeated, message=node_info)
                            ])
 
 parse_error_info = Message("DomParseError",
@@ -282,7 +282,7 @@ parse_error_info = Message("DomParseError",
                                   ])
 
 css_index_map = Message("CssIndexMap",
-                    fields=[Field(Proto.String,  "property", 1, q=Quantifier.Repeated)
+                    fields=[Field(Proto.String,  "nameList", 1, q=Quantifier.Repeated)
                            ])
 
 css_stylesheet = Message("Stylesheet", is_global=False,
@@ -298,7 +298,7 @@ css_stylesheet = Message("Stylesheet", is_global=False,
                                 ])
 
 css_stylesheet_list = Message("CssStylesheetList",
-                              fields=[Field(Proto.Message,  "stylesheets", 1, q=Quantifier.Repeated, message=css_stylesheet)
+                              fields=[Field(Proto.Message,  "stylesheetList", 1, q=Quantifier.Repeated, message=css_stylesheet)
                                      ])
 
 css_stylesheet_selection = Message("CssStylesheetSelection",
@@ -333,7 +333,7 @@ css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
                                      ,Field(Proto.String,  "media",               9, q=Quantifier.Repeated)
 
                                      # For MEDIA
-                                     ,Field(Proto.Message, "rules",              10, q=Quantifier.Repeated)
+                                     ,Field(Proto.Message, "ruleList",           10, q=Quantifier.Repeated)
 
                                      # For IMPORT
                                      ,Field(Proto.String,  "href",               11, q=Quantifier.Optional)
@@ -346,11 +346,11 @@ css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
                                      ,Field(Proto.String,  "charset",            14, q=Quantifier.Optional)
                                      ])
 # Must be set separately due to recursion
-css_stylesheet_rule["rules"].message = css_stylesheet_rule
+css_stylesheet_rule["ruleList"].message = css_stylesheet_rule
 css_stylesheet_rule.updateCount({})
 
 css_stylesheet_rules = Message("CssStylesheetRules",
-                               fields=[Field(Proto.Message, "rules",  1, q=Quantifier.Repeated, message=css_stylesheet_rule)
+                               fields=[Field(Proto.Message, "ruleList",  1, q=Quantifier.Repeated, message=css_stylesheet_rule)
                                       ])
 
 css_element_selection = Message("CssElementSelection",
@@ -384,8 +384,8 @@ css_node_style = Message("NodeStyle", is_global=False,
                                 ])
 
 css_node_decls = Message("CssStyleDeclarations",
-                         fields=[Field(Proto.String,  "computedStyles",  1, q=Quantifier.Repeated)
-                                ,Field(Proto.Message, "nodeStyles",      2, q=Quantifier.Repeated, message=css_node_style)
+                         fields=[Field(Proto.String,  "computedStyleList",  1, q=Quantifier.Repeated)
+                                ,Field(Proto.Message, "nodeStyleList",      2, q=Quantifier.Repeated, message=css_node_style)
                                 ])
 
 es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",

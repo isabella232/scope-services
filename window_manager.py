@@ -17,11 +17,11 @@ window_list = Message("WindowList",
                              ])
 
 window_filter = Message("WindowFilter",
-                        fields=[Field(Proto.Bool,   "clearFilter",    1, default=False)
-                               ,Field(Proto.Uint32, "includeID",      2, q=Quantifier.Repeated)
-                               ,Field(Proto.String, "includePattern", 3, q=Quantifier.Repeated)
-                               ,Field(Proto.Uint32, "excludeID",      4, q=Quantifier.Repeated)
-                               ,Field(Proto.String, "excludePattern", 5, q=Quantifier.Repeated)
+                        fields=[Field(Proto.Bool,   "clearFilter",        1, default=False)
+                               ,Field(Proto.Uint32, "includeIDList",      2, q=Quantifier.Repeated)
+                               ,Field(Proto.String, "includePatternList", 3, q=Quantifier.Repeated)
+                               ,Field(Proto.Uint32, "excludeIDList",      4, q=Quantifier.Repeated)
+                               ,Field(Proto.String, "excludePatternList", 5, q=Quantifier.Repeated)
                                ])
 
 # Core 2.2 examples

@@ -16,7 +16,7 @@ It is currently not possible to figure out which actions take parameters (`value
 Optimistically, we have made the `Action` type extendable to include such information later."""
 
 exec_data = Message("ActionList",
-                    fields=[Field(Proto.Message, "Actions", 1, q=Quantifier.Repeated,
+                    fields=[Field(Proto.Message, "ActionList", 1, q=Quantifier.Repeated,
                                   message=Message("Action", is_global=False,
                                                   doc="""Executes a series of actions in the opera host,\neach action consists of a name identifying the\naction and optionally a value for the action.\nThe value depends on the type of action.""",
                                                   fields=[Field(Proto.String, "name",  1, doc=actiondoc)
@@ -26,7 +26,7 @@ exec_data = Message("ActionList",
                            ])
 
 get_action_list = Message("ActionInfoList", doc="List all valid `Action` `name`s",
-        fields=[Field(Proto.Message, "ActionInfos", 1, q=Quantifier.Repeated,
+        fields=[Field(Proto.Message, "actionInfoList", 1, q=Quantifier.Repeated,
                       message=Message("ActionInfo", is_global=False,
                                       doc="""Name of an action, to be used in the `Action` message.""",
                                       fields=[Field(Proto.String, "name", 1),
@@ -40,9 +40,9 @@ area = Message("area",
                        Field(Proto.Int32, "h", 4)])
 
 screenwatcher_data = Message("ScreeWatcher",
-                             fields=[Field(Proto.Uint32, "timeOut", 1),
-                                     Field(Proto.Message, "area", 2, message = area),
-                                     Field(Proto.String, "md5", 3, q=Quantifier.Repeated),
+                             fields=[Field(Proto.Uint32, "timeOut",  1),
+                                     Field(Proto.Message, "area",    2, message = area),
+                                     Field(Proto.String, "md5List",  3, q=Quantifier.Repeated),
                                      Field(Proto.Uint32, "windowID", 4, q=Quantifier.Optional)])
 
 screenwatcher_event = Message("ScreenWatcherEvent",

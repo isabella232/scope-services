@@ -28,8 +28,8 @@ event = Message("EventInfo",
                        ])
 
 service_info = Message("ServiceInfo",
-                       fields=[Field(Proto.Message, "commands", 1, message=command, q=Quantifier.Repeated)
-                              ,Field(Proto.Message, "events",   2, message=event, q=Quantifier.Repeated)
+                       fields=[Field(Proto.Message, "commandList", 1, message=command, q=Quantifier.Repeated)
+                              ,Field(Proto.Message, "eventList",   2, message=event, q=Quantifier.Repeated)
                               ])
 
 service_selection = Message("ServiceSelection",
@@ -42,7 +42,7 @@ host_info = Message("HostInfo",
                              ,Field(Proto.String,  "platform",        3)
                              ,Field(Proto.String,  "operatingSystem", 4)
                              ,Field(Proto.String,  "userAgent",       5)
-                             ,Field(Proto.Message, "services",        6, message=service, q=Quantifier.Repeated)
+                             ,Field(Proto.Message, "serviceList",     6, message=service, q=Quantifier.Repeated)
                              ])
 
 client_id = Message("ClientID",
@@ -50,7 +50,7 @@ client_id = Message("ClientID",
                            ])
 
 service_list = Message("ServiceList",
-                       fields=[Field(Proto.String, "service",    1, q=Quantifier.Repeated)
+                       fields=[Field(Proto.String, "serviceList",    1, q=Quantifier.Repeated)
                               ])
 
 error_info = Message("ErrorInfo",
