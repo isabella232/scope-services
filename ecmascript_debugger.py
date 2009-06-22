@@ -81,19 +81,17 @@ object_value = Message("ObjectValue",
                              ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, comment="Name of class (object) or function")
                              ])
 
-eval_property = Message("Property", is_global=False,
+eval_variable = Message("Variable", is_global=False,
                         fields=[Field(Proto.String, "name",      1)
-                               ,Field(Proto.String, "type",      2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
-                               ,Field(Proto.String, "value",     3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
-                               ,Field(Proto.Uint32, "objectID",  4, q=Quantifier.Optional, comment="Only present for `Object`")
+                               ,Field(Proto.Uint32, "objectID",  2)
                                ])
 
 eval_data = Message("EvalData",
-                    fields=[Field(Proto.Uint32,  "runtimeID",  1)
-                           ,Field(Proto.Uint32,  "threadID",   2)
-                           ,Field(Proto.Uint32,  "frameID",    3)
-                           ,Field(Proto.String,  "scriptData", 4)
-                           ,Field(Proto.Message, "properties", 5, q=Quantifier.Repeated, message=eval_property)
+                    fields=[Field(Proto.Uint32,  "runtimeID",    1)
+                           ,Field(Proto.Uint32,  "threadID",     2, doc="The ID of the thread to use for executing the script data, or 0")
+                           ,Field(Proto.Uint32,  "frameIndex",   3)
+                           ,Field(Proto.String,  "scriptData",   4)
+                           ,Field(Proto.Message, "variableList", 5, q=Quantifier.Repeated, message=eval_variable)
                            ])
 
 eval_result = Message("EvalResult",
