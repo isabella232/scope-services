@@ -33,13 +33,13 @@ get_action_list = Message("ActionInfoList", doc="List all valid `Action` `name`s
                                              ]
                                      ))])
 
-area = Message("area",
+area = Message("Area",
                fields=[Field(Proto.Int32, "x", 1),
                        Field(Proto.Int32, "y", 2),
                        Field(Proto.Int32, "w", 3),
                        Field(Proto.Int32, "h", 4)])
 
-screenwatcher_data = Message("ScreeWatcher",
+screenwatcher_data = Message("ScreenWatcher",
                              fields=[Field(Proto.Uint32, "timeOut",  1),
                                      Field(Proto.Message, "area",    2, message = area),
                                      Field(Proto.String, "md5List",  3, q=Quantifier.Repeated),
