@@ -7,8 +7,8 @@ console_message = Message("ConsoleMessage",
                                  ,Field(Proto.String, "description", 3)
                                  ,Field(Proto.String, "uri",         4, q=Quantifier.Optional)
                                  ,Field(Proto.String, "context",     5, q=Quantifier.Optional)
-                                 ,Field(Proto.String, "source",      7, q=Quantifier.Optional) # TODO: Make enum
-                                 ,Field(Proto.String, "severity",    8, q=Quantifier.Optional) # TODO: Make enum
+                                 ,Field(Proto.String, "source",      6, q=Quantifier.Optional) # TODO: Make enum
+                                 ,Field(Proto.String, "severity",    7, q=Quantifier.Optional) # TODO: Make enum
                                  ])
 
 console_logger = Service("ConsoleLogger", version="2.0", coreRelease="2.4",
