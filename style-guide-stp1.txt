@@ -26,7 +26,7 @@ Every HTML page must have the following header, placed right after the ``<body>`
 
 And the following footer::
 
-    <div id="footer">© Opera Software ASA</div>
+    <div id="footer">Copyright © 2009 Opera Software ASA. All rights reserved.</div>
 
 Some documents have changelogs. These should be removed. We can rely on external changelogs from Mercurial.
 
