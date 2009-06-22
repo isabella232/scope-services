@@ -11,7 +11,7 @@ header = Message("Header",
                         ])
 
 http_logger = Service("HttpLogger", version="2.0", coreRelease="2.4",
-                      commands=[Event(0,  "OnRequest",  header)
+                      commands=[Event(1,  "OnRequest",  header)
                                ,Event(2,  "OnResponse", header)
                                ],
                       cpp_class="OpScopeHttpLogger", cpp_hfile="modules/scope/src/scope_http_logger.h")

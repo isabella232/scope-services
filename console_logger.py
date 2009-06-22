@@ -12,6 +12,6 @@ console_message = Message("ConsoleMessage",
                                  ])
 
 console_logger = Service("ConsoleLogger", version="2.0", coreRelease="2.4",
-                         commands=[Event(0,  "OnConsoleMessage",  console_message)
+                         commands=[Event(1,  "OnConsoleMessage",  console_message)
                                   ],
                          cpp_class="OpScopeConsoleLogger", cpp_hfile="modules/scope/src/scope_console_logger.h")

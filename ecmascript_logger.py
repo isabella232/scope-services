@@ -15,6 +15,6 @@ esl_configure = Message("Config",
 
 ecmascript_logger = Service("EcmascriptLogger", version="2.0", coreRelease="2.4",
                             commands=[Request(1, "Configure", esl_configure, False)
-                                     ,Event(0,   "OnNewScript", esl_new_script)
+                                     ,Event(2,   "OnNewScript", esl_new_script)
                                      ],
                             cpp_class="OpScopeEcmascriptLogger", cpp_hfile="modules/scope/src/scope_ecmascript_logger.h")
