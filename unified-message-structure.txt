@@ -155,14 +155,16 @@ would be encoded like this::
   </User>
 
 For repeated fields the element also contains a sub-element for each item
-in the repeated field, the name of the sub-element is *item*.
+in the repeated field, the name of the sub-element is taken from the field
+name by removing the suffix *List*. This means that a field named *windowList*
+will have sub-elements named *window*.
 
 For instance representing a height map like this::
 
   message HeightMap {
     required uint32 width = 1;
     required uint32 height = 2;
-    repeated int32  values = 3;
+    repeated int32  valueList = 3;
   }
 
 would result in this::
@@ -170,12 +172,12 @@ would result in this::
   <HeightMap>
     <width>2</width>
     <height>2</height>
-    <values>
-     <item>1</item>
-     <item>10</item>
-     <item>7</item>
-     <item>3</item>
-    </values>
+    <valueList>
+     <value>1</value>
+     <value>10</value>
+     <value>7</value>
+     <value>3</value>
+    </valueList>
   </HeightMap>
 
 The same is true for nested messages. Each *item* will contain the fields
@@ -186,21 +188,21 @@ for the sub-message::
         required string number = 1;
         optional string extension = 2;
     }
-    repeated PhoneNumber phoneNumbers = 1;
+    repeated PhoneNumber phoneNumberList = 1;
   }
 
 would end up as::
 
   <PhoneBook>
-    <phoneNumbers>
-      <item>
+    <phoneNumberList>
+      <phoneNumber>
         <number>12345678</number>
         <extension>+47</extension>
-      </item>
-      <item>
+      </phoneNumber>
+      <phoneNumber>
         <number>555-768</number>
-      </item>
-    </phoneNumbers>
+      </phoneNumber>
+    </phoneNumberList>
   </PhoneBook>
 
 JSON
