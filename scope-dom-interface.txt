@@ -46,9 +46,7 @@ are received (responses or events), and when the remote host disconnects.
 
 The signature is:
 
-.. code-block:: javascript
-
-  scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
+.. function:: scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
 
 The ``connected`` callback is called when the service list has been sent from the
 host and is available for the client to look at. For `STP/0` that means right
@@ -61,18 +59,14 @@ was chosen it would contain "stp-0-json".
 
 The signature of the callback is:
 
-.. code-block:: javascript
-
-  connected(services: string)
+.. function:: connected(services: string)
   
 The ``receive`` callback exists in two versions, one of which is `STP/0` where only
 the service name and message payload is known.
 
 The `STP/0` signature is:
 
-.. code-block:: javascript
-
-  receive(service: string, message: string)
+.. function:: receive(service: string, message: string)
 
 For `STP/1` additional arguments are present which reflect the extra fields that
 are part of the transport message.
@@ -97,16 +91,12 @@ first requesting message definitions from the host and then using that to decode
 
 The `STP/1` signature is:
 
-.. code-block:: javascript
-
-  receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)
+.. function:: receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)
 
 The ``quit`` callback is called when the remote host disconnects.
 The signature is:
 
-.. code-block:: javascript
-
-  quit()
+.. function:: quit()
 
 Example code for `STP/1`:
 
@@ -160,9 +150,7 @@ Enabling a service
 
 For `STP/0` the function signature is:
 
-.. code-block:: javascript
-
-  scopeEnableService(service: string)
+.. function:: scopeEnableService(service: string)
 
 For `STP/1` a callback is available which is called when the service has been
 enabled or an error has occured. The signature of the callback is the same as
@@ -170,9 +158,7 @@ the ``receive`` callback.
 
 The function signature is:
 
-.. code-block:: javascript
-
-  scopeEnableService(service: string, response: callback)
+.. function:: scopeEnableService(service: string, response: callback)
 
 Transmitting data
 -----------------
@@ -183,9 +169,7 @@ it will be transmitted as a string as before.
 
 For `STP/0` the signature is:
 
-.. code-block:: javascript
-
-  scopeTransmit(service: string, message: string)
+.. function:: scopeTransmit(service: string, message: string)
 
 For `STP/1` there are extra arguments available which will be put in the
 `STP/1` transport message.
@@ -201,9 +185,7 @@ For `STP/1` there are extra arguments available which will be put in the
 
 The signature is:
 
-.. code-block:: javascript
-
-  scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)
+.. function:: scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)
   
 Example code for `STP/0`:
 
