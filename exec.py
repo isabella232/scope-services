@@ -3,17 +3,25 @@ from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Se
 
 # Service: Exec
 
-actiondoc = """The name of the action to execute. This is either a regular Opera action (e.g. "Page Down"),
-or a special exec-action. Both kinds can be found by calling `GetActionInfoList`. The special cases are
-prefixed with underscore ("_"), and these require `value` parameter to work, but always ignores `windowID`.
+actiondoc = """The name of the action to execute. 
+This is either a regular Opera action (e.g. "Page Down"),
+or a special exec-action. Both kinds can be found by 
+calling `GetActionInfoList`. The special cases are
+prefixed with underscore ("_"), and these require `value` 
+parameter to work, but always ignores `windowID`.
 
 The special cases may include:
-    _keydown | _keyup: The `value` is either a key-name ("ctrl", "down", etc.)
-                       or a single character ("a", "b", etc.)
-    _type: Types the text present in `value` (a different approach is the "Insert" action)
+    _keydown | _keyup: 
+        The `value` is either a key-name ("ctrl", "down", etc.)
+        or a single character ("a", "b", etc.)
+    _type: 
+        Types the text present in `value` 
+        (a different approach is the "Insert" action)
 
-It is currently not possible to figure out which actions take parameters (`value`), and which don't.
-Optimistically, we have made the `Action` type extendable to include such information later."""
+It is currently not possible to figure out which actions 
+take parameters (`value`), and which don't. Optimistically, 
+we have made the `Action` type extendable to include 
+such information later."""
 
 exec_data = Message("ActionList",
                     fields=[Field(Proto.Message, "Actions", 1, q=Quantifier.Repeated,
