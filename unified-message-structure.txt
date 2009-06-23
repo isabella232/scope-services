@@ -67,6 +67,12 @@ is not required it can be defined as either optional or as being repeated.
 A repeated field with zero elements and an optional field which is missing
 are considered the same.
 
+Style guide
+===========
+
+The style guide for services and all related elements are explained in
+detail in in :doc:`style-guide-stp1`.
+
 Syntax
 ======
 
