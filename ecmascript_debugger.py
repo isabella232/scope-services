@@ -291,7 +291,7 @@ css_stylesheet = Message("Stylesheet", is_global=False,
                                 ,Field(Proto.String,  "href",        3)
                                 ,Field(Proto.String,  "title",       4)
                                 ,Field(Proto.String,  "type",        5)
-                                ,Field(Proto.String,  "media",       6, q=Quantifier.Repeated)
+                                ,Field(Proto.String,  "mediaList",   6, q=Quantifier.Repeated)
                                 ,Field(Proto.Uint32,  "ownerNodeID", 7, q=Quantifier.Optional)
                                 ,Field(Proto.Uint32,  "ownerRuleID", 8, q=Quantifier.Optional)
                                 ,Field(Proto.Uint32,  "parentStylesheetID", 9, q=Quantifier.Optional)
@@ -321,16 +321,16 @@ css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
                                      ,Field(Proto.Uint32,  "ruleID",              3)
 
                                      # Common to FONT_FACE, PAGE and STYLE
-                                     ,Field(Proto.Uint32,  "indexes",             4, q=Quantifier.Repeated)
-                                     ,Field(Proto.String,  "values",              5, q=Quantifier.Repeated)
-                                     ,Field(Proto.Bool,    "priorities",          6, q=Quantifier.Repeated)
+                                     ,Field(Proto.Uint32,  "indexList",           4, q=Quantifier.Repeated)
+                                     ,Field(Proto.String,  "valueList",           5, q=Quantifier.Repeated)
+                                     ,Field(Proto.Bool,    "priorityList",        6, q=Quantifier.Repeated)
 
                                      # Common to STYLE and PAGE
-                                     ,Field(Proto.String,  "selectors",           7, q=Quantifier.Repeated, comment="0..1 for PAGE and 0..* for STYLE")
-                                     ,Field(Proto.Uint32,  "specificities",       8, q=Quantifier.Repeated, comment="1..1 for PAGE and 0..* for STYLE")
+                                     ,Field(Proto.String,  "selectorList",        7, q=Quantifier.Repeated, comment="0..1 for PAGE and 0..* for STYLE")
+                                     ,Field(Proto.Uint32,  "specificityList",     8, q=Quantifier.Repeated, comment="1..1 for PAGE and 0..* for STYLE")
 
                                      # Common to MEDIA and IMPORT
-                                     ,Field(Proto.String,  "media",               9, q=Quantifier.Repeated)
+                                     ,Field(Proto.String,  "mediaList",           9, q=Quantifier.Repeated)
 
                                      # For MEDIA
                                      ,Field(Proto.Message, "ruleList",           10, q=Quantifier.Repeated)
@@ -362,10 +362,10 @@ css_style_decl = Message("StyleDeclaration", is_global=False,
                          fields=[Field(Proto.Uint32,  "origin",        1) # 1 = USER-AGENT, 2=LOCAL, 3=AUTHOR, 4=ELEMENT
 
                                 # Common to all origins
-                                ,Field(Proto.Uint32,  "indexes",       2, q=Quantifier.Repeated)
-                                ,Field(Proto.String,  "values",        3, q=Quantifier.Repeated)
-                                ,Field(Proto.Bool,    "priorities",    4, q=Quantifier.Repeated)
-                                ,Field(Proto.Uint32,  "statuses",      5, q=Quantifier.Repeated) # 0 = overwritten, 1 = standard
+                                ,Field(Proto.Uint32,  "indexList",     2, q=Quantifier.Repeated)
+                                ,Field(Proto.String,  "valueList",     3, q=Quantifier.Repeated)
+                                ,Field(Proto.Bool,    "priorityList",  4, q=Quantifier.Repeated)
+                                ,Field(Proto.Uint32,  "statusList",    5, q=Quantifier.Repeated) # 0 = overwritten, 1 = standard
 
                                 # Common to AUTHOR and LOCAL
                                 ,Field(Proto.String,  "selector",      6, q=Quantifier.Optional)
@@ -380,7 +380,7 @@ css_style_decl = Message("StyleDeclaration", is_global=False,
 css_node_style = Message("NodeStyle", is_global=False,
                          fields=[Field(Proto.Uint32,  "objectID",     1) 
                                 ,Field(Proto.String,  "elementName",  2)
-                                ,Field(Proto.Message, "styles",       3, q=Quantifier.Repeated, message=css_style_decl)
+                                ,Field(Proto.Message, "styleList",    3, q=Quantifier.Repeated, message=css_style_decl)
                                 ])
 
 css_node_decls = Message("CssStyleDeclarations",
