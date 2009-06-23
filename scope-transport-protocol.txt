@@ -681,15 +681,6 @@ The service is defined as::
   META-STP ::= "stp-" NUMBER
   NUMBER   ::= DIGIT+
 
-In addition, the host will also report the STP/0 version using a special suffix
-to specify the format for the compatibility messages. The host will report::
-
-  stp-0-json,stp-0-xml
-
-`stp-0-json` means that the body is formatted using JSON, but the entire message
-is sent over STP/0 using the compatibility layer. `stp-0-xml` is the same but
-the format is XML.
-
 Core version is determined by the "core-" meta service and contains the
 core version after the prefix. This core version can be used to determine
 the structure of the messages and how the services will act.
