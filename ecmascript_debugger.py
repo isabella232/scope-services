@@ -394,7 +394,6 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(3,  "Eval",                eval_data,           eval_result, async=True)
                                ,Request(4,  "ExamineObjects",      examine_list,        object_info)
                                ,Request(5,  "SpotlightObject",     spotlight_object_selection, False)
-                               ,Request(27, "SpotlightObjects",    spotlight_selection, False)
                                ,Request(6,  "AddBreakpoint",       breakpoint_pos,      False)
                                ,Request(7,  "RemoveBreakpoint",    breakpoint_id,       False)
                                ,Request(8,  "AddEventHandler",     event_handler,       False)
@@ -413,7 +412,6 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Event(19, "OnThreadStoppedAt", thread_stopinfo)
                                ,Event(20, "OnHandleEvent",     dom_event)
                                ,Event(21, "OnObjectSelected",  object_selection)
-                               ,Event(28, "OnParseError",      parse_error_info)
 
                                # CSS inspector, should be moved to separate service
                                ,Request(22, "CssGetIndexMap",          False,                    css_index_map)
@@ -422,5 +420,8 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                ,Request(25, "CssGetStyleDeclarations", css_element_selection,    css_node_decls)
 
                                ,Request(26, "GetSelectedObject",       False,                    object_selection)
+
+                               ,Request(27, "SpotlightObjects",    spotlight_selection, False)
+                               ,Event(28, "OnParseError",      parse_error_info)
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
