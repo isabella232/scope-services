@@ -45,23 +45,20 @@ More details on types can be read in the `Protocol Buffer documentation`_.
 
 .. _`Protocol Buffer documentation`: http://code.google.com/apis/protocolbuffers/docs/proto.html
 
-Note:
+.. note::
       Currently floating-point numbers are not supported due to the
       different nature of floating numbers between different processors.
-Note:
+.. note::
       64 bit types are not yet supported due to incomplete support for
       them in the Opera core.
-TODO:
-      Support enums are basically sent as numbers but require some
-      extra handling in generated code.
-TODO:
-      Perhaps the types should be split up into basic type, and constraints.
-      e.g. integer with constraint positive numbers (32bit)
+.. note::
+      Enums are not yet supported, should be easy as they are basically sent
+      as numbers but require some extra handling in the generated code.
 
 Quantifier
 ==========
 
-TODO:
+.. todo::
       Find a better name for this?
 
 The quantifier defines whether the field is required or not. If the field
@@ -81,7 +78,7 @@ Syntax
 The syntax for defining messages is based upon the Protocol Buffers syntax:
 http://code.google.com/apis/protocolbuffers/docs/proto.html
 
-Note:
+.. note::
       Currently there is no parser for this, and everything is written in pure
       Python. A parser will be added once STP/1 and UMS stabilizes.
 
@@ -301,10 +298,10 @@ The C++ generator translates the message structures into C++ classes. This
 allows C++ code to interact with messages using native structures. Encoding
 and decoding is handled as a separate layer and is generated.
 
-TODO:
+.. todo::
       More details on the generated C++ code.
 
-Note:
+.. note::
       We do not use the protoc compiler from Protocol Buffers since the
       generated code is not compatible with the limited C++ usage in
       the Opera core.
@@ -323,14 +320,14 @@ outputs JSON data to a human-readable form.
 Python
 ------
 
-TODO:
+.. todo::
       Either use a similar style as JavaScript, or allow for proper classes
       to be made for the different messages.
 
 Java
 ----
 
-TODO:
+.. todo::
       Need to figure what is needed here for the various java projects.
 
 .. XML: http://www.w3.org/XML/

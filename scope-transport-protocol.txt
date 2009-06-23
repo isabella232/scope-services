@@ -162,7 +162,8 @@ ecmascript-debugger    pure XML       4
 css-inspector (of esd) XML/XML+JSON   4
 ====================== ============== ================
 
-.. TODO: Fill in complete service list.
+.. todo::
+   Fill in complete service list.
 
 To get a better overview, a few examples follow which display how the various
 protocols communicate.
@@ -545,7 +546,8 @@ Code Description
 9    Service Already Enabled
 ==== ==========================
 
-TODO: Add more error codes as needed.
+.. todo::
+   Add more error codes as needed.
 
 format
 ------
