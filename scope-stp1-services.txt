@@ -6,15 +6,6 @@
 :Version: 0.3
 :Date:    22nd April 2009
 
-Changelog
-=========
-
-=== =================================================================
-0.1 Moved all docs not related to STP to this document.
-0.2 Finished details on "scope" service.
-0.3 Made "scope" service use UMS for all commands.
-=== =================================================================
-
 Commands and Events
 ===================
 

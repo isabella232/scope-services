@@ -6,32 +6,6 @@
 :Version: 0.10
 :Date:    22nd April 2009
 
-Changelog
-=========
-
-====  =================================================================
-0.1   Initial ideas
-0.2   The protocol supports backwards compatibility with old clients.
-0.3   Added an overview of all protocols, formats and clients.
-      Simplified the protocol due to relaxed compatibility requirements.
-      Changed the header structure slightly.
-      Added more details on HTTP and JavaScript clients.
-0.4   Fixed inconsistencies and mistakes in the protocol and examples.
-      Details have been added on the existing * commands.
-0.5   Replaced `tag` in the JavaScript client with a callback.
-      Moved version checking in the JavaScript client to the `connect`
-      callback.
-0.6   Revised and simplified several aspects after having discussions.
-0.7   Minor changes have been made to status, client id and version numbers.
-0.8   Cleaned up the document to make it match the implementation, and
-      added information on the handshake phase.
-0.9   Moved most of the logic away from the proxies and into the host.
-      Changed the STP message to be defined as a proto message, which allows
-      for more flexibility. It also has a new prefix.
-0.10  Reworked the handshake part to allow different STP versions per
-      network connection.
-====  =================================================================
-
 EBNF
 ====
 
