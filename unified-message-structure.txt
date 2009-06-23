@@ -3,8 +3,9 @@
 ===========================
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
-:Version: 0.1
-:Date:    11th February 2008
+:Version: 0.2
+:Status:  Draft
+:Date:    23th June 2009
 
 Unified Message Structure, or UMS for short, is a system for defining message
 structures in a generic format which can be exported to and imported from
@@ -40,8 +41,9 @@ The types in the system are based upon the types in Protocol Buffers which
 consist of a set of integer types, boolean, string and binary.
 Nested messages are also possible with a special type called Message.
 
-More details on types can be read in the Protocol Buffer documentation:
-http://code.google.com/apis/protocolbuffers/docs/proto.html
+More details on types can be read in the `Protocol Buffer documentation`_.
+
+.. _`Protocol Buffer documentation`: http://code.google.com/apis/protocolbuffers/docs/proto.html
 
 Note:
       Currently floating-point numbers are not supported due to the
@@ -100,7 +102,9 @@ Types
 ^^^^^
 
 - All integer types are encoded/decoded as textual numbers. Size and signs are
-  checked for when decoding numbers. For instance::
+  checked for when decoding numbers. For instance:
+
+  .. code-block:: javascript
 
     0
     1
@@ -108,7 +112,9 @@ Types
     65536
 
 - *double* and *float* are encoded similar to integers but allows for
-  fractions. For instance::
+  fractions. For instance:
+
+  .. code-block:: javascript
 
     0
     3.14
@@ -117,7 +123,9 @@ Types
 - *bool* is encoded/decoded as a textual number with **0** being **false** and **1** being
   **true**, other values are not allowed.
 - *string* is encoded as UTF-8 XML text with XML entities for certain
-  characters. For instance::
+  characters. For instance:
+
+  .. code-block:: html
 
     Foo
     &lt;element&gt;
@@ -144,7 +152,9 @@ A message representing a *user*::
     optional uint32 age = 6;
   }
 
-would be encoded like this::
+would be encoded like this:
+
+.. code-block:: xml
 
   <User>
     <id>42</id>
@@ -167,7 +177,9 @@ For instance representing a height map like this::
     repeated int32  valueList = 3;
   }
 
-would result in this::
+would result in this:
+
+.. code-block:: xml
 
   <HeightMap>
     <width>2</width>
@@ -191,7 +203,9 @@ for the sub-message::
     repeated PhoneNumber phoneNumberList = 1;
   }
 
-would end up as::
+would end up as:
+
+.. code-block:: xml
 
   <PhoneBook>
     <phoneNumberList>
@@ -223,9 +237,7 @@ Missing elements are sent as the null type. In addition, trailing elements
 which are missing are cut off from the list.
 Repeated types are encoded as JSON lists.
 
-For more details on JSON see RFC 4627:
-http://www.ietf.org/rfc/rfc4627.txt
-or visit http://json.org
+For more details on JSON see :rfc:`4627` or visit http://json.org
 
 For instance this structure::
 
@@ -235,7 +247,9 @@ For instance this structure::
     repeated int32 fib = 3;
   }
 
-Could be encoded like this::
+Could be encoded like this:
+
+.. code-block:: javascript
 
   [1,"foo",[1,1,2,3,5]]
 
@@ -252,11 +266,15 @@ Using more optional fields::
     required SubData msg = 4;
   }
 
-Could be encoded like this::
+Could be encoded like this:
+
+.. code-block:: javascript
 
   [1,null,[4]]
 
-While this would be just as valid::
+While this would be just as valid:
+
+.. code-block:: javascript
 
   [1,null,[4,null,null]]
 

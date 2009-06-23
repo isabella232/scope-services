@@ -10,7 +10,7 @@ Protocol specifications
 Style guide
 ^^^^^^^^^^^
 
-The style guide uses elements from the Python Style Guide `PEP 8`_.
+The style guide uses elements from the Python Style Guide :pep:`8`.
 Names of services, command, events and messages are all written using
 CamelCase_. Fields are also written using CamelCase but the first letter
 of the first word uses a non-capital letter, this is also known as mixedCase.
@@ -40,7 +40,6 @@ Tags for field and command/event tags must be numbered from 1 and up in order.
 Services, commands, events, messages and fields are explained in detail in
 :doc:`unified-message-structure`.
 
-.. _`PEP 8`:   http://www.python.org/dev/peps/pep-0008/
 .. _CamelCase: http://en.wikipedia.org/wiki/Camel_case
 
 Documentation
