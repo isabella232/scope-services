@@ -36,6 +36,10 @@ service_selection = Message("ServiceSelection",
                             fields=[Field(Proto.String, "name", 1)
                                    ])
 
+service_result = Message("ServiceResult",
+                         fields=[Field(Proto.String, "name", 1)
+                                ])
+
 host_info = Message("HostInfo",
                       fields=[Field(Proto.Uint32,  "stpVersion",      1)
                              ,Field(Proto.String,  "coreVersion",     2)
@@ -60,8 +64,8 @@ error_info = Message("ErrorInfo",
 window_manager = Service("Scope", version="1.0", coreRelease="2.4",
                          commands=[Request(3, "Connect",    client_info,       connection_info)
                                   ,Request(4, "Disconnect", client_id,         False)
-                                  ,Request(5, "Enable",     service_selection, False)
-                                  ,Request(6, "Disable",    service_selection, False)
+                                  ,Request(5, "Enable",     service_selection, service_result)
+                                  ,Request(6, "Disable",    service_selection, service_result)
                                   ,Request(7, "Info",       service_selection, service_info)
                                   ,Request(8, "Quit",       False,             False)
                                   ,Request(10, "HostInfo",  False,             host_info)
