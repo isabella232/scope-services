@@ -10,12 +10,15 @@
 EBNF
 ====
 
-The following common EBNF entries are defined::
+The following common EBNF entries are defined:
 
-  PB-UINT32      ::= <32bit unsigned encoded as Protocol Buffer varint>
-  PB-UINT64      ::= <64bit unsigned encoded as Protocol Buffer varint>
-  PB-ZERO-UINT32 ::= <0 encoded as Protocol Buffer varint>
-  DIGIT          ::= "0"-"9"
+.. productionlist::
+  pb_uint_short: <32bit unsigned encoded as Protocol Buffer varint>
+  pb_uint_long : <64bit unsigned encoded as Protocol Buffer varint>
+  number       : `number`
+  digit        : "0"..."9"
+  space        : "\x20"
+  newline      : "\x0a"
 
 Unified Message Structure
 =========================
@@ -38,15 +41,16 @@ This is the basic component in the communication layer, abbreviated as STP.
 It defines how to send commands with data (arguments) between the
 Opera host and the clients.
 
-STP version 0 is defined as::
+STP version 0 is defined as:
 
-  STP          ::= COUNT TERMINATOR KEYWORD TERMINATOR DATA
-  TERMINATOR   ::= " "
-  COUNT        ::= "0"-"9"+
-  KEYWORD      ::= COMMAND | SERVICE
-  COMMAND      ::= "*" COMMAND-NAME
-  COMMAND-NAME ::= "services" | "enable" | "disable" | "quit" | "hostquit"
-  SERVICE      ::= ^[ ,]+
+.. productionlist::
+  stp         : `count` `terminator` `keyword` `terminator` <payload>
+  terminator  : `space`
+  count       : `number`
+  keyword     : `command` | `service`
+  command     : "*" `command_name`
+  command_name: "services" | "enable" | "disable" | "quit" | "hostquit"
+  service     : <any source character except ",">+
 
 The flow of the transport protocol currently looks like this::
 
@@ -307,21 +311,23 @@ This would mean case #1 and #2 as described in the section Client_.
 STP/1
 =====
 
-The new transport layer is defined as::
+The new transport layer is defined as:
 
-  CONNECTION     ::= SERVICES HANDSHAKE MESSAGES
-  MESSAGES       ::= MESSAGE*
+.. productionlist::
+  connection: `services` `handshake` `messages`
+  messages  : `message`*
 
 This shows that the original STP/0 service list SERVICES is the first
 entry to be sent. Next comes a handshake which results in the handshake
 response `HANDSHAKE` followed by the actual transport messages.
 
-The outer layer of the transport message is defined as::
+The outer layer of the transport message is defined as:
 
-  MESSAGE        ::= "STP" STP-VER STP-SIZE STP-DATA
-  STP-VER        ::= BYTE
-  STP-SIZE       ::= PB-UINT64
-  STP-DATA       ::= STP-SIZE * BYTE
+.. productionlist::
+  message : "STP" `stp_ver` `stp_size` `stp_data`
+  stp_ver : <single octet>
+  stp_size: `pb_uint_long`
+  stp_data: <octets equal to stp-size>
 
 This allows for multiple versions of a message to be sent. Each message is
 uniquely identified by the string "STP" followed by a version number. The
@@ -329,17 +335,19 @@ size of the entire message is followed by the data of the message. This
 allows any decoder to check the version and skip data that it does not
 understand. The decoding of STP-DATA depends on the version.
 
-An STP/1 message will look like::
+An STP/1 message will look like:
 
-  MESSAGE        ::= "STP" \x01 STP-SIZE STP1-DATA
+.. productionlist::
+  stp_one_message: "STP" "\x01" `stp_size` `stp_one_data`
 
 In addition, it is now possible to pass STP/0 messages over the STP/1 protocol.
 This is done by setting the STP-VER to 0 and then passing the STP/0 data.
 The fields COUNT and SEPARATOR found in STP/0 will be skipped as the size is
 already present in the STP/1 layer. This means we only transfer the KEYWORD
-and DATA. An STP/0 message wrapped in STP/1 will look like::
+and DATA. An STP/0 message wrapped in STP/1 will look like:
 
-  MESSAGE        ::= "STP" \x00 STP-SIZE KEYWORD TERMINATOR DATA
+.. productionlist::
+  stp_zero_message: "STP" "\x00" `stp_size` `keyword` `terminator` <payload>
 
 SERVICES
 --------
@@ -347,12 +355,11 @@ SERVICES
 The very first data sent by the host is a list of services.
 This data is encoded in UTF-16-BE (UTF-16 Big Endian) and is the
 same format as it was in STP/0. This ensures compatibility with older
-clients::
+clients:
 
-  SERVICES     ::= SIZE SP "*services" SP SERVICE-LIST
-  SERVICE-LIST ::= SERVICE-NAME { "," SERVICE }
-  SERVICE-NAME ::= <any character except comma>
-  SIZE         ::= DIGIT+
+.. productionlist::
+  services     : `count` `terminator` "*services" `terminator` `service_list`
+  service_list : `service` ["," `service`]+
 
 HANDSHAKE
 ---------
@@ -370,11 +377,12 @@ The side which receives the SERVICES message, aka the network client, must choos
 a valid STP version from this list and initiate it.
 
 The network client will then send an "\*enable" request with the specific
-stp service which is defined as::
+stp service which is defined as:
 
-  HANDSHAKE-REQ ::= "*enable" SP "stp-" VER
-  VER           ::= "0" | "1"
-  HANDSHAKE     ::= "STP/" VER LF
+.. productionlist::
+  handshake_req: "*enable" `terminator` "stp-" `version`
+  version      : "0" | "1"
+  handshake    : "STP/" `version` `newline`
 
 The handshake request is encoded in STP/0, while the response is sent as plain
 US-ASCII. For now there are only two versions to enable, STP/0 and STP/1.
@@ -385,11 +393,12 @@ the specific STP version and parse and send messages in the specific format.
 STP1-DATA
 ---------
 
-For STP/1 messages STP-DATA is defined as::
+For STP/1 messages STP-DATA is defined as:
 
-  STP1-DATA      ::= STP1-TYPE HEADERS
-  STP1-TYPE      ::= PB-UINT32 # 1 = command, 2 = response, 3 = event, 4 = error
-  HEADERS        ::= PB-MESSAGE
+.. productionlist::
+  stp_one_data: `stp_one_type` `headers`
+  stp_one_type: `pb_uint_short` # 1 = command, 2 = response, 3 = event, 4 = error
+  headers     : <protocol buffer message>
 
 STP1-TYPE represents which type of STP/1 message is found in the HEADERS
 which is represented by the protocol buffer message TransportMessage.
@@ -676,18 +685,19 @@ sent, then it means that another client has already decided which version to
 use. The new client must then either start using the selected version or
 disconnect if it does not support it.
 
-The service is defined as::
+The service is defined as:
 
-  META-STP ::= "stp-" NUMBER
-  NUMBER   ::= DIGIT+
+.. productionlist::
+  meta_stp: "stp-" `number`
 
 Core version is determined by the "core-" meta service and contains the
 core version after the prefix. This core version can be used to determine
 the structure of the messages and how the services will act.
-It is defined as::
+It is defined as:
 
-  META-CORE    ::= "core-" DASH-VERSION
-  DASH-VERSION ::= DIGIT+ ("-" DIGIT+)*
+.. productionlist::
+  meta_core   : "core-" `dash_version`
+  dash_version: `number` ("-" `number`)*
 
 Extended STP/0
 ==============
@@ -708,29 +718,30 @@ UTF-16BE. That is, it will be sent as pure text. The payload will consist of two
 things: the STP/1 header and the real payload. The header can then be decoded
 before the actual payload is sent to the next layer.
 
-Definition::
+..
+  terminator  : `space`
+  count       : `number`
+  keyword     : `command` | `service`
+  command     : "*" `command_name`
+  command_name: "services" | "enable" | "disable" | "quit" | "hostquit"
+  service     : <any source character except ",">
 
-  STP          ::= COUNT TERMINATOR "scope" TERMINATOR DATA
-  TERMINATOR   ::= " "
-  COUNT        ::= "0"-"9"+
-  KEYWORD      ::= COMMAND | SERVICE
-  COMMAND      ::= "*" COMMAND-NAME
-  COMMAND-NAME ::= "services" | "enable" | "disable" | "quit" | "hostquit"
-  SERVICE      ::= ^[ ,]+
+Definition:
 
-  DATA         :: = "STP/" VERSION TERMINATOR HEADER-SIZE TERMINATOR HEADER PAYLOAD
-  VERSION      ::= INT
-  HEADER-SIZE  ::= INT
-  HEADER       ::= "[" SERVICE-NAME "," STP-TYPE "," COMMAND-ID "," FORMAT ("," CLIENT-ID ("," TAG ("," STATUS ("," UUID)? )? )? )? "]"
-  SERVICE-NAME ::= <json-string>
-  STP-TYPE     ::= <json-int>
-  COMMAND-ID   ::= <json-int>
-  FORMAT       ::= <json-int>
-  CLIENT-ID    ::= <json-int>
-  TAG          ::= <json-int>
-  STATUS       ::= <json-int>
-  UUID         ::= <json-string>
-  INT          ::= "0"-"9"+
+.. productionlist::
+  stp         : `count` `terminator` "scope" `terminator` `data`
+  data        : "STP/" `version` `terminator` `header_size` `terminator` `header` <payload>
+  version     : `number`
+  header_size : `number`
+  header      : "[" `service_name` "," `stp_type` "," `command_id` "," `format` ["," `client_id` ["," `tag` ["," `status` ["," `uuid`] ] ] ] "]"
+  service_name: <json string>
+  stp_type    : <json int>
+  command-id  : <json int>
+  format      : <json int>
+  client-id   : <json int>
+  tag         : <json int>
+  status      : <json int>
+  uuid        : <json string>
 
 Messages must always be sent to the  "scope" service. This ensures that
 there is only one service that needs to be enabled in the old proxies. This
