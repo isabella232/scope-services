@@ -2,13 +2,13 @@
    sphinx-quickstart on Fri Jun 19 10:19:30 2009.
    You can adapt this file completely to your liking, but it should at least
    contain the root * `toctree` directive.
+
 =====================================
 Scope Interface for the Opera Browser
 =====================================
 
 General Overview
 ================
-
 
 
 * `Opera Dragonfly Architecture`_

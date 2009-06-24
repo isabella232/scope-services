@@ -1,6 +1,8 @@
 # Makefile for Sphinx documentation
 #
 
+OUTDIR := _build
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
@@ -9,7 +11,8 @@ PAPER         =
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d ${OUTDIR}/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+
 
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
 
@@ -27,17 +30,17 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf _build/*
+	-rm -rf ${OUTDIR}/*
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ${OUTDIR}
 	@echo
-	@echo "Build finished. The HTML pages are in _build/html."
+	@echo "Build finished. The HTML pages are in ${OUTDIR}."
 
 dirhtml:
-	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) _build/dirhtml
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) ${OUTDIR}
 	@echo
-	@echo "Build finished. The HTML pages are in _build/dirhtml."
+	@echo "Build finished. The HTML pages are in ${OUTDIR}."
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) _build/pickle
