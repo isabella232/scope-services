@@ -2,16 +2,6 @@
 Walk Through the Log Entries
 =============================
 
-.. class:: docdata
-
-Status
-  Draft
-
-Introduced
-  Core 2.4
-
-.. role:: code
-
 
 Setup the `STP/1` Connection
 ====================================
@@ -101,8 +91,6 @@ Such a callback will have the arguments as ``[status, response_message].concat(&
 
 The service list which is returned as the payload of the ``connected`` callback is basically only needed for compatibility reasons with the STP 0 protocol. As soon as the client gets it it will call ``services.scope.requestHostInfo()`` in the ``client`` singleton in ``on_host_connected``. The scope service is enabled by default so that it can be used always. This should cause the following log entries:
 
-.. class:: log
-
 ::
 
   sent: 
@@ -127,8 +115,6 @@ The scope service will read that message and enable each service in the list wit
   }
 
 This should cause the following entries in the log:
-
-.. class:: log
 
 ::
 
@@ -216,8 +202,6 @@ The service class has also the following methods::
   }
 
 The ``window-manager`` service will call ``this.requestListWindows()`` in the ``onEnableSuccess()`` callback. If there is not jet an debug context selected it will call ``requestGetActiveWindow()`` in ``handleListWindows(status, message)``. It will then set the active window ( the one which has focus ) as the debug context. This should give the following log entries, depending on the opened tabs:
-
-.. class:: log
 
 ::
 
