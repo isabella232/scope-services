@@ -44,9 +44,9 @@ debugger through the URL opera:debug.
 The call also registers callbacks when the host is connected, when messages
 are received (responses or events), and when the remote host disconnects.
 
-The signature is::
+The signature is:
 
-  scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
+.. function:: scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
 
 The ``connected`` callback is called when the service list has been sent from the
 host and is available for the client to look at. For `STP/0` that means right
@@ -57,16 +57,16 @@ The service list will be modified to only show the currently used STP version.
 For instance if `STP/1` was chosen it would contain "stp-1" while if `STP/0`
 was chosen it would contain "stp-0-json".
 
-The signature of the callback is::
+The signature of the callback is:
 
-  connected(services: string)
+.. function:: connected(services: string)
   
 The ``receive`` callback exists in two versions, one of which is `STP/0` where only
 the service name and message payload is known.
 
-The `STP/0` signature is::
+The `STP/0` signature is:
 
-  receive(service: string, message: string)
+.. function:: receive(service: string, message: string)
 
 For `STP/1` additional arguments are present which reflect the extra fields that
 are part of the transport message.
@@ -89,16 +89,18 @@ objects as opposed to those in `STP/0` where the message is just a string.
 Scope will decode the data from the incoming protocol buffer data by 
 first requesting message definitions from the host and then using that to decode.
 
-The `STP/1` signature is::
+The `STP/1` signature is:
 
-  receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)
+.. function:: receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)
 
 The ``quit`` callback is called when the remote host disconnects.
-The signature is::
+The signature is:
 
-  quit()
+.. function:: quit()
 
-Example code for `STP/1`::
+Example code for `STP/1`:
+
+.. code-block:: javascript
 
   var connected = function(services)
   {
@@ -146,17 +148,17 @@ Enabling a service
 
 ``scopeEnableService`` is used to enable a service for the client.
 
-For `STP/0` the function signature is::
+For `STP/0` the function signature is:
 
-  scopeEnableService(service: string)
+.. function:: scopeEnableService(service: string)
 
 For `STP/1` a callback is available which is called when the service has been
 enabled or an error has occured. The signature of the callback is the same as
 the ``receive`` callback.
 
-The function signature is::
+The function signature is:
 
-  scopeEnableService(service: string, response: callback)
+.. function:: scopeEnableService(service: string, response: callback)
 
 Transmitting data
 -----------------
@@ -165,9 +167,9 @@ Transmitting data
 if the host is running core-2.4 or higher. If the host is core-2.3 or lower,
 it will be transmitted as a string as before.
 
-For `STP/0` the signature is::
+For `STP/0` the signature is:
 
-  scopeTransmit(service: string, message: string)
+.. function:: scopeTransmit(service: string, message: string)
 
 For `STP/1` there are extra arguments available which will be put in the
 `STP/1` transport message.
@@ -181,11 +183,13 @@ For `STP/1` there are extra arguments available which will be put in the
   ``receieve`` callback. The tag can contain the values in the range
   1 to 2^32-1. A value of 0 or negative values are not allowed.
 
-The signature is::
+The signature is:
 
-  scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)
+.. function:: scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)
   
-Example code for `STP/0`::
+Example code for `STP/0`:
+
+.. code-block:: javascript
 
   var receive = function(service, message)
   {
@@ -193,7 +197,9 @@ Example code for `STP/0`::
 
   opera.scopeTransmit("ecmascript-debugger", "<get-runtimes></get-runtimes>");
 
-Example code for `STP/1`::
+Example code for `STP/1`:
+
+.. code-block:: javascript
 
   var receive = function(service, message, command, status, tag)
   {

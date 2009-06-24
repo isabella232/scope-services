@@ -6,23 +6,11 @@
 :Version: 0.3
 :Date:    22nd April 2009
 
-Changelog
-=========
-
-=== =================================================================
-0.1 Moved all docs not related to STP to this document.
-0.2 Finished details on "scope" service.
-0.3 Made "scope" service use UMS for all commands.
-=== =================================================================
-
-Commands and Events
-===================
-
 System commands
 ===============
 
 All previous system commands (starting with an `*`) will be now be organized in
-a proper service called "scope". See `Service: Scope`_ for more details.
+a proper service called "scope".
 
 Services and multiple clients
 =============================
@@ -48,23 +36,22 @@ This is a special service which is always present and always enabled.
 
 This service replaces the special commands used in STP/0 (started with an asterix).
 The only command that is fully compatible with STP/0 is "\*services" (OnServices)
-which is actually sent as STP/0 only. In addition "\*enable" is mapped to the
-Enable, "\*disable" to Disable, "\*hostquit" to OnQuit and "\*quit" to Quit.
+which is actually sent as STP/0 only, any other special command sent to scope
+will be ignored.
 The system takes care of mapping it to the correct format when sending and
 receiving them. However the payload of these messages is no longer the same:
 they must now be sent using UMS. This means using either JSON or XML when
 sending over STP/0.
 
-The STP/0 commands are::
+The service list is defined as::
 
   *services <service-list>
-  *hostquit
-  *enable <service>
-  *disable <service>
-  *quit
 
 Overview
 --------
+
+.. note::
+   The IDs for the commands and events might change before the final version.
 
 Commands:
 
@@ -165,7 +152,7 @@ means setting the format of all messages for this client.
 Repeated use of this command will result in the host resetting any settings
 and services that the client used earlier.
 
-Note:
+.. note::
   The uuid field is required both in the STP message and in the payload.
   This ensures that any proxies can relay the information properly and
   that the host or client(s) can read the message uniformly.
@@ -188,8 +175,10 @@ The command is defined as::
 The command responds with the new client ID which is to be used by all
 subsequent commands. This client ID is also used when sending out events.
 
-If the requested format is not allowed or does not exist, it will respond
-with the status "Bad Request" (3).
+Errors:
+
+* If the requested format is not allowed or does not exist, it will respond
+  with the status "Bad Request" (3).
 
 Command: Disconnect
 -------------------
@@ -201,7 +190,7 @@ the client used. This command is primarily meant for proxies which must be
 sent if a socket connection with an active client closes.
 If the client is able to do this, then it should send the command itself.
 
-Note:
+.. note::
   The uuid field is required both in the STP message and in the payload.
   This ensures that any proxies can relay the information properly and
   that the host or client(s) can read the message uniformly.
@@ -222,8 +211,9 @@ CommandID: 5
 
 This is used to enable one service in the host.
 
-Important note: The old behaviour of the proxy which allowed a comma-separated list
-      of services is no longer supported.
+.. note::
+   The old behaviour of the proxy which allowed a comma-separated list
+   of services is no longer supported.
 
 It is defined as::
 
@@ -236,13 +226,16 @@ It is defined as::
 
 It will enable the service and report back the result.
 
-If the service is not found it will return with status "Service Not Found" (6).
-If the service could not be enabled it will return with status
-"Service Not Enabled" (8).
-If the client tries to enable the "scope" service it will return with status
-"Bad Request" (3).
-If the client tries to enable a service before the Configure command has been
-used it will return with status "Bad Request" (3).
+Errors:
+
+* If the service is not found it will return with status
+  "Service Not Found" (6).
+* If the service could not be enabled it will return with status
+  "Service Not Enabled" (8).
+* If the client tries to enable the "scope" service it will return with status
+  "Bad Request" (3).
+* If the client tries to enable a service before the Configure command has been
+  used it will return with status "Bad Request" (3).
 
 Command: Disable
 ----------------
@@ -266,11 +259,14 @@ It is defined as::
 
 The response contains no data.
 
-If the service is not found it will return with a status of "Service Not Found" (6).
-If the service is not yet enabled it will return with a status of
-"Service Not Enabled" (8).
-If the client tries to disable the "scope" service it will return with a status of
-"Bad Request" (3).
+Errors:
+
+* If the service is not found it will return with a status of
+  "Service Not Found" (6).
+* If the service is not yet enabled it will return with a status of
+  "Service Not Enabled" (8).
+* If the client tries to disable the "scope" service it will return with a
+  status of "Bad Request" (3).
 
 Command: Info
 -------------
@@ -311,8 +307,10 @@ listed with its name and the corresponding command ID (used by STP/1).
 The event list is similar to the command list, but is listed for the available
 events.
 
-If the service is not found it will return the message with status set
-to "Service Not Found" (6).
+Errors:
+
+* If the service is not found it will return the message with status set
+  to "Service Not Found" (6).
 
 Command: Quit
 ^^^^^^^^^^^^^
@@ -378,15 +376,3 @@ It would do::
     print "We support service version %d.%d" % (major, minor)
   else:
     print "We do not support service version %d.%d" % (major, minor)
-
-Existing clients
-================
-
-============= ===============
-Name          Protocol
-============= ===============
-Dragonfly     HTTP/Javascript
-OpWatir       HTTP
-PyScope       STP
-devtools-test STP
-============= ===============

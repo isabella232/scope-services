@@ -7,6 +7,43 @@ specifications and documentation for scope and ``STP/1``.
 Protocol specifications
 -----------------------
 
+Style guide
+^^^^^^^^^^^
+
+The style guide uses elements from the Python Style Guide :pep:`8`.
+Names of services, command, events and messages are all written using
+CamelCase_. Fields are also written using CamelCase but the letters
+of the first word uses non-capital letters, this is also known as mixedCase.
+The exception to this rule are abbreviations, we capitalize all the letters
+of the abbreviation when used in CamelCase.
+
+Examples of service/command names:
+
+* WindowManager
+* EcmascriptDebugger
+* WindowInfo
+* ID
+
+Examples of field names:
+
+* windowID
+* windowType
+* id
+
+Fields which are of type *Repeated* must always end in *List*, this allows
+the type to be extracted by removing the *List* from the name. Examples of
+this are:
+
+* windowList -> window
+* indexList  -> index
+
+Tags for field and command/event tags must be numbered from 1 and up in order.
+
+Services, commands, events, messages and fields are explained in detail in
+:doc:`unified-message-structure`.
+
+.. _CamelCase: http://en.wikipedia.org/wiki/Camel_case
+
 Documentation
 -------------
 

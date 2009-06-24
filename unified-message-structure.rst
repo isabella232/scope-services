@@ -3,8 +3,9 @@
 ===========================
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
-:Version: 0.1
-:Date:    11th February 2008
+:Version: 0.2
+:Status:  Draft
+:Date:    23th June 2009
 
 Unified Message Structure, or UMS for short, is a system for defining message
 structures in a generic format which can be exported to and imported from
@@ -31,7 +32,9 @@ The name is a non-empty string written in camel-case.
 
 A tool written in Python is available for dealing with UMS data:
 http://dvcs.vlab.osa/cgi-bin/hgwebdir.cgi/home/jborsodi/opprotoc/
-Note: The URL will change when a proper name is found.
+
+.. note::
+   The URL will change when a proper name is found.
 
 Types
 =====
@@ -40,26 +43,24 @@ The types in the system are based upon the types in Protocol Buffers which
 consist of a set of integer types, boolean, string and binary.
 Nested messages are also possible with a special type called Message.
 
-More details on types can be read in the Protocol Buffer documentation:
-http://code.google.com/apis/protocolbuffers/docs/proto.html
+More details on types can be read in the `Protocol Buffer documentation`_.
 
-Note:
+.. _`Protocol Buffer documentation`: http://code.google.com/apis/protocolbuffers/docs/proto.html
+
+.. note::
       Currently floating-point numbers are not supported due to the
       different nature of floating numbers between different processors.
-Note:
+.. note::
       64 bit types are not yet supported due to incomplete support for
       them in the Opera core.
-TODO:
-      Support enums are basically sent as numbers but require some
-      extra handling in generated code.
-TODO:
-      Perhaps the types should be split up into basic type, and constraints.
-      e.g. integer with constraint positive numbers (32bit)
+.. note::
+      Enums are not yet supported, should be easy as they are basically sent
+      as numbers but require some extra handling in the generated code.
 
 Quantifier
 ==========
 
-TODO:
+.. todo::
       Find a better name for this?
 
 The quantifier defines whether the field is required or not. If the field
@@ -67,13 +68,19 @@ is not required it can be defined as either optional or as being repeated.
 A repeated field with zero elements and an optional field which is missing
 are considered the same.
 
+Style guide
+===========
+
+The style guide for services and all related elements are explained in
+detail in in :doc:`style-guide-stp1`.
+
 Syntax
 ======
 
 The syntax for defining messages is based upon the Protocol Buffers syntax:
 http://code.google.com/apis/protocolbuffers/docs/proto.html
 
-Note:
+.. note::
       Currently there is no parser for this, and everything is written in pure
       Python. A parser will be added once STP/1 and UMS stabilizes.
 
@@ -94,7 +101,9 @@ Types
 ^^^^^
 
 - All integer types are encoded/decoded as textual numbers. Size and signs are
-  checked for when decoding numbers. For instance::
+  checked for when decoding numbers. For instance:
+
+  .. code-block:: javascript
 
     0
     1
@@ -102,7 +111,9 @@ Types
     65536
 
 - *double* and *float* are encoded similar to integers but allows for
-  fractions. For instance::
+  fractions. For instance:
+
+  .. code-block:: javascript
 
     0
     3.14
@@ -111,7 +122,9 @@ Types
 - *bool* is encoded/decoded as a textual number with **0** being **false** and **1** being
   **true**, other values are not allowed.
 - *string* is encoded as UTF-8 XML text with XML entities for certain
-  characters. For instance::
+  characters. For instance:
+
+  .. code-block:: html
 
     Foo
     &lt;element&gt;
@@ -138,7 +151,9 @@ A message representing a *user*::
     optional uint32 age = 6;
   }
 
-would be encoded like this::
+would be encoded like this:
+
+.. code-block:: xml
 
   <User>
     <id>42</id>
@@ -149,27 +164,31 @@ would be encoded like this::
   </User>
 
 For repeated fields the element also contains a sub-element for each item
-in the repeated field, the name of the sub-element is *item*.
+in the repeated field, the name of the sub-element is taken from the field
+name by removing the suffix *List*. This means that a field named *windowList*
+will have sub-elements named *window*.
 
 For instance representing a height map like this::
 
   message HeightMap {
     required uint32 width = 1;
     required uint32 height = 2;
-    repeated int32  values = 3;
+    repeated int32  valueList = 3;
   }
 
-would result in this::
+would result in this:
+
+.. code-block:: xml
 
   <HeightMap>
     <width>2</width>
     <height>2</height>
-    <values>
-     <item>1</item>
-     <item>10</item>
-     <item>7</item>
-     <item>3</item>
-    </values>
+    <valueList>
+     <value>1</value>
+     <value>10</value>
+     <value>7</value>
+     <value>3</value>
+    </valueList>
   </HeightMap>
 
 The same is true for nested messages. Each *item* will contain the fields
@@ -180,21 +199,23 @@ for the sub-message::
         required string number = 1;
         optional string extension = 2;
     }
-    repeated PhoneNumber phoneNumbers = 1;
+    repeated PhoneNumber phoneNumberList = 1;
   }
 
-would end up as::
+would end up as:
+
+.. code-block:: xml
 
   <PhoneBook>
-    <phoneNumbers>
-      <item>
+    <phoneNumberList>
+      <phoneNumber>
         <number>12345678</number>
         <extension>+47</extension>
-      </item>
-      <item>
+      </phoneNumber>
+      <phoneNumber>
         <number>555-768</number>
-      </item>
-    </phoneNumbers>
+      </phoneNumber>
+    </phoneNumberList>
   </PhoneBook>
 
 JSON
@@ -215,9 +236,7 @@ Missing elements are sent as the null type. In addition, trailing elements
 which are missing are cut off from the list.
 Repeated types are encoded as JSON lists.
 
-For more details on JSON see RFC 4627:
-http://www.ietf.org/rfc/rfc4627.txt
-or visit http://json.org
+For more details on JSON see :rfc:`4627` or visit http://json.org
 
 For instance this structure::
 
@@ -227,7 +246,9 @@ For instance this structure::
     repeated int32 fib = 3;
   }
 
-Could be encoded like this::
+Could be encoded like this:
+
+.. code-block:: javascript
 
   [1,"foo",[1,1,2,3,5]]
 
@@ -244,11 +265,15 @@ Using more optional fields::
     required SubData msg = 4;
   }
 
-Could be encoded like this::
+Could be encoded like this:
+
+.. code-block:: javascript
 
   [1,null,[4]]
 
-While this would be just as valid::
+While this would be just as valid:
+
+.. code-block:: javascript
 
   [1,null,[4,null,null]]
 
@@ -275,10 +300,10 @@ The C++ generator translates the message structures into C++ classes. This
 allows C++ code to interact with messages using native structures. Encoding
 and decoding is handled as a separate layer and is generated.
 
-TODO:
+.. todo::
       More details on the generated C++ code.
 
-Note:
+.. note::
       We do not use the protoc compiler from Protocol Buffers since the
       generated code is not compatible with the limited C++ usage in
       the Opera core.
@@ -297,14 +322,14 @@ outputs JSON data to a human-readable form.
 Python
 ------
 
-TODO:
+.. todo::
       Either use a similar style as JavaScript, or allow for proper classes
       to be made for the different messages.
 
 Java
 ----
 
-TODO:
+.. todo::
       Need to figure what is needed here for the various java projects.
 
 .. XML: http://www.w3.org/XML/

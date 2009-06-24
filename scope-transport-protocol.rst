@@ -4,33 +4,8 @@
 
 :Author:  Jan Borsodi <jborsodi@opera.com>
 :Version: 0.10
+:Status:  Draft
 :Date:    22nd April 2009
-
-Changelog
-=========
-
-====  =================================================================
-0.1   Initial ideas
-0.2   The protocol supports backwards compatibility with old clients.
-0.3   Added an overview of all protocols, formats and clients.
-      Simplified the protocol due to relaxed compatibility requirements.
-      Changed the header structure slightly.
-      Added more details on HTTP and JavaScript clients.
-0.4   Fixed inconsistencies and mistakes in the protocol and examples.
-      Details have been added on the existing * commands.
-0.5   Replaced `tag` in the JavaScript client with a callback.
-      Moved version checking in the JavaScript client to the `connect`
-      callback.
-0.6   Revised and simplified several aspects after having discussions.
-0.7   Minor changes have been made to status, client id and version numbers.
-0.8   Cleaned up the document to make it match the implementation, and
-      added information on the handshake phase.
-0.9   Moved most of the logic away from the proxies and into the host.
-      Changed the STP message to be defined as a proto message, which allows
-      for more flexibility. It also has a new prefix.
-0.10  Reworked the handshake part to allow different STP versions per
-      network connection.
-====  =================================================================
 
 EBNF
 ====
@@ -45,9 +20,9 @@ The following common EBNF entries are defined::
 Unified Message Structure
 =========================
 
-This is a new specification which describes how messages are structured in
-core-2.4 and higher. It is abbreviated as UMS and will be referenced
-throughout the document. UMS is described in further details in a separate document.
+The payload of all messages sent from *scope* will follow the specification
+:doc:`unified-message-structure`. This specification is abbreviated as UMS
+throughout the document.
 
 Protocols
 =========
@@ -92,6 +67,8 @@ The flow of the transport protocol currently looks like this::
 STP is used between the Opera host and the proxy as well as between the proxy
 and clients speaking STP.
 
+STP version 1 is described in detail in `STP/1`_.
+
 Scope HTTP Adapter Protocol
 ---------------------------
 
@@ -101,41 +78,29 @@ the STP communication to HTTP request/responses. The major difference is how
 requests and responses/events are handled. In HTTP the request/response is
 synchronous, and you cannot receive data without asking for it.
 
-It is currently used by Opera Dragonfly when loaded trough the proxy
-(/file/ecma-debugger/client.xml)
+This protocol is currently implemented in the tool *Dragonkeeper*.
 
-Scope JavaScript Protocol
--------------------------
+Scope DOM Interface
+-------------------
 
-This is the direct communication layer used between
-the Opera Host and the direct JavaScript client. Here the STP is trimmed
-down to only send the KEYWORD and DATA elements.
-All of this is handled by the the opera.scopeTransmit and opera.scopeAddClient
-JavaScript functions.
+This is the direct communication layer used between the Opera Host and the
+JavaScript client. Here the STP is trimmed down to only send the KEYWORD and
+DATA elements. All of this is handled by the the *opera.scopeTransmit* and
+*opera.scopeAddClient* JavaScript functions.
 
-This is currently used by the built-in Opera Dragonfly client for the Opera 9.5 desktop release.
+This is currently used by the built-in Opera Dragonfly client for the Opera
+9.5 desktop release.
 
-Service Protocols
-=================
-
-In addition to the transport protocol there are also protocols defined by each
-service which defines the formats used and the available commands.
-
-EcmaScript Debugger Protocol
-----------------------------
-
-This uses XML for the ECMAScript part. It also has a CSS inspector which can respond in
-XML and XML+JSON. Requests are all in XML.
-
-Version: 5
+A new interface is designed to accomodate the changes in STP/1, it is
+explained in details in :doc:`scope-dom-interface`.
 
 Problems
 ========
 
-The current protocol is based around sending Unicode strings to and from the
+The current protocol is based around sending *Unicode* strings to and from the
 clients, which makes it difficult to send binary data. Also, the encoding is
-hardcoded to UTF-16 for the entire message (STP and payload). This represents
-uneccessary overhead for sending data which is often in US-ASCII only.
+hardcoded to *UTF-16* for the entire message (STP and payload). This represents
+uneccessary overhead for sending data which is often in *US-ASCII* only.
 
 XML is used as primary format which is inefficient when transporting lots
 of data. Lightweight alternatives are needed. XML also affects the decoding
@@ -147,7 +112,7 @@ The format is predeterminded by each service and there is no way
 to change it dynamically. For instance, JavaScript based clients will be
 able to decode the responses more quickly if they are sent as JSON.
 
-There is no standard way to tie (<tag>) a response to a previous
+There is no standardized way to tie (<tag>) a response to a previous
 request. This is currently embedded in the content of the request
 which is specific to each service and each command in the service. For
 instance, if you receive an error message there is no information about
@@ -175,31 +140,20 @@ Proxy<->Clients       Port:8001 STP/0
 Proxy<->HTTP-Client   Port:8002 HTTP/1.1
 Opera<->Opera         Port:49152-65535 STP/0
 Opera<->Remote Opera  Port:49152-65535 STP/0
-Opera<->JS-Client     JavaScript functions
+Opera<->JS-Client     DOM interface
 ===================== ====================
-
-These are the following services with formats and versions.
-
-====================== ============== ================
-Service                Format         Version
-====================== ============== ================
-ecmascript-debugger    pure XML       4
-css-inspector (of esd) XML/XML+JSON   4
-====================== ============== ================
-
-.. TODO: Fill in complete service list.
 
 To get a better overview, a few examples follow which display how the various
 protocols communicate.
 
-A typical developer setup with Opera Dragonfly communicating with the Proxy using
-the HTTP adapter protocol::
+A typical developer setup with Opera Dragonfly communicating with the Proxy
+using Dragonkeeper::
 
-  +-------+ STP/0 +-------+ HTTP/1.1 +-----------+
-  |       | 7001  |       |   8002   |   Opera   |
-  | Scope |<----->| Proxy +<-------->| Dragonfly |
-  |       |       |       |          |           |
-  +-------+       +-------+          +-----------+
+  +-------+ STP/0 +--------------+ HTTP/1.1 +-----------+
+  |       | 7001  |              |   8002   |   Opera   |
+  | Scope |<----->| Dragonkeeper +<-------->| Dragonfly |
+  |       |       |              |          |           |
+  +-------+       +--------------+          +-----------+
 
 The common usage scenario with Opera Dragonfly connecting to Opera using
 the internal JavaScript methods. Internally these methods will
@@ -570,7 +524,8 @@ Code Description
 9    Service Already Enabled
 ==== ==========================
 
-TODO: Add more error codes as needed.
+.. todo::
+   Add more error codes as needed.
 
 format
 ------
@@ -725,15 +680,6 @@ The service is defined as::
 
   META-STP ::= "stp-" NUMBER
   NUMBER   ::= DIGIT+
-
-In addition, the host will also report the STP/0 version using a special suffix
-to specify the format for the compatibility messages. The host will report::
-
-  stp-0-json,stp-0-xml
-
-`stp-0-json` means that the body is formatted using JSON, but the entire message
-is sent over STP/0 using the compatibility layer. `stp-0-xml` is the same but
-the format is XML.
 
 Core version is determined by the "core-" meta service and contains the
 core version after the prefix. This core version can be used to determine
