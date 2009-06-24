@@ -26,7 +26,6 @@ div.documentwrapper {
 
 div.bodywrapper {
     margin: 0 0 0 230px;
-    b
 }
 
 div.body {
@@ -201,10 +200,7 @@ div.seealso {
     background-color: #ffc;
     border: 1px solid #ff6;
 }
-[alt="Logo"]
-{
-  xdisplay: none;
-}
+
 div.topic {
     background-color: #eee;
 }
@@ -233,7 +229,6 @@ pre {
 }
 
 tt {
-    xxbackground-color: #ecf0f3;
     padding: 0 1px 0 1px;
     font-size: 0.95em;
     color: #f90;
