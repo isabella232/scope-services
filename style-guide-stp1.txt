@@ -12,8 +12,8 @@ Style guide
 
 The style guide uses elements from the Python Style Guide :pep:`8`.
 Names of services, command, events and messages are all written using
-CamelCase_. Fields are also written using CamelCase but the first letter
-of the first word uses a non-capital letter, this is also known as mixedCase.
+CamelCase_. Fields are also written using CamelCase but the letters
+of the first word uses non-capital letters, this is also known as mixedCase.
 The exception to this rule are abbreviations, we capitalize all the letters
 of the abbreviation when used in CamelCase.
 
@@ -22,11 +22,13 @@ Examples of service/command names:
 * WindowManager
 * EcmascriptDebugger
 * WindowInfo
+* ID
 
 Examples of field names:
 
 * windowID
 * windowType
+* id
 
 Fields which are of type *Repeated* must always end in *List*, this allows
 the type to be extracted by removing the *List* from the name. Examples of
