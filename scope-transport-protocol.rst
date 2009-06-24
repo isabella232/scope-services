@@ -54,7 +54,7 @@ STP version 0 is defined as:
 
 The flow of the transport protocol currently looks like this::
 
-              Opera              proxy                 client
+  Opera                           proxy                    client
   
   *services     ---------------->
                                       ----------------->   *services
@@ -632,7 +632,7 @@ and host. The following symbols are used::
 The client must then initiate the handshake which also determines the STP
 version to use, for instance to enable STP version 1::
 
-              Host               client
+  Host                              client
   
   *services     =================>
                 <~~~~~~~~~~~~~~~~~  *enable stp-1
@@ -642,7 +642,7 @@ version to use, for instance to enable STP version 1::
 
 A typical message flow between a client, proxy and host looks like this::
 
-              Opera               proxy                 client
+  Opera                             proxy                   client
   
   handshake       <~~~~~~~~~~~~~~~~     ~ ~ ~ ~ ~ ~ ~ ~ ~>  handshake
                                         <-----------------  scope.Connect
