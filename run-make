@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ -n "$1" ]
+then
+  hg up tip
+  chmod 664 *.rst
+  make html OUTDIR=$1
+  cd $1
+  chmod -R 664 *
+  for directory in "_sources" "_static" "style" "doctrees"
+  do
+    chmod 775 directory
+  done
+fi
