@@ -5,9 +5,10 @@ then
   chmod 664 *.rst
   make html OUTDIR=$1
   cd $1
-  chmod -R 664 *
+  chmod 664 *.*
   for directory in "_sources" "_static" "style" "doctrees"
   do
-    chmod 775 directory
+    chmod 775 $directory
+    chmod 664 $directory/*
   done
 fi
