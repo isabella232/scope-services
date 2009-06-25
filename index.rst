@@ -92,6 +92,7 @@ Logger tools
 
   * `HTTP Logger`_
   * `Console Logger`_
+  * `Ecmascript Logger`_
 
 Interactive/controlling tools
 -----------------------------
@@ -118,6 +119,7 @@ Other reference material
 .. _HTTPD interface to the proxy: ./services-stp-0/httpd-interface.html
 .. _HTTP Logger: ./services-stp-0/http-logger.html
 .. _Console Logger: ./services-stp-0/console-logger.html
+.. _Ecmascript Logger: ./services-stp-0/console-logger.html
 .. _Window Manager Service: ./services-stp-0/window-manager.html
 .. _ECMAScript debugger protocol: ./services-stp-0/ecmascript-debugger-protocol.html
 .. _Opera Exec protocol: ./services-stp-0/exec-protocol.html
