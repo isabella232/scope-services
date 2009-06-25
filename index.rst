@@ -7,6 +7,7 @@
 Scope Interface for the Opera Browser
 =====================================
 
+
 General Overview
 ================
 
