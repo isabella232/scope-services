@@ -10,7 +10,6 @@ Scope Interface for the Opera Browser
 General Overview
 ================
 
-
 * `Opera Dragonfly Architecture`_
 
 
