@@ -750,3 +750,4 @@ means that a client must first enable the "scope" service by sending
 by STP enabled hosts. After this is sent, the client must encode all outgoing
 STP/1 messages according to the definition and send it to the "scope" service.
 The host will recognize this extended format and decode as an STP/1 message.
+
