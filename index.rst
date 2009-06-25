@@ -11,7 +11,6 @@ General Overview
 ================
 
 
-
 * `Opera Dragonfly Architecture`_
 
 
