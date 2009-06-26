@@ -231,10 +231,56 @@ pre {
 tt {
     padding: 0 1px 0 1px;
     font-size: 0.95em;
-    color: #f90;
+    color: #ff7f00;
     font-weight: bold;
 }
 
 .toctree-l1 ul {
   margin-bottom: 20px;
+}
+
+/* not really appropriated */
+
+cite {
+  font-style: normal;
+  font-family: monospace;
+}
+
+.highlight {
+    background-color: transparent;
+    position: relative;
+}
+
+.highlight-none .highlight:before,
+.highlight-none .highlight:after
+{
+  content: "log >";
+  display: block;
+  position:absolute;
+  top: -16px;
+  left: -1px;
+  color: #f60;
+  font-weight: bold;
+  color: #fff;
+  background-color: #ff7f00;
+  line-height: 16px;
+  padding: 0 3px;
+  font-family: monospace;
+  font-size: .9em;
+}
+
+.highlight-none .highlight:after
+{
+  content: "<";
+  top: auto;
+  bottom: -20px;
+}
+
+.highlight-none pre
+{
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  margin: 30px 0;
+  position: relative;
 }

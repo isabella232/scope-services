@@ -6,12 +6,14 @@ Walk Through the Log Entries
 Setup the `STP/1` Connection
 ====================================
 
-The main DOM API for the debugger is::
+The main DOM API for the debugger is:
+
+.. code-block:: javascript
 
   interface opera {
-    scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
-    scopeTransmit(service: string, message: string)
-    scopeEnableService(service: string, response: callback)
+    scopeAddClient(connect_callback, receive_callback, quit_callback, port_number)
+    scopeTransmit(service_name, message)
+    scopeEnableService(service_name, response_callback)
     stpVersion
   }
 
@@ -23,7 +25,7 @@ Calling ``scopeAddClient`` will cause the implementation to setup the STP connec
 
 * On the lowest level the STP 1 protocol gets initialised by the proxy. This happens in the test setup in ``ScopeConnection`` of ``dragonkeeper`` and is needed for compatibility reasons with STP 0 protocol.
 * Then the ``Connect`` command is sent to the host. This will establish on success  an unique connection between the host and the client. 
-* Then the service list is returned to the client as payload of the ``connected`` callback of the ``scopeAddClient`` call. 
+* Then the service list is returned to the client as payload of the ``connect`` callback callback of the ``scopeAddClient`` call. 
 
 For more details see `Scope transport protocol`_ and `Scope services`_.
 
@@ -35,14 +37,16 @@ Running ``opprotoc --js --js-test-framework`` does create on top of the Scope DO
 
   <service name> {
     // to execute a command
-    request&lt;CommandClassName>(tag, message)
+    request<CommandClassName>(tag, message)
     // to handle the response
-    handle&lt;CommandClassName>(status, message)
+    handle<CommandClassName>(status, message)
     // events
-    on&lt;EventClassName>(status, message)
+    <EventClassName with first char lowercase>(status, message)
   }
 
-e.g.::
+e.g.:
+
+.. code-block:: javascript
 
   cls.services.EcmascriptDebugger = function()
   {
@@ -50,7 +54,7 @@ e.g.::
       * The name of the service used in scope in ScopeTransferProtocol
       */
     this.name = 'ecmascript-debugger';
-    // snipp snipp
+
     // e.g. for the ListRuntimes command
     this.requestListRuntimes = function(tag, message)
     {
@@ -66,9 +70,10 @@ e.g.::
       WINDOW_ID = 2,
       OBJECT_ID = 3,
       URI = 4;
-      
+      // code to handle the message, 
+      // e.g. the runtimeList of the message is message[RUNTIME_LIST]
     }
-    // snipp snipp
+
     // e.g. for the OnObjectSelected event
     this.onObjectSelected = function(status, message)
     {
@@ -76,22 +81,29 @@ e.g.::
       OBJECT_ID = 0,
       WINDOW_ID = 1,
       RUNTIME_ID = 2;
-
+      // code to handle the message
     }
   }
 
 The created consts are identifiers to read and handle the response message.
 
-To handle responses more specifically there is also a ``tagManager`` singleton. That works basically like::
+To handle responses more specifically there is also a ``tagManager``. That works basically like:
 
-  var tag = tagManager.setCallback(<callbackObject>, <callbackMethod>, <array with callback context>);
-  services[<service-name>].request<CommandName>(tag, <message>);
+.. code-block:: javascript
 
-Such a callback will have the arguments as ``[status, response_message].concat(&lt;array with callback context>)``.
+  var tag = tagManager.setCallback(callbackObject, callbackMethod, [/* array with callback context */]);
+  services[<the name of the service>].request<CommandName>(tag, message);
 
-The service list which is returned as the payload of the ``connected`` callback is basically only needed for compatibility reasons with the STP 0 protocol. As soon as the client gets it it will call ``services.scope.requestHostInfo()`` in the ``client`` singleton in ``on_host_connected``. The scope service is enabled by default so that it can be used always. This should cause the following log entries:
+Such a callback will have the arguments as:
 
-::
+.. code-block:: javascript
+
+  [status, response_message].concat([/* array with callback context */])
+
+
+The service list which is returned as the payload of the ``connect`` callback is basically only needed for compatibility reasons with the `STP/0` protocol. As soon as the client gets it, it will call ``services.scope.requestHostInfo()`` in ``client`` in ``on_host_connected``. The scope service is enabled by default so that it can be used right away. This should cause the following log entries:
+
+.. code-block:: none
 
   sent: 
     service: scope 
@@ -106,17 +118,18 @@ The service list which is returned as the payload of the ``connected`` callback 
     tag: 0 
     payload: [1,​"2.​4",​"WinGogi",​"WinGogi",​"Opera/9.​70 (​WinGogi; U; en)​ Presto/2.​3.​0",​[["scope",​"1.​0.​0",​0,​1],​["console-logger",​"1.​0.​0",​0,​1],​["ecmascript-logger",​"1.​0.​0",​0,​1],​["http-logger",​"1.​0.​0",​0,​1],​["exec",​"1.​0.​0",​0,​1],​["window-manager",​"1.​0.​0",​0,​1],​["url-player",​"1.​0.​0",​0,​1],​["ecmascript-debugger",​"1.​0.​0",​0,​1],​["core-2-4",​"1.​0.​0",​0,​1],​["stp-0",​"1.​0.​0",​0,​1],​["stp-1",​"1.​0.​0",​0,​1]]]
 
-The scope service will read that message and enable each service in the list with::
+The scope service will read that message and enable each service in the list with:
+
+.. code-block:: javascript
 
   if(service[NAME] in services && service[NAME] != "scope" )
   {
-    tag = tagManager.setCallback(this, this.handleEnableService, [service[NAME]]);
-    services['scope'].requestEnable(tag,[service[NAME]]);
+    services['scope'].requestEnable(0,[service[NAME]]);
   }
 
 This should cause the following entries in the log:
 
-::
+.. code-block:: none
 
   sent: 
     service: scope 
@@ -190,20 +203,22 @@ Perhaps not in that order, the communication is asynchronous.
 Setting the Debug Context
 =========================
 
-The service class has also the following methods::
+The service class has also the following methods:
+
+.. code-block:: javascript
 
   ServiceBase {
     // called if the service was enabled successfully
     onEnableSuccess()
     // called when ever a new debug context is set
-    onWindowFilterChange(&lt;filter>)
+    onWindowFilterChange(windowFilterObject)
     // called if the client quits the connection
     onQuit()
   }
 
-The ``window-manager`` service will call ``this.requestListWindows()`` in the ``onEnableSuccess()`` callback. If there is not jet an debug context selected it will call ``requestGetActiveWindow()`` in ``handleListWindows(status, message)``. It will then set the active window ( the one which has focus ) as the debug context. This should give the following log entries, depending on the opened tabs:
+The ``window-manager`` service will call ``requestListWindows()`` in the ``onEnableSuccess()`` callback. If there is not jet an debug context selected it will call ``requestGetActiveWindow()`` in ``handleListWindows(status, message)``. It will then set the active window ( the one which has focus ) as the debug context. This should give the following log entries, depending on the opened tabs:
 
-::
+.. code-block:: none
 
   sent: 
     service: window-manager 
@@ -244,15 +259,17 @@ The ``window-manager`` service will call ``this.requestListWindows()`` in the ``
     tag: 0 
     payload: []
   
-Now the ``window-manager`` service will call ``onWindowFilterChange(<filter>)`` on each service.
+Now the ``window-manager`` service will call ``onWindowFilterChange(windowFilterObject)`` on each service.
 
 
 Getting the runtimes and retrieving the DOM
 ===========================================
 
-The ``ecmascript_debugger`` will call ``requestListRuntimes(0, [[], 1])`` in the ``onWindowFilterChange`` callback. This will retrieve any runtime in the debug context and also create one for documents which don't have one by default, e.g. documents without scripts.
+The ``ecmascript-debugger`` will call ``requestListRuntimes(0, [[], 1])`` in the ``onWindowFilterChange`` callback. This will retrieve any runtime in the debug context and also create one for documents which don't have one by default, e.g. documents without scripts.
 
-It then extracts the top runtime of the returned list in ``handleListRuntimes(status, message)``. Before being able to retrieve the DOM the service has to ensure that the runtime has finished loading to be sure that there is a DOM. This is done with the ``Eval`` command like::
+It then extracts the top runtime of the returned list in ``handleListRuntimes(status, message)``. Before being able to retrieve the DOM the service has to ensure that the runtime has finished loading to be sure that there is a DOM. This is done with the ``Eval`` command like:
+
+.. code-block:: javascript
 
   this._check_top_runtime_loaded = function(status, message)
   {
@@ -268,16 +285,14 @@ It then extracts the top runtime of the returned list in ``handleListRuntimes(st
       setTimeout( function(){
         var tag = tagManager.setCallback(self, self._check_top_runtime_loaded);
         var script = "return document.readyState";
-        self.requestEval(tag, [self._top_runtime_id, 0, 0, script, []]);
+        self.requestEval(tag, [self._top_runtime_id, 0, 0, script]);
       }, 100);
     }
   }
 
 That means it checks for ``document.readyState`` as long as that value is not ``"complete"`` ( or as long as the document has not finished loading ). This should give the following log entries:
 
-.. class:: log
-
-::
+.. code-block:: none
 
   sent: 
     service: ecmascript-debugger 
@@ -307,7 +322,7 @@ That means it checks for ``document.readyState`` as long as that value is not ``
   
 The function ``_on_top_runtime_loaded``
 
-::
+.. code-block:: javascript
 
     this._on_top_runtime_loaded = function(status, message)
     {
@@ -318,9 +333,7 @@ The function ``_on_top_runtime_loaded``
 
 does retrieve the root element of the top document. The according log entries:
 
-.. class:: log
-
-::
+.. code-block:: none
 
   sent: 
     service: ecmascript-debugger 
@@ -336,8 +349,9 @@ does retrieve the root element of the top document. The according log entries:
     payload: ["completed",​"object",​null,​[54,​0,​0,​"object",​null,​"HTMLHtmlElement"]]
 
 
-With the message definition for the ``Eval`` command it's easier to read that message::
+With the message definition for the ``Eval`` command it's easier to read that message:
 
+.. code-block:: c
 
   message EvalResult
   {
@@ -360,7 +374,9 @@ With the message definition for the ``Eval`` command it's easier to read that me
     optional ObjectValue objectValue = 4; 
   }
 
-Object are handled with an unique id, in the given example it's a ``HTMLHtmlElement`` element with the id ``54``. This is now used to retrieve the DOM for the root element::
+Object are handled with an unique id, in the given example it's a ``HTMLHtmlElement`` element with the id ``54``. This is now used to retrieve the DOM for the root element:
+
+.. code-block:: javascript
 
   this._on_root_id = function(status, message)
   {
@@ -385,9 +401,7 @@ Object are handled with an unique id, in the given example it's a ``HTMLHtmlElem
 
 And the log entries for a blank page:
 
-.. class:: log
-
-::
+.. code-block:: none
 
   sent: 
     service: ecmascript-debugger 
@@ -404,23 +418,84 @@ And the log entries for a blank page:
 
 This message is displayed in ``handleInspectDom`` as:
 
-.. raw:: html
+.. code-block:: html
 
-  <div class="dom">
-  <div><div style='margin-left:16px;'><node>&lt;html <key>dir</key>=<value>"ltr"</value>&gt;</node> <span class='object-id'>[92]</span></div><div style='margin-left:32px;'><node>&lt;head&gt;</node> <span class='object-id'>[98]</span></div><div style='margin-left:48px;'><text ref-id='99'>
-   </text></div><div style='margin-left:48px;' ><node>&lt;title&gt;</node><text>Blank page</text><node>&lt;/title&gt;</node> <span class='object-id'>[100]</span></div><div style='margin-left:48px;'><text ref-id='102'>
-  </text></div><div style='margin-left:32px;'><node>&lt;/head&gt;</node></div><div style='margin-left:32px;'><node>&lt;body/&gt;</node> <span class='object-id'>[103]</span></div><div style='margin-left:16px;'><node>&lt;/html&gt;</node></div></div>
-  </div>
+  <html dir="ltr"> [92]
+    <head> [98]
+      <title>Blank page</title> [100]
+    </head>
+    <body/> [103]
+  </html>
 
 The numbers in brackets are the object-ids of the according elements.
 
 
 Submit a command manually
 =========================
-TODO
+
+Exec
+----
+
+With the  Exec service it's possible to submit any Opera UI command. Select "Exec" in the "Service List". That will display the available commands and events for that service. To get the available UI commands select "GetActioInfoList" in the "Command List". That will display an overview of the selected command ``Command GetActionInfoList``. The definition of the argument of the command  is:
+
+.. code-block:: c
+
+  message Default
+  {
+  }
+
+That means the command has no argument. With the text field below the definition commands can be submitted manually. A message without arguments is an empty list ``[]``, so that is for the given case the whole message. Pressing send will return the command list, displayed below the definition of the returned message. The response should look something like:
+
+.. code-block:: javascript
+
+  response:
+    status: OK
+    payload: [[["Activate element"],​["Adaptive Zoom In"],​["Adaptive Zoom Out"],​["Back"],​["Backspace"],​["Backspace word"],​["Change direction to LTR"],​["Change direction to RTL"],​["Check item"],​["Clear"],​["Click button"],​["Click default button"],​["Close cycler"],​["Close dropdown"],​["Close page"],​["Pan document"],​["Convert hex to unicode"],​["Copy"],​["Copy label text"],​["Copy to note"],​["Cut"],​["Decrease visual viewport height 16px"],​["Decrease visual viewport width 16px"],​["Delay"],​["Delete"],​["Delete to end of line"],​["Delete word"],​["Deselect all"],​["Disable Handheld Mode"],​["Disable mediumscreen mode"],​["Disable scroll bars"],​["Disable tv rendering mode"],​["Download URL"],​["Enable Handheld Mode"],​["Enable mediumscreen mode"],​["Enable scroll bars"],​["Enable tv rendering mode"],​["External action"],​["Find inline"],​["Find next"],​["Find previous"],​["Focus address bar"],​["Focus current tab"],​["Focus form"],​["Focus next frame"],​["Focus next radio widget"],​["Focus next widget"],​["Focus previous frame"],​["Focus previous radio widget"],​["Focus previous widget"],​["Forward"],​["Go"],​["GOGI Paste and Go"],​["Go to Content Magic"],​["Go to end"],​["Go to homepage"],​["Go to line end"],​["Go to line start"],​["Go to speed dial"],​["Go to start"],​["Go to Top CM Bottom"],​["Highlight current block"],​["Highlight next block"],​["Highlight next element"],​["Highlight next heading"],​["Highlight next URL"],​["Highlight previous block"],​["Highlight previous element"],​["Highlight previous heading"],​["Highlight previous URL"],​["Increase visual viewport height 16px"],​["Increase visual viewport width 16px"],​["Insert"],​["Left adjust text"],​["Lock visual viewport size"],​["Make Readable"],​["Move rendering viewport down"],​["Move rendering viewport down 16px"],​["Move rendering viewport left"],​["Move rendering viewport left 16px"],​["Move rendering viewport right"],​["Move rendering viewport right 16px"],​["Move rendering viewport up"],​["Move rendering viewport up 16px"],​["Navigate down"],​["Navigate leave down"],​["Navigate leave left"],​["Navigate leave right"],​["Navigate leave up"],​["Navigate left"],​["Navigate page down"],​["Navigate page up"],​["Navigate right"],​["Navigate up"],​["New page"],​["Next character"],​["next character spatial"],​["Next item"],​["Next line"],​["next line spatial"],​["Next word"],​["Open link"],​["Open link in background page"],​["Open link in background window"],​["Open link in new page"],​["Open link in new window"],​["Page down"],​["Page left"],​["Page right"],​["Page up"],​["Pan document X"],​["Pan document Y"],​["Paste"],​["Paste and go"],​["Paste mouse selection"],​["Paste to note"],​["Previous character"],​["previous character spatial"],​["Previous item"],​["Previous line"],​["previous line spatial"],​["Previous word"],​["Quit"],​["Range go to end"],​["Range go to line end"],​["Range go to line start"],​["Range go to start"],​["Range next character"],​["Range next item"],​["Range next line"],​["Range next word"],​["Range page down"],​["Range page left"],​["Range page right"],​["Range page up"],​["Range previous character"],​["Range previous item"],​["Range previous line"],​["Range previous word"],​["Redo"],​["Reload"],​["Reload stylesheets"],​["Right adjust text"],​["Scroll"],​["Scroll down"],​["Scroll left"],​["Scroll right"],​["Scroll up"],​["Search"],​["Select all"],​["Select item"],​["Set desktop layout viewport size"],​["Show dropdown"],​["Show hidden popup menu"],​["Show link popup menu"],​["Show popup menu"],​["Stop"],​["SVG pause animation"],​["SVG reset pan"],​["SVG set quality"],​["SVG start animation"],​["SVG stop animation"],​["SVG zoom"],​["SVG zoom in"],​["SVG zoom out"],​["Switch to next window"],​["Switch to previous window"],​["Toggle overstrike"],​["Toggle presentation mode"],​["Toggle style bold"],​["Toggle style italic"],​["Toggle style underline"],​["Uncheck item"],​["Undo"],​["Unfocus form"],​["Unfocus plugin"],​["Unlock visual viewport size"],​["Unset desktop layout viewport size"],​["Wand"],​["Zoom in"],​["Zoom out"],​["Zoom point"],​["Zoom step in"],​["Zoom step out"],​["Zoom to"],​["_keydown"],​["_keyup"],​["_type"]]]
 
 
-.. _Scope DOM API: /scope-interface/scope-dom-interface.html
-.. _Scope transport protocol: /scope-interface/scope-transport-protocol.html
-.. _Scope services: /scope-interface/scope-stp1-services.html
+To execute one of the commands select the ``Exec`` command in the command list. The argument is a list of Actions, each Action with a required name, an optional parameter and an optional `ID` of the target window. The id is displayed in the "Window List" for the selected window. A simple command is ``"Go"``, which means to an `URL` in the case of a browser. So the command argument should e.g. look like:
+
+.. code-block:: javascript
+
+  [[["Go", "http://www.opera.com", 1]]] 
+
+The three objects are message, actionList and action, the action itself is ``"Go"``, where to is ``"http://www.opera.com"`` and the target window id is ``1``. Submitting the command will cause Opera to load that URL, the response in this case is short:
+
+.. code-block:: javascript
+
+  response:
+    status: OK
+    payload: []
+
+EcmascriptDebugger
+------------------
+
+The EcmascriptDebugger exposes a powerful interface to the ecma engine and the DOM. Setting breakpoints, retrieving the DOM, highlight elements and much more can be done with it. Let's have a look at the Eval command. We will create a simple function on the host side and execute it with some values. The message to create the function:
+
+.. code-block:: javascript
+
+   [1, 0, 0, "return function(string){alert(string)}"]
+
+The first value is the ``runtimeID``, it is displayed in the "Window List" for the selected window. The two following values are ``threadID`` and ``frameIndex``, they are used to evaluate code while stepping trough code, e.g. when the runtime hits a breakpoint. For the given case they are both not set, that means ``0``. ``"return function(string){alert(string)}"`` is the script to be evaluated, a simple function to call alert. The response will look something like:
+
+.. code-block:: c
+
+  response:
+    status: OK
+    payload: ["completed",​"object",​null,​[10,​1,​1,​"function",​null,​""]]
+
+That means the code was executed successfully and the returned value is an object. The interesting part is the ``ObjectValue``, ``[10,​1,​1,​"function",​null,​""]``, the first number in that object is the internal id for the returned object, in the above example ``10``. Now we are able to call that function with the Eval command:
+
+.. code-block:: javascript
+
+  [1, 0, 0, "_f(\"hello\")", [["_f", 10]]]
+
+
+the syntax is the same as before, but with a variable list with one variable ``["_f", 10]``, a key value pair, where the key is a identifier used in the script string and the value the object id of the function. Submitting that message will show an alert box in the host with the message "hello".
+
+
+
+.. _Scope DOM API: ./scope-dom-interface.html
+.. _Scope transport protocol: ./scope-transport-protocol.html
+.. _Scope services: ./scope-stp1-services.html
 
