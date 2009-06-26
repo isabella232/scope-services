@@ -6,7 +6,7 @@ How to setup a Test Environment for STP 1
 With easy_install and Python scripts in the path variable
 =========================================================
 
-* get an Opera Gogi Core 2.4 build `here`_ .
+* get an `Opera Gogi Core 2.4 build`_ .
 * get opprotoc with ``easy_install opprotoc``
 * run ``opprotoc --js --js-test-framework`` to create a html test framework. You should see the following out put in our console:
 
@@ -73,7 +73,30 @@ With easy_install and Python scripts in the path variable
 With other setups
 =================
 
-TODO
+You need at least `Python`_ and `Mercurial`_. To get ``opprotoc`` and ``dragonkeeper`` type in the commandline:
 
-.. _here: https://homes.oslo.osa/jborsodi/stp1/
+::
+  
+  hg clone http://code.opera.com/scope/opprotoc
+  hg clone http://code.opera.com/scope/dragonkeeper
+
+to create the test frame go to the cloned opprotoc direcory and type:
+
+::
+
+  hg up
+  python -m oppotoc.script --js --js-test--framework
+
+to start dragonkeeper change to the dragonkeeper directory and type:
+
+::
+
+  hg up
+  python -m dragonkeeper -dfr <path to the created test framework> 
+
+Other than that it's the same as above.
+
+.. _Python: http://www.python.org/
+.. _Mercurial: http://mercurial.selenic.com/wiki/
+.. _Opera Gogi Core 2.4 build: https://homes.oslo.osa/jborsodi/stp1/
 .. _Walk Through the Log Entries: ./walk-through.html
