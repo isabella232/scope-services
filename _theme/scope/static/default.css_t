@@ -235,6 +235,10 @@ tt {
     font-weight: bold;
 }
 
+tt.xref  {
+  font-size: 100%;
+}
+
 .toctree-l1 ul {
   margin-bottom: 20px;
 }

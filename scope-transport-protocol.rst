@@ -2,7 +2,7 @@
  Scope transport protocol v1
 =============================
 
-:Author:  Jan Borsodi <jborsodi@opera.com>
+:Author:  Jan Borsodi (jborsodi [at] opera.com)
 :Version: 0.10
 :Status:  Draft
 :Date:    22nd April 2009

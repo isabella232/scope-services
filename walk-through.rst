@@ -320,7 +320,7 @@ That means it checks for ``document.readyState`` as long as that value is not ``
     tag: 1 
     payload: ["completed",​"string",​"complete"]
   
-The function ``_on_top_runtime_loaded``
+The method
 
 .. code-block:: javascript
 

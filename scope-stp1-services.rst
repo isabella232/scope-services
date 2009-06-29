@@ -2,7 +2,7 @@
  Scope services
 ================
 
-:Author:  Jan Borsodi <jborsodi@opera.com>
+:Author:  Jan Borsodi (jborsodi [at] opera.com)
 :Version: 0.3
 :Date:    22nd April 2009
 

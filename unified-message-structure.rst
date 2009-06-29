@@ -2,7 +2,7 @@
  Unified Message Structure
 ===========================
 
-:Author:  Jan Borsodi <jborsodi@opera.com>
+:Author:  Jan Borsodi (jborsodi [at] opera.com)
 :Version: 0.2
 :Status:  Draft
 :Date:    23th June 2009
