@@ -85,7 +85,10 @@ e.g.:
     }
   }
 
-The created ``consts`` are identifiers to read and handle the response message.
+
+The created ``const``-ants are identifiers to read and handle the response message.
+
+
 
 To handle responses more specifically there is also a ``tagManager``. This works like:
 
