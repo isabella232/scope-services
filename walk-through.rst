@@ -1,9 +1,9 @@
 =============================
-Walk Through the Log Entries
+Walk through the log entries
 =============================
 
 
-Setup the `STP/1` Connection
+Set up the `STP/1` connection
 ====================================
 
 The main DOM API for the debugger is:
@@ -17,23 +17,23 @@ The main DOM API for the debugger is:
     stpVersion
   }
 
-for details see `Scope DOM API`_.
+For details see `Scope DOM API`_.
 
-This interface gets only exposed to privileged windows. If ``opera`` or ``opera.scopeAddClient`` does not exist, the interface is implemented by the ``ScopeHTTPInterface`` class. As the name suggests this is a http interface to scope. It requires a local proxy which also acts as server. For our test setup this is dragonkeeper. It translate STP to HTTP. For the events the client keeps always one connection to the proxy open so that an event can be returned instantly to the client.
+This interface is only exposed to privileged windows. If ``opera`` or ``opera.scopeAddClient`` does not exist, the interface is implemented by the ``ScopeHTTPInterface`` class. As the name suggests this is a HTTP interface to scope. It requires a local proxy which also acts as a server. For our test set up this is dragonkeeper. It translate STP to HTTP. For the events the client always keeps open one connection to the proxy so that an event can be returned instantly to the client.
 
-Calling ``scopeAddClient`` will cause the implementation to setup the STP connection. This happens in three steps:
+Calling ``scopeAddClient`` will cause the implementation to set up the STP connection. This happens in three steps:
 
-* On the lowest level the STP 1 protocol gets initialised by the proxy. This happens in the test setup in ``ScopeConnection`` of ``dragonkeeper`` and is needed for compatibility reasons with STP 0 protocol.
-* Then the ``Connect`` command is sent to the host. This will establish on success  an unique connection between the host and the client. 
-* Then the service list is returned to the client as payload of the ``connect`` callback callback of the ``scopeAddClient`` call. 
+* On the lowest level the STP 1 protocol gets initialised by the proxy. This happens in the test setup in ``ScopeConnection`` of ``dragonkeeper`` and is needed for compatibility reasons with the STP 0 protocol.
+* The ``Connect`` command is then sent to the host. If successful, this will establish an unique connection between the host and the client. 
+* The service list is then returned to the client as a payload of the ``connect`` callback of the ``scopeAddClient`` call. 
 
-For more details see `Scope transport protocol`_ and `Scope services`_.
+For more details, see `Scope transport protocol`_ and `Scope services`_.
 
 
-Enabling the Services
+Enabling the services
 =====================
 
-Running ``opprotoc --js --js-test-framework`` does create on top of the Scope DOM API a service class for each scope service. Each command and event is implemented as::
+Running ``opprotoc --js --js-test-framework`` creates a service class for each scope service on top of the Scope DOM API. Each command and event is implemented as::
 
   <service name> {
     // to execute a command
@@ -85,9 +85,9 @@ e.g.:
     }
   }
 
-The created consts are identifiers to read and handle the response message.
+The created ``consts`` are identifiers to read and handle the response message.
 
-To handle responses more specifically there is also a ``tagManager``. That works basically like:
+To handle responses more specifically there is also a ``tagManager``. This works like:
 
 .. code-block:: javascript
 
@@ -101,7 +101,7 @@ Such a callback will have the arguments as:
   [status, response_message].concat([/* array with callback context */])
 
 
-The service list which is returned as the payload of the ``connect`` callback is basically only needed for compatibility reasons with the `STP/0` protocol. As soon as the client gets it, it will call ``services.scope.requestHostInfo()`` in ``client`` in ``on_host_connected``. The scope service is enabled by default so that it can be used right away. This should cause the following log entries:
+The service list which is returned as the payload of the ``connect`` callback is only needed for compatibility reasons with the `STP/0` protocol. As soon as the client gets it, it will call ``services.scope.requestHostInfo()`` in ``client`` in ``on_host_connected``. The scope service is enabled by default so that it can be used immediately. This should cause the following log entries:
 
 .. code-block:: none
 
@@ -197,7 +197,7 @@ This should cause the following entries in the log:
     payload: []
 
 
-Perhaps not in that order, the communication is asynchronous.
+Although not in that order, the communication is asynchronous.
 
 
 Setting the Debug Context
@@ -216,7 +216,7 @@ The service class has also the following methods:
     onQuit()
   }
 
-The ``window-manager`` service will call ``requestListWindows()`` in the ``onEnableSuccess()`` callback. If there is not jet an debug context selected it will call ``requestGetActiveWindow()`` in ``handleListWindows(status, message)``. It will then set the active window ( the one which has focus ) as the debug context. This should give the following log entries, depending on the opened tabs:
+The ``window-manager`` service will call ``requestListWindows()`` in the ``onEnableSuccess()`` callback. If a debug context has not been selected it will call ``requestGetActiveWindow()`` in ``handleListWindows(status, message)``. It will then set the active window ( the one which has focus ) as the debug context. This should give the following log entries, depending on the opened tabs:
 
 .. code-block:: none
 
@@ -259,15 +259,15 @@ The ``window-manager`` service will call ``requestListWindows()`` in the ``onEna
     tag: 0 
     payload: []
   
-Now the ``window-manager`` service will call ``onWindowFilterChange(windowFilterObject)`` on each service.
+Next, the ``window-manager`` service will call ``onWindowFilterChange(windowFilterObject)`` on each service.
 
 
 Getting the runtimes and retrieving the DOM
 ===========================================
 
-The ``ecmascript-debugger`` will call ``requestListRuntimes(0, [[], 1])`` in the ``onWindowFilterChange`` callback. This will retrieve any runtime in the debug context and also create one for documents which don't have one by default, e.g. documents without scripts.
+The ``ecmascript-debugger`` will call ``requestListRuntimes(0, [[], 1])`` in the ``onWindowFilterChange`` callback. This will retrieve any runtime in the debug context and also create one for documents which do not have one by default, e.g., documents without scripts.
 
-It then extracts the top runtime of the returned list in ``handleListRuntimes(status, message)``. Before being able to retrieve the DOM the service has to ensure that the runtime has finished loading to be sure that there is a DOM. This is done with the ``Eval`` command like:
+It then extracts the top runtime of the returned list in ``handleListRuntimes(status, message)``. Before being able to retrieve the DOM, the service has to ensure that the runtime has finished loading to identify that there is a DOM. This is done with the ``Eval`` command like:
 
 .. code-block:: javascript
 
@@ -331,7 +331,7 @@ The method
       self.requestEval(tag, [this._top_runtime_id, 0, 0, script, []]);
     }
 
-does retrieve the root element of the top document. The according log entries:
+retrieves the root element of the top document. The according log entries are:
 
 .. code-block:: none
 
@@ -349,7 +349,7 @@ does retrieve the root element of the top document. The according log entries:
     payload: ["completed",​"object",​null,​[54,​0,​0,​"object",​null,​"HTMLHtmlElement"]]
 
 
-With the message definition for the ``Eval`` command it's easier to read that message:
+With the message definition for the ``Eval`` command it is easier to read this message:
 
 .. code-block:: c
 
@@ -374,7 +374,7 @@ With the message definition for the ``Eval`` command it's easier to read that me
     optional ObjectValue objectValue = 4; 
   }
 
-Object are handled with an unique id, in the given example it's a ``HTMLHtmlElement`` element with the id ``54``. This is now used to retrieve the DOM for the root element:
+Object are handled with an unique id. In the given example it is a ``HTMLHtmlElement`` element with the id ``54``. This is now used to retrieve the DOM for the root element:
 
 .. code-block:: javascript
 
@@ -399,7 +399,7 @@ Object are handled with an unique id, in the given example it's a ``HTMLHtmlElem
     }
   }
 
-And the log entries for a blank page:
+And the log entries for a blank page are:
 
 .. code-block:: none
 
@@ -436,7 +436,7 @@ Submit a command manually
 Exec
 ----
 
-With the  Exec service it's possible to submit any Opera UI command. Select "Exec" in the "Service List". That will display the available commands and events for that service. To get the available UI commands select "GetActioInfoList" in the "Command List". That will display an overview of the selected command ``Command GetActionInfoList``. The definition of the argument of the command  is:
+With the Exec service it is possible to submit any Opera UI command. Select "Exec" in the "Service List". That will display the available commands and events for that service. To get the available UI commands select "GetActioInfoList" in the "Command List". That will display an overview of the selected command ``Command GetActionInfoList``. The definition of the argument of the command  is:
 
 .. code-block:: c
 
@@ -444,7 +444,7 @@ With the  Exec service it's possible to submit any Opera UI command. Select "Exe
   {
   }
 
-That means the command has no argument. With the text field below the definition commands can be submitted manually. A message without arguments is an empty list ``[]``, so that is for the given case the whole message. Pressing send will return the command list, displayed below the definition of the returned message. The response should look something like:
+This means that the command has no argument. With the text field below the definition, commands can be submitted manually. A message without arguments is an empty list ``[]``, so that is the given case for the whole message. Pressing "Send" will return the command list, which is displayed below the definition of the returned message. The response should look similar to:
 
 .. code-block:: javascript
 
@@ -453,13 +453,13 @@ That means the command has no argument. With the text field below the definition
     payload: [[["Activate element"],​["Adaptive Zoom In"],​["Adaptive Zoom Out"],​["Back"],​["Backspace"],​["Backspace word"],​["Change direction to LTR"],​["Change direction to RTL"],​["Check item"],​["Clear"],​["Click button"],​["Click default button"],​["Close cycler"],​["Close dropdown"],​["Close page"],​["Pan document"],​["Convert hex to unicode"],​["Copy"],​["Copy label text"],​["Copy to note"],​["Cut"],​["Decrease visual viewport height 16px"],​["Decrease visual viewport width 16px"],​["Delay"],​["Delete"],​["Delete to end of line"],​["Delete word"],​["Deselect all"],​["Disable Handheld Mode"],​["Disable mediumscreen mode"],​["Disable scroll bars"],​["Disable tv rendering mode"],​["Download URL"],​["Enable Handheld Mode"],​["Enable mediumscreen mode"],​["Enable scroll bars"],​["Enable tv rendering mode"],​["External action"],​["Find inline"],​["Find next"],​["Find previous"],​["Focus address bar"],​["Focus current tab"],​["Focus form"],​["Focus next frame"],​["Focus next radio widget"],​["Focus next widget"],​["Focus previous frame"],​["Focus previous radio widget"],​["Focus previous widget"],​["Forward"],​["Go"],​["GOGI Paste and Go"],​["Go to Content Magic"],​["Go to end"],​["Go to homepage"],​["Go to line end"],​["Go to line start"],​["Go to speed dial"],​["Go to start"],​["Go to Top CM Bottom"],​["Highlight current block"],​["Highlight next block"],​["Highlight next element"],​["Highlight next heading"],​["Highlight next URL"],​["Highlight previous block"],​["Highlight previous element"],​["Highlight previous heading"],​["Highlight previous URL"],​["Increase visual viewport height 16px"],​["Increase visual viewport width 16px"],​["Insert"],​["Left adjust text"],​["Lock visual viewport size"],​["Make Readable"],​["Move rendering viewport down"],​["Move rendering viewport down 16px"],​["Move rendering viewport left"],​["Move rendering viewport left 16px"],​["Move rendering viewport right"],​["Move rendering viewport right 16px"],​["Move rendering viewport up"],​["Move rendering viewport up 16px"],​["Navigate down"],​["Navigate leave down"],​["Navigate leave left"],​["Navigate leave right"],​["Navigate leave up"],​["Navigate left"],​["Navigate page down"],​["Navigate page up"],​["Navigate right"],​["Navigate up"],​["New page"],​["Next character"],​["next character spatial"],​["Next item"],​["Next line"],​["next line spatial"],​["Next word"],​["Open link"],​["Open link in background page"],​["Open link in background window"],​["Open link in new page"],​["Open link in new window"],​["Page down"],​["Page left"],​["Page right"],​["Page up"],​["Pan document X"],​["Pan document Y"],​["Paste"],​["Paste and go"],​["Paste mouse selection"],​["Paste to note"],​["Previous character"],​["previous character spatial"],​["Previous item"],​["Previous line"],​["previous line spatial"],​["Previous word"],​["Quit"],​["Range go to end"],​["Range go to line end"],​["Range go to line start"],​["Range go to start"],​["Range next character"],​["Range next item"],​["Range next line"],​["Range next word"],​["Range page down"],​["Range page left"],​["Range page right"],​["Range page up"],​["Range previous character"],​["Range previous item"],​["Range previous line"],​["Range previous word"],​["Redo"],​["Reload"],​["Reload stylesheets"],​["Right adjust text"],​["Scroll"],​["Scroll down"],​["Scroll left"],​["Scroll right"],​["Scroll up"],​["Search"],​["Select all"],​["Select item"],​["Set desktop layout viewport size"],​["Show dropdown"],​["Show hidden popup menu"],​["Show link popup menu"],​["Show popup menu"],​["Stop"],​["SVG pause animation"],​["SVG reset pan"],​["SVG set quality"],​["SVG start animation"],​["SVG stop animation"],​["SVG zoom"],​["SVG zoom in"],​["SVG zoom out"],​["Switch to next window"],​["Switch to previous window"],​["Toggle overstrike"],​["Toggle presentation mode"],​["Toggle style bold"],​["Toggle style italic"],​["Toggle style underline"],​["Uncheck item"],​["Undo"],​["Unfocus form"],​["Unfocus plugin"],​["Unlock visual viewport size"],​["Unset desktop layout viewport size"],​["Wand"],​["Zoom in"],​["Zoom out"],​["Zoom point"],​["Zoom step in"],​["Zoom step out"],​["Zoom to"],​["_keydown"],​["_keyup"],​["_type"]]]
 
 
-To execute one of the commands select the ``Exec`` command in the command list. The argument is a list of Actions, each Action with a required name, an optional parameter and an optional `ID` of the target window. The id is displayed in the "Window List" for the selected window. A simple command is ``"Go"``, which means to an `URL` in the case of a browser. So the command argument should e.g. look like:
+To execute one of the commands, select the ``Exec`` command in the command list. The argument is a list of Actions, each Action with a required name, an optional parameter, and an optional `ID` of the target window. The id is displayed in the "Window List" for the selected window. A simple command is ``"Go"``, which means to an `URL` in the case of a browser. So the command argument should resemble:
 
 .. code-block:: javascript
 
   [[["Go", "http://www.opera.com", 1]]] 
 
-The three objects are message, actionList and action, the action itself is ``"Go"``, where to is ``"http://www.opera.com"`` and the target window id is ``1``. Submitting the command will cause Opera to load that URL, the response in this case is short:
+The three objects are message, actionList, and action. The action itself is ``"Go"``, where to is ``"http://www.opera.com"`` and the target window id is ``1``. Submitting the command will cause Opera to load that URL. The response in this case is short:
 
 .. code-block:: javascript
 
@@ -470,13 +470,13 @@ The three objects are message, actionList and action, the action itself is ``"Go
 EcmascriptDebugger
 ------------------
 
-The EcmascriptDebugger exposes a powerful interface to the ecma engine and the DOM. Setting breakpoints, retrieving the DOM, highlight elements and much more can be done with it. Let's have a look at the Eval command. We will create a simple function on the host side and execute it with some values. The message to create the function:
+The EcmascriptDebugger exposes a powerful interface to the ECMA engine and the DOM. Setting breakpoints, retrieving the DOM, highlighting elements, and much more can be done with it. Let us have a look at the Eval command. We will create a simple function on the host side and execute it with some values. The message to create the function is:
 
 .. code-block:: javascript
 
    [1, 0, 0, "return function(string){alert(string)}"]
 
-The first value is the ``runtimeID``, it is displayed in the "Window List" for the selected window. The two following values are ``threadID`` and ``frameIndex``, they are used to evaluate code while stepping trough code, e.g. when the runtime hits a breakpoint. For the given case they are both not set, that means ``0``. ``"return function(string){alert(string)}"`` is the script to be evaluated, a simple function to call alert. The response will look something like:
+The first value is the ``runtimeID``. It is displayed in the "Window List" for the selected window. The two following values are ``threadID`` and ``frameIndex``. They are used to evaluate code while stepping trough code, e.g., when the runtime hits a breakpoint. For the given case they are both not set, which means ``0``. ``"return function(string){alert(string)}"`` is the script to be evaluated and is a simple function to call alert. The response will look similar to:
 
 .. code-block:: c
 
@@ -484,14 +484,14 @@ The first value is the ``runtimeID``, it is displayed in the "Window List" for t
     status: OK
     payload: ["completed",​"object",​null,​[10,​1,​1,​"function",​null,​""]]
 
-That means the code was executed successfully and the returned value is an object. The interesting part is the ``ObjectValue``, ``[10,​1,​1,​"function",​null,​""]``, the first number in that object is the internal id for the returned object, in the above example ``10``. Now we are able to call that function with the Eval command:
+That means the code was executed successfully and the returned value is an object. The interesting part is the ``ObjectValue``, ``[10,​1,​1,​"function",​null,​""]``. The first number in that object is the internal id for the returned object as shown in the above example ``10``. Now we are able to call that function with the Eval command:
 
 .. code-block:: javascript
 
   [1, 0, 0, "_f(\"hello\")", [["_f", 10]]]
 
 
-the syntax is the same as before, but with a variable list with one variable ``["_f", 10]``, a key value pair, where the key is a identifier used in the script string and the value the object id of the function. Submitting that message will show an alert box in the host with the message "hello".
+The syntax is the same as before, but with a variable list with one variable ``["_f", 10]``, a key value pair, where the key is an identifier used in the script string, and the value is the object id of the function. Submitting that message will show an alert box in the host with the message "hello".
 
 
 

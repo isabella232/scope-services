@@ -6,9 +6,9 @@ How to setup a Test Environment for STP 1
 With easy_install and Python scripts in the path variable
 =========================================================
 
-* get an `Opera Gogi Core 2.4 build`_ .
-* get opprotoc with ``easy_install opprotoc``
-* run ``opprotoc --js --js-test-framework`` to create a html test framework. You should see the following out put in our console:
+* Get an `Opera Gogi Core 2.4 build`_ .
+* Get opprotoc with ``easy_install opprotoc``
+* Run ``opprotoc --js --js-test-framework`` to create a HTML test framework. You should see the following output in our console:
 
   ::
 
@@ -36,8 +36,8 @@ With easy_install and Python scripts in the path variable
     Copied templates\js\json.js
     Copied templates\js\style.css
 
-* get dragonkeeper with ``easy_install dragonkeeper``
-* run ``dragonkeeper -dfr <path to the created test framework>`` to start a local server / proxy. You should see the following output in your console:
+* Get dragonkeeper with ``easy_install dragonkeeper``
+* Run ``dragonkeeper -dfr <path to the created test framework>`` to start a local server / proxy. You should see the following output in your console:
 
   ::
 
@@ -64,7 +64,7 @@ With easy_install and Python scripts in the path variable
 
 * Go to ``http://localhost:8002/`` with any Browser and open ``js-out/client.html``. 
 
-  The test framework should start. It should set the active tab in the gogi build as debug context and retrieve the DOM from the top document of that tab. In the "Log" section you can see the communication with scope. "Window List" shows the tabs of the debugged Opera, "Service List" the available services. Click any service name to get the "Command List" and "Event List" for the selected service. Click any command in the "Command List" to display a description of the data structure for that command and it's response. Try out the command by typing the message manually and see the corresponding response.
+  The test framework should start. It should set the active tab in the gogi build as debug context and retrieve the DOM from the top document of that tab. In the "Log" section you can see the communication with scope. "Window List" shows the tabs of the debugged Opera, and "Service List" the available services. Click any service name to get the "Command List" and "Event List" for the selected service. Click any command in the "Command List" to display a description of the data structure for that command and its response. Try out the command by typing the message manually and see the corresponding response.
 
   See `Walk Through the Log Entries`_ for more details.
   
@@ -73,28 +73,28 @@ With easy_install and Python scripts in the path variable
 With other setups
 =================
 
-You need at least `Python`_ and `Mercurial`_. To get ``opprotoc`` and ``dragonkeeper`` type in the commandline:
+You need at least `Python`_ and `Mercurial`_. To get ``opprotoc`` and ``dragonkeeper``, in the commandline type:
 
 ::
   
   hg clone http://code.opera.com/scope/opprotoc
   hg clone http://code.opera.com/scope/dragonkeeper
 
-to create the test frame go to the cloned opprotoc direcory and type:
+To create the test frame go to the cloned opprotoc direcory and type:
 
 ::
 
   hg up
   python -m oppotoc.script --js --js-test--framework
 
-to start dragonkeeper change to the dragonkeeper directory and type:
+To start dragonkeeper, change to the dragonkeeper directory and type:
 
 ::
 
   hg up
   python -m dragonkeeper -dfr <path to the created test framework> 
 
-Other than that it's the same as above.
+Other than that, it is the same as done in the preceding instructions.
 
 .. _Python: http://www.python.org/
 .. _Mercurial: http://mercurial.selenic.com/wiki/
