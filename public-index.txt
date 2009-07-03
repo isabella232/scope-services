@@ -1,0 +1,94 @@
+.. Opera Dragonfly documentation master file, created by
+   sphinx-quickstart on Fri Jun 19 10:19:30 2009.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root * `toctree` directive.
+
+=====================================
+Scope Interface for the Opera Browser
+=====================================
+
+General Overview
+================
+
+* `Opera Dragonfly Architecture`_
+
+
+  A general overview of the Opera Dragonfly debug and inspection architecture for the Opera Browser.
+
+  .. _Opera Dragonfly Architecture: http://dev.opera.com/articles/view/opera-dragonfly-architecture/
+
+Scope Interface Version 1 
+=========================
+
+Architecture
+------------
+
+.. toctree::
+   :maxdepth: 2
+   
+   scope-transport-protocol.rst
+
+   scope-stp1-services.rst
+
+   unified-message-structure.rst
+
+   scope-dom-interface.rst
+
+   
+Scope Services
+--------------
+
+
+.. toctree::
+   :maxdepth: 1
+
+   Scope.rst
+   WindowManager.rst
+   EcmascriptDebugger.rst
+   ConsoleLogger.rst
+   HttpLogger.rst
+   Exec.rst
+   UrlPlayer.rst
+
+       
+Scope Interface Version 0 
+=========================
+
+Overall documentation
+---------------------
+
+* `Architecture overview`_
+* `Transport protocol`_
+* `Requirements for the debugging infrastructure`_
+* `Scope JavaScript API`_
+* `HTTPD interface to the proxy`_
+
+Scope Services
+--------------
+
+* `Window Manager Service`_
+* `ECMAScript debugger protocol`_
+* `HTTP Logger`_
+* `Console Logger`_
+* `Opera Exec protocol`_
+
+
+.. _Requirements for the debugging infrastructure: ./services-stp-0/requirements.html
+.. _Architecture overview: ./services-stp-0/architecture.html
+.. _HTTPD interface to the proxy: ./services-stp-0/httpd-interface.html
+.. _HTTP Logger: ./services-stp-0/http-logger-protocol-1.html
+.. _Console Logger: ./services-stp-0/console-logger.html
+.. _Window Manager Service: ./services-stp-0/window-manager.html
+.. _ECMAScript debugger protocol: ./services-stp-0/ecmascript-debugger-protocol.html
+.. _Opera Exec protocol: ./services-stp-0/exec-protocol.html
+.. _Scope JavaScript API: ./services-stp-0/scope-js-api.html
+.. _Transport protocol: ./services-stp-0/transport-protocol.html
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
