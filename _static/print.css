@@ -1,6 +1,11 @@
+body {
+    font-family: serif;
+}
+
 .sphinxsidebar {
   display: none;
 }
+
 div.documentwrapper {
     float: none;
     width: 100%;
@@ -9,6 +14,7 @@ div.documentwrapper {
 div.bodywrapper {
     margin: 0;
 }
+
 div.body {
     padding: 0 20px 30px 20px;
     border: none;
@@ -18,6 +24,31 @@ div.body {
     bottom: auto;
     right: auto;
 }
+
 div.footer {
     position: static;
+}
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+    border-bottom: none
+    background-color: transparent;
+}
+div.body h1,
+div.body h2 {
+    border-bottom: 1px dotted #333;
+}
+
+pre {
+    color: #000;
+    border: 1px solid #666;
+    background-color: transparent;
+}
+
+tt {
+    color: #000;
+    font-weight: normal;
 }
