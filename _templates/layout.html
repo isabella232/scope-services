@@ -101,6 +101,7 @@
     <title>{{ title|striptags }}{{ titlesuffix }}</title>
     <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
     <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
+    <link rel="stylesheet" media="print" href="{{ pathto('_static/print.css', 1) }}" type="text/css" />
     {%- if not embedded %}
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {

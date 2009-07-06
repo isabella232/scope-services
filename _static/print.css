@@ -1,0 +1,23 @@
+.sphinxsidebar {
+  display: none;
+}
+div.documentwrapper {
+    float: none;
+    width: 100%;
+}
+
+div.bodywrapper {
+    margin: 0;
+}
+div.body {
+    padding: 0 20px 30px 20px;
+    border: none;
+    position: static;
+    left: 0px;
+    top: auto;
+    bottom: auto;
+    right: auto;
+}
+div.footer {
+    position: static;
+}
