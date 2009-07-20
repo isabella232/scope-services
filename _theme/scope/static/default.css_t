@@ -288,3 +288,8 @@ cite {
   margin: 30px 0;
   position: relative;
 }
+
+.field-name
+{
+  white-space: pre;
+}
