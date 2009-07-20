@@ -10,13 +10,15 @@
 EBNF
 ====
 
-The following common EBNF entries are defined:
+The following common EBNF_ entries are defined:
+
+.. _EBNF: http://en.wikipedia.org/wiki/Ebnf
 
 .. productionlist::
   pb_uint_short: <32bit unsigned encoded as Protocol Buffer varint>
   pb_uint_long : <64bit unsigned encoded as Protocol Buffer varint>
-  number       : `number`
-  digit        : "0"..."9"
+  number       : `digit`+
+  digit        : "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
   space        : "\x20"
   newline      : "\x0a"
 
