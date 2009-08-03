@@ -16,7 +16,6 @@ The following common EBNF_ entries are defined:
 
 .. productionlist::
   pb_uint_short: <32bit unsigned encoded as Protocol Buffer varint>
-  pb_uint_long : <64bit unsigned encoded as Protocol Buffer varint>
   number       : `digit`+
   digit        : "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
   space        : "\x20"
@@ -328,7 +327,7 @@ The outer layer of the transport message is defined as:
 .. productionlist::
   message : "STP" `stp_ver` `stp_size` `stp_data`
   stp_ver : <single octet>
-  stp_size: `pb_uint_long`
+  stp_size: `pb_uint_short`
   stp_data: <octets equal to stp-size>
 
 This allows for multiple versions of a message to be sent. Each message is
