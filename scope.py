@@ -18,13 +18,16 @@ service = Message("Service",
                          ])
 
 command = Message("CommandInfo",
-                  fields=[Field(Proto.String, "name",   1)
-                         ,Field(Proto.Uint32, "number", 2)
+                  fields=[Field(Proto.String, "name",       1)
+                         ,Field(Proto.Uint32, "number",     2)
+                         ,Field(Proto.Uint32, "messageID",  3)
+                         ,Field(Proto.Uint32, "responseID", 4)
                          ])
 
 event = Message("EventInfo",
-                fields=[Field(Proto.String, "name",   1)
-                       ,Field(Proto.Uint32, "number", 2)
+                fields=[Field(Proto.String, "name",      1)
+                       ,Field(Proto.Uint32, "number",    2)
+                       ,Field(Proto.Uint32, "messageID", 3)
                        ])
 
 service_info = Message("ServiceInfo",
@@ -34,6 +37,25 @@ service_info = Message("ServiceInfo",
 
 service_selection = Message("ServiceSelection",
                             fields=[Field(Proto.String, "name", 1)
+                                   ])
+
+field_info = Message("FieldInfo",
+                     fields=[Field(Proto.String, "name",       1)
+                            ,Field(Proto.Uint32, "type",       2) # double=1, float=2, int32=3, uint32=4, sint32=5, fixed32=6, sfixed32=7, bool=8, string=9, bytes=10, message=11, int64=12, uint64=13, sint64=14, fixed64=15, sfixed64=16
+                            ,Field(Proto.Uint32, "number",     3)
+                            ,Field(Proto.Uint32, "quantifier", 4, q=Quantifier.Optional, default=0) # required=0, optional=1, repeated=2
+                            ,Field(Proto.Uint32, "messageID",  5, q=Quantifier.Optional)
+                            ])
+
+message_info = Message("MessageInfo",
+                       fields=[Field(Proto.String,  "name",      1)
+                              ,Field(Proto.Message, "fields",    2, q=Quantifier.Repeated, message=field_info)
+                              ,Field(Proto.Uint32,  "parentID",  3)
+                              ])
+
+message_selection = Message("MessageSelection",
+                            fields=[Field(Proto.String, "serviceName", 1)
+                                   ,Field(Proto.Uint32, "id",          2, q=Quantifier.Repeated)
                                    ])
 
 service_result = Message("ServiceResult",
@@ -69,6 +91,7 @@ window_manager = Service("Scope", version="1.0", coreRelease="2.4",
                                   ,Request(7, "Info",       service_selection, service_info)
                                   ,Request(8, "Quit",       False,             False)
                                   ,Request(10, "HostInfo",  False,             host_info)
+                                  ,Request(11, "MessageInfo", message_selection, message_info)
                                   ,Event(0, "OnServices",       service_list)
                                   ,Event(1, "OnQuit",           False)
                                   ,Event(2, "OnConnectionLost", False)
