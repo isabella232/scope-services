@@ -72,6 +72,7 @@ screenwatcher_data = Message("ScreenWatcher",
                                      Field(Proto.String,  "md5List",       3, q=Quantifier.Repeated),
                                      Field(Proto.Uint32,  "windowID",      4, q=Quantifier.Optional, doc="The ID of the window to watch, the default (or 0) is to watch the current window"),
                                      Field(Proto.Message, "colorSpecList", 5, q=Quantifier.Repeated, message=color_spec),
+                                     Field(Proto.Bool,    "includeImage",  6, q=Quantifier.Optional, doc="If true then the image data will be sent in the response WatcherResult.png, otherwise the field will be omitted", default=True),
                                      ])
 
 color_match = Message("ColorMatch", is_global=False,
