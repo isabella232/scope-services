@@ -39,7 +39,7 @@ service_selection = Message("ServiceSelection",
                             fields=[Field(Proto.String, "name", 1)
                                    ])
 
-field_info = Message("FieldInfo",
+field_info = Message("FieldInfo", is_global=False,
                      fields=[Field(Proto.String, "name",       1)
                             ,Field(Proto.Uint32, "type",       2) # double=1, float=2, int32=3, uint32=4, sint32=5, fixed32=6, sfixed32=7, bool=8, string=9, bytes=10, message=11, int64=12, uint64=13, sint64=14, fixed64=15, sfixed64=16
                             ,Field(Proto.Uint32, "number",     3)
@@ -48,14 +48,20 @@ field_info = Message("FieldInfo",
                             ])
 
 message_info = Message("MessageInfo",
-                       fields=[Field(Proto.String,  "name",      1)
-                              ,Field(Proto.Message, "fields",    2, q=Quantifier.Repeated, message=field_info)
-                              ,Field(Proto.Uint32,  "parentID",  3)
+                       fields=[Field(Proto.Uint32,  "id",        1)
+                              ,Field(Proto.String,  "name",      2)
+                              ,Field(Proto.Message, "fieldList", 3, q=Quantifier.Repeated, message=field_info)
+                              ,Field(Proto.Uint32,  "parentID",  4)
+                              ])
+
+message_list = Message("MessageInfoList",
+                       fields=[Field(Proto.Message, "messageList", 1, q=Quantifier.Repeated, message=message_info)
                               ])
 
 message_selection = Message("MessageSelection",
                             fields=[Field(Proto.String, "serviceName", 1)
-                                   ,Field(Proto.Uint32, "id",          2, q=Quantifier.Repeated)
+                                   ,Field(Proto.Uint32, "idList",      2, q=Quantifier.Repeated)
+                                   ,Field(Proto.Bool,   "includeRelated", 3, q=Quantifier.Optional, doc="""Whether to include messages which are related to the specified ones. This means messages which are referenced in fields of type Message""")
                                    ])
 
 service_result = Message("ServiceResult",
@@ -91,7 +97,7 @@ window_manager = Service("Scope", version="1.0", coreRelease="2.4",
                                   ,Request(7, "Info",       service_selection, service_info)
                                   ,Request(8, "Quit",       False,             False)
                                   ,Request(10, "HostInfo",  False,             host_info)
-                                  ,Request(11, "MessageInfo", message_selection, message_info)
+                                  ,Request(11, "MessageInfo", message_selection, message_list)
                                   ,Event(0, "OnServices",       service_list)
                                   ,Event(1, "OnQuit",           False)
                                   ,Event(2, "OnConnectionLost", False)
