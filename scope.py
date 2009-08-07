@@ -41,27 +41,55 @@ service_selection = Message("ServiceSelection",
 
 field_info = Message("FieldInfo", is_global=False,
                      fields=[Field(Proto.String, "name",       1)
-                            ,Field(Proto.Uint32, "type",       2) # double=1, float=2, int32=3, uint32=4, sint32=5, fixed32=6, sfixed32=7, bool=8, string=9, bytes=10, message=11, int64=12, uint64=13, sint64=14, fixed64=15, sfixed64=16
-                            ,Field(Proto.Uint32, "number",     3)
-                            ,Field(Proto.Uint32, "quantifier", 4, q=Quantifier.Optional, default=0) # required=0, optional=1, repeated=2
-                            ,Field(Proto.Uint32, "messageID",  5, q=Quantifier.Optional)
+                            ,Field(Proto.Uint32, "type",       2, doc="""The protocol buffer type for this field. The types are:
+
+== ============================
+1  Double
+2  Float
+3  Int32
+4  Uint32
+5  Sint32
+6  Fixed32
+7  Sfixed32
+8  Bool
+9  String
+10 Bytes
+11 Message
+12 Int64 (not supported yet)
+13 Uint64 (not supported yet)
+14 Sint64 (not supported yet)
+15 Fixed64 (not supported yet)
+16 Sfixed64 (not supported yet)
+== ============================
+""")
+                            ,Field(Proto.Uint32, "number",     3, doc="The unique protocol buffer number for this field.")
+                            ,Field(Proto.Uint32, "quantifier", 4, q=Quantifier.Optional, default=0, doc="""Specifies whether the fields is required, optional or repeated:
+
+= ========
+0 Required
+1 Optional
+2 Repeated
+= ========
+""")
+                            ,Field(Proto.Uint32, "messageID",  5, q=Quantifier.Optional, doc="ID of message this field references, only set for Message fields")
                             ])
 
-message_info = Message("MessageInfo",
+message_info = Message("MessageInfo", doc="Introspection result for a given message.",
                        fields=[Field(Proto.Uint32,  "id",        1)
                               ,Field(Proto.String,  "name",      2)
                               ,Field(Proto.Message, "fieldList", 3, q=Quantifier.Repeated, message=field_info)
-                              ,Field(Proto.Uint32,  "parentID",  4)
+                              ,Field(Proto.Uint32,  "parentID",  4, q=Quantifier.Optional)
                               ])
 
 message_list = Message("MessageInfoList",
                        fields=[Field(Proto.Message, "messageList", 1, q=Quantifier.Repeated, message=message_info)
                               ])
 
-message_selection = Message("MessageSelection",
-                            fields=[Field(Proto.String, "serviceName", 1)
-                                   ,Field(Proto.Uint32, "idList",      2, q=Quantifier.Repeated)
-                                   ,Field(Proto.Bool,   "includeRelated", 3, q=Quantifier.Optional, doc="""Whether to include messages which are related to the specified ones. This means messages which are referenced in fields of type Message""")
+message_selection = Message("MessageSelection", doc="Selects which messages to introspect.",
+                            fields=[Field(Proto.String, "serviceName", 1, doc="Name of service to fetch messages from. Message ids are unique per service.")
+                                   ,Field(Proto.Uint32, "idList",      2, q=Quantifier.Repeated, doc="Contains ids of message which should be fetched.")
+                                   ,Field(Proto.Bool,   "includeRelated", 3, q=Quantifier.Optional, doc="""Set to true to automatically include messages which are referenced (fields of type Message). This makes it easy to fetch the entire message chain for a given message.""")
+                                   ,Field(Proto.Bool,   "includeAll",     4, q=Quantifier.Optional, doc="""Set to true if all message in the service should be included. Overrides includeRelated and idList.""")
                                    ])
 
 service_result = Message("ServiceResult",
