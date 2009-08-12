@@ -23,23 +23,26 @@ take parameters (`value`), and which don't. Optimistically,
 we have made the `Action` type extendable to include 
 such information later."""
 
-exec_data = Message("ActionList",
-                    fields=[Field(Proto.Message, "actionList", 1, q=Quantifier.Repeated,
-                                  message=Message("Action", is_global=False,
-                                                  doc="""Executes a series of actions in the opera host,\neach action consists of a name identifying the\naction and optionally a value for the action.\nThe value depends on the type of action.""",
-                                                  fields=[Field(Proto.String, "name",  1, doc=actiondoc)
-                                                         ,Field(Proto.String, "value", 2, Quantifier.Optional)
-                                                         ,Field(Proto.Uint32, "windowID", 3, Quantifier.Optional)
-                                                         ]))
-                           ])
+action = Message("Action", doc="""Executes a series of actions in the opera host,\neach action consists of a name identifying the\naction and optionally a value for the action.\nThe value depends on the type of action.""",
+                 fields=[Field(Proto.String, "name",  1, doc=actiondoc)
+                        ,Field(Proto.String, "value", 2, Quantifier.Optional)
+                        ,Field(Proto.Uint32, "windowID", 3, Quantifier.Optional)
+                        ])
 
-get_action_list = Message("ActionInfoList", doc="List all valid `Action` `name`s",
-        fields=[Field(Proto.Message, "actionInfoList", 1, q=Quantifier.Repeated,
-                      message=Message("ActionInfo", is_global=False,
-                                      doc="""Name of an action, to be used in the `Action` message.""",
-                                      fields=[Field(Proto.String, "name", 1),
-                                             ]
-                                     ))])
+exec_data = Message("ActionList", children=[action],
+                    fields=[Field(Proto.Message, "actionList", 1, q=Quantifier.Repeated,
+                                  message=action)
+                           ])
+ 
+action_info = Message("ActionInfo",
+                      doc="""Name of an action, to be used in the `Action` message.""",
+                      fields=[Field(Proto.String, "name", 1),
+                             ])
+
+get_action_list = Message("ActionInfoList", doc="List all valid `Action` `name`s", children=[action_info],
+                          fields=[Field(Proto.Message, "actionInfoList", 1, q=Quantifier.Repeated, message=action_info)
+                                 ])
+
 
 area = Message("Area",
                fields=[Field(Proto.Int32, "x", 1),
@@ -56,7 +59,7 @@ Color values ranges from 0 (no color) to 255 (maximal saturation), other values 
 Default (meaning field missing) is 0 for *Low elements and 255 for *High fields.
 """
 
-color_spec = Message("ColorSpec", doc=color_spec_doc, is_global=False,
+color_spec = Message("ColorSpec", doc=color_spec_doc,
                      fields=[Field(Proto.Uint32, "id", 1),
                              Field(Proto.Uint32, "redLow",    2, q=Quantifier.Optional),
                              Field(Proto.Uint32, "redHigh",   3, q=Quantifier.Optional),
@@ -66,7 +69,7 @@ color_spec = Message("ColorSpec", doc=color_spec_doc, is_global=False,
                              Field(Proto.Uint32, "blueHigh",  7, q=Quantifier.Optional),
                              ])
 
-screenwatcher_data = Message("ScreenWatcher",
+screenwatcher_data = Message("ScreenWatcher", children=[color_spec],
                              fields=[Field(Proto.Uint32,  "timeOut",       1, doc="Number of milliseconds to wait before capturing the screen area."),
                                      Field(Proto.Message, "area",          2, message = area),
                                      Field(Proto.String,  "md5List",       3, q=Quantifier.Repeated),
@@ -75,12 +78,12 @@ screenwatcher_data = Message("ScreenWatcher",
                                      Field(Proto.Bool,    "includeImage",  6, q=Quantifier.Optional, doc="If true then the image data will be sent in the response WatcherResult.png, otherwise the field will be omitted", default=True),
                                      ])
 
-color_match = Message("ColorMatch", is_global=False,
+color_match = Message("ColorMatch",
                       fields=[Field(Proto.Uint32, "id",    1, doc="The `ColorSpec.id` which matched a color"),
                               Field(Proto.Uint32, "count", 2),
                               ])
 
-screenwatcher_result = Message("ScreenWatcherResult",
+screenwatcher_result = Message("ScreenWatcherResult", children=[color_match],
                               fields=[Field(Proto.Uint32,  "windowID",       1, doc="The ID of the window that was triggered by a screen watch, or 0 if the screen watch failed or was cancelled"),
                                       Field(Proto.String,  "md5",            2),
                                       Field(Proto.Bytes,   "png",            3, q=Quantifier.Optional),
