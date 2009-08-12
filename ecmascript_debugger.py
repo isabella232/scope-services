@@ -81,12 +81,12 @@ object_value = Message("ObjectValue",
                              ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, comment="Name of class (object) or function")
                              ])
 
-eval_variable = Message("Variable", is_global=False,
+eval_variable = Message("Variable",
                         fields=[Field(Proto.String, "name",      1)
                                ,Field(Proto.Uint32, "objectID",  2)
                                ])
 
-eval_data = Message("EvalData",
+eval_data = Message("EvalData", children=[eval_variable],
                     fields=[Field(Proto.Uint32,  "runtimeID",    1)
                            ,Field(Proto.Uint32,  "threadID",     2, doc="The ID of the thread to use for executing the script data, or 0")
                            ,Field(Proto.Uint32,  "frameIndex",   3)
@@ -112,14 +112,14 @@ frame_selection = Message("FrameSelection",
                                  ,Field(Proto.Uint32, "frameID",   3)
                                  ])
 
-property_data = Message("Property", is_global=False,
+property_data = Message("Property",
                         fields=[Field(Proto.String,  "name",         1)
                                ,Field(Proto.String,  "type",         2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
                                ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
                                ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, comment="Only present for `Object`")
                                ])
 
-object_data = Message("ObjectInfo",
+object_data = Message("ObjectInfo", children=[property_data],
                       fields=[Field(Proto.Message, "value",       1, message=object_value)
                              ,Field(Proto.Message, "propertyList",  2, q=Quantifier.Repeated, message=property_data)
                              ])
@@ -128,7 +128,7 @@ object_info = Message("ObjectList",
                       fields=[Field(Proto.Message, "objectList", 1, q=Quantifier.Repeated, message=object_data)
                              ])
 
-spotlight_box = Message("SpotlightBox", is_global=False, 
+spotlight_box = Message("SpotlightBox", 
                             doc="""Colors are encoded as RGBA with 8 bits for each channel.
 encoded_color = ( red << 24 ) + ( green << 16 ) + ( blue << 8 ) + ( alpha ) 
 with red, green, blue and alpha in a range of 0 - 255
@@ -147,7 +147,7 @@ e.g.:
                                ,Field(Proto.Uint32, "gridColor",  4, q=Quantifier.Optional, comment="Drawn with 1px width inside the box over the whole document")
                                ]) 
 
-spotlight_object = Message("SpotlightObject", comment="The drawing order is box, reference-box-frame, box-frame, grid.",
+spotlight_object = Message("SpotlightObject",  children=[spotlight_box], comment="The drawing order is box, reference-box-frame, box-frame, grid.",
                               fields=[Field(Proto.Uint32,  "objectID",       1)
                                      ,Field(Proto.Bool,    "scrollIntoView", 2, comment="Chooses whether the given object should be scrolled into view or not.")
                                      ,Field(Proto.Message, "boxList",        3, q=Quantifier.Repeated, message=spotlight_box)
@@ -241,7 +241,7 @@ traversal on off:
     get node data for the subtree in the flow of it""") # TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
                                ])
 
-attribute = Message("Attribute", is_global=False,
+attribute = Message("Attribute",
                     fields=[Field(Proto.String,  "namePrefix", 1)
                            ,Field(Proto.String,  "name",       2)
                            ,Field(Proto.String,  "value",      3)
@@ -249,7 +249,7 @@ attribute = Message("Attribute", is_global=False,
                            ])
 #attribute.fields[3].message = attribute
 
-node_info = Message("NodeInfo",
+node_info = Message("NodeInfo", children=[attribute],
                     fields=[Field(Proto.Uint32,  "objectID", 1)
                            ,Field(Proto.Uint32,  "type",     2)
                            ,Field(Proto.String,  "name",     3)
@@ -285,7 +285,7 @@ css_index_map = Message("CssIndexMap",
                     fields=[Field(Proto.String,  "nameList", 1, q=Quantifier.Repeated)
                            ])
 
-css_stylesheet = Message("Stylesheet", is_global=False,
+css_stylesheet = Message("Stylesheet",
                          fields=[Field(Proto.Uint32,  "objectID",    1)
                                 ,Field(Proto.Bool,    "isDisabled",  2) # TODO: Should it be isEnabled?
                                 ,Field(Proto.String,  "href",        3)
@@ -297,7 +297,7 @@ css_stylesheet = Message("Stylesheet", is_global=False,
                                 ,Field(Proto.Uint32,  "parentStylesheetID", 9, q=Quantifier.Optional)
                                 ])
 
-css_stylesheet_list = Message("CssStylesheetList",
+css_stylesheet_list = Message("CssStylesheetList", children=[css_stylesheet],
                               fields=[Field(Proto.Message,  "stylesheetList", 1, q=Quantifier.Repeated, message=css_stylesheet)
                                      ])
 
@@ -306,7 +306,7 @@ css_stylesheet_selection = Message("CssStylesheetSelection",
                                           ,Field(Proto.Uint32,  "stylesheetID",  2)
                                           ])
 
-css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
+css_stylesheet_rule = Message("StylesheetRule", update=False,
                               fields=[Field(Proto.Uint32,  "type",                1) 
 # Type values:
 # 0 - UNKNOWN
@@ -349,7 +349,7 @@ css_stylesheet_rule = Message("StylesheetRule", is_global=False, update=False,
 css_stylesheet_rule["ruleList"].message = css_stylesheet_rule
 css_stylesheet_rule.updateCount({})
 
-css_stylesheet_rules = Message("CssStylesheetRules",
+css_stylesheet_rules = Message("CssStylesheetRules", children=[css_stylesheet_rule],
                                fields=[Field(Proto.Message, "ruleList",  1, q=Quantifier.Repeated, message=css_stylesheet_rule)
                                       ])
 
@@ -358,7 +358,7 @@ css_element_selection = Message("CssElementSelection",
                                        ,Field(Proto.Uint32,  "objectID",   2)
                                        ])
 
-css_style_decl = Message("StyleDeclaration", is_global=False,
+css_style_decl = Message("StyleDeclaration",
                          fields=[Field(Proto.Uint32,  "origin",        1) # 1 = USER-AGENT, 2=LOCAL, 3=AUTHOR, 4=ELEMENT
 
                                 # Common to all origins
@@ -377,13 +377,13 @@ css_style_decl = Message("StyleDeclaration", is_global=False,
                                 ,Field(Proto.Uint32,  "ruleType",     10, q=Quantifier.Optional)
                                 ])
 
-css_node_style = Message("NodeStyle", is_global=False,
+css_node_style = Message("NodeStyle",  children=[css_style_decl],
                          fields=[Field(Proto.Uint32,  "objectID",     1) 
                                 ,Field(Proto.String,  "elementName",  2)
                                 ,Field(Proto.Message, "styleList",    3, q=Quantifier.Repeated, message=css_style_decl)
                                 ])
 
-css_node_decls = Message("CssStyleDeclarations",
+css_node_decls = Message("CssStyleDeclarations", children=[css_node_style],
                          fields=[Field(Proto.String,  "computedStyleList",  1, q=Quantifier.Repeated)
                                 ,Field(Proto.Message, "nodeStyleList",      2, q=Quantifier.Repeated, message=css_node_style)
                                 ])

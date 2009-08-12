@@ -39,7 +39,7 @@ service_selection = Message("ServiceSelection",
                             fields=[Field(Proto.String, "name", 1)
                                    ])
 
-field_info = Message("FieldInfo", is_global=False,
+field_info = Message("FieldInfo",
                      fields=[Field(Proto.String, "name",       1)
                             ,Field(Proto.Uint32, "type",       2, doc="""The protocol buffer type for this field. The types are:
 
@@ -74,7 +74,7 @@ field_info = Message("FieldInfo", is_global=False,
                             ,Field(Proto.Uint32, "messageID",  5, q=Quantifier.Optional, doc="ID of message this field references, only set for Message fields")
                             ])
 
-message_info = Message("MessageInfo", doc="Introspection result for a given message.",
+message_info = Message("MessageInfo", doc="Introspection result for a given message.", children=[field_info],
                        fields=[Field(Proto.Uint32,  "id",        1)
                               ,Field(Proto.String,  "name",      2)
                               ,Field(Proto.Message, "fieldList", 3, q=Quantifier.Repeated, message=field_info)
