@@ -423,5 +423,10 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
 
                                ,Request(27, "SpotlightObjects",    spotlight_selection, False)
                                ,Event(28, "OnParseError",      parse_error_info)
+                               ,Request(29, "ReleaseObjects",      False,     False,
+                                   doc='Release all objects (that is, object received through this protocol as objectIDs), so they can be garbage collected ' \
+                                       'by the ecmascript engine. Note that garbage collection is not necessarily run at this point, so the memory for the given objects might not be freed ' \
+                                       'immediately. IMPORTANT: After this call, no object IDs received earlier are valid! All objects needs to be requested again.'
+                                       )
                                ],
                       cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
