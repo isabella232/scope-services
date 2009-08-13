@@ -2,7 +2,7 @@
 Tutorial for a very basic console logger
 ========================================
 
-It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_.
+It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show how you can create a very simple console looger with the Opera scope interface. The console logger is a part of Opera which logs any type of errors which can occure during browsing and exposes them throgh the scope interface.
 
 Create the files
 ================
@@ -77,10 +77,109 @@ lib/stp_0_wrapper.js
 lib/tag_manager.js
   To handle responses to request individually, separated of the default response handlers.
 
+Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper`` proxy and open with any browser the created ``client.html`` as decribed in `How to setup a Test Environment for STP 1`_. You should see the following output in the console:
+
+.. code-block:: none
+
+  services available:
+    scope
+    console-logger
+    ecmascript-logger
+    http-logger
+    exec
+    window-manager
+    url-player
+    ecmascript-debugger
+    core-2-4
+    stp-0
+    stp-1
+
+  send to scope: *enable stp-1
+  send to host:
+    message type: command
+    service: scope
+    command: Connect
+    format: json
+    uuid: 1250186862378
+    tag: 0
+    payload: ["json","1250186862378"]
+
+  client connected:
+    message type: response
+    service: scope
+    command: Connect
+    format: json
+    status: OK
+    cid: 1
+    uuid: 1250186862378
+    tag: 0
+    payload: [1]
+
+  send to host:
+    message type: command
+    service: scope
+    command: HostInfo
+    format: json
+    tag: 0
+    payload: []
+
+  send to client:
+    message type: response
+    service: scope
+    command: HostInfo
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: [1,"2.4","WinGogi","WinGogi","Opera/9.70 (WinGogi; U; en) Presto/2.3.0",[["scope","1.0.0",0,1],["console-logg
+  er","1.0.0",0,1],["ecmascript-logger","1.0.0",0,1],["http-logger","1.0.0",0,1],["exec","1.0.0",0,1],["window-manager","1
+  .0.0",0,1],["url-player","1.0.0",0,1],["ecmascript-debugger","1.0.0",0,1],["core-2-4","1.0.0",0,1],["stp-0","1.0.0",0,1]
+  ,["stp-1","1.0.0",0,1]]]
+
+  send to host:
+    message type: command
+    service: scope
+    command: Enable
+    format: json
+    tag: 0
+    payload: ["console-logger"]
+
+  send to host:
+    message type: command
+    service: scope
+    command: Enable
+    format: json
+    tag: 0
+    payload: ["window-manager"]
+
+  send to client:
+    message type: response
+    service: scope
+    command: Enable
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: ["console-logger"]
+
+  send to client:
+    message type: response
+    service: scope
+    command: Enable
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: ["window-manager"]
+
+ That shows that the client has connected successfully, requested the ``HostInfo`` and enabled the available services according to the response. 
+
+ Now we need to edit some files and write some code.
+
 Edit window_manager.js
 =========================
 
-First we need to edit the ``window_manager.js``. Each service has default notification events, ``on_enable_success``, ``on_window_filter_change``, ``on_quit``. We implement ``on_enable_success`` as:
+First we need to edit the ``window_manager.js``. This file contains a single class, the ``cls.WindowManager["2.0"].Service``. Each service has default notification events, ``on_enable_success``, ``on_window_filter_change``, ``on_quit``. As we can see in the log above the last messages are the confirmations that the enable command has succseeded. The framework tells that each service with the ``on_enable_success`` call. We implement this call as:
 
 .. code-block:: javascript
 
@@ -91,9 +190,84 @@ First we need to edit the ``window_manager.js``. Each service has default notifi
     this.requestModifyFilter(0, this._window_filter);
   };
 
-``requestListWindows`` will return all windows or tabs of the host. 
+``requestListWindows`` will return all windows or tabs of the host. This is not really necessary, but we would like to know all existing windows. This will allow us to separate the log messages per window. The response to that request is handled in ``handleListWindows``, we will look to that later.
 
 Then we need to set a window filter. The ``window-manager`` service blocks all messages by default, or more precisely a given message is only created if it will pass the active filter. The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a boolean, representing ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
+
+The above filter is to get quickly something up and running. Normaly we are only interested in the messages of a specific window, e.g. the one with the document we are working one, all other messages should just not show up. But with the knowalege of this tutorial and the code in the test frame work ( see `Walk through the log entries`_ ) it should be possible to create your own application which will fit exactely your needs.
+
+We can now now run again ``client.html``. There should be now some more entries:
+
+.. code-block:: none
+
+  send to host:
+    message type: command
+    service: window-manager
+    command: ListWindows
+    format: json
+    tag: 0
+    payload: []
+
+  send to host:
+    message type: command
+    service: window-manager
+    command: ModifyFilter
+    format: json
+    tag: 0
+    payload: [1,[],["*"]]
+
+  send to client:
+    message type: response
+    service: window-manager
+    command: ListWindows
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: [[[1,"Opera Portal BETA","normal",0],[2,"About Opera","normal",0],[8,"Connect to Debugger","normal",0],[13,"O
+  pera Developer Community","normal",0],[18,"GOGI Dialog","dialog",0]]]
+
+  send to client:
+    message type: response
+    service: window-manager
+    command: ModifyFilter
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: []
+
+  send to client:
+    message type: event
+    service: window-manager
+    command: OnWindowClosed
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: [18]
+
+If you now type in the addressfield of the Opera gogi build for example:
+
+::
+
+  javascript:void(opera.postError("hello world"))
+
+you should see the according message in the console:
+
+.. code-block:: none
+
+  send to client:
+    message type: event
+    service: console-logger
+    command: OnConsoleMessage
+    format: json
+    status: OK
+    cid: 1
+    tag: 0
+    payload: [8,1250183583,"hello world","","Javascript URL thread: \"javascript:void(opera.postError(\"hello world\"))\""
+  ,"ecmascript","information"]
+
 
 This code is actually enough to get the messages of the ``console-logger``. If you are running ``dragonkeeper`` with the ``d`` and ``f`` flag you will see the messages in the shell console.
 
