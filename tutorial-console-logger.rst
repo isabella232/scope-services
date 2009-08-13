@@ -7,9 +7,9 @@ It is recommended that you first read `How to setup a Test Environment for STP 1
 Create the files
 ================
 
-To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` does specify that we only like to create the console logger service. Without any argument it would create all services. ``scope`` and ``window-manager`` are created always. 
+To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` specifies that we only want to create the console logger service. Without any argument it would create all services. ``scope`` and ``window-manager`` are always created. 
 
-It will create in the current directory a new ``js-out`` repository. This are the created files:
+It will create in the current directory a new ``js-out`` repository. These are the created files:
 
 ::
 
@@ -32,7 +32,7 @@ It will create in the current directory a new ``js-out`` repository. This are th
     stp_0_wrapper.js   
     tag_manager.js
 
-Only files in the relative root should be edited. The files contain in short:
+Only files in the relative root should be edited. In short, the files contain:
 
 client.html
   The main document.
@@ -43,12 +43,8 @@ build_application.js
 client.js  
   Definition of the client class.
 
-console_logger.js 
-
-scope.js  
-
-window_manager.js
-  Implementations of the services. This files are the starting points to create your own application.
+console_logger.js, scope.js, window_manager.js
+  Implementations of the services. These files are the starting points to create your own application.
 
 helper_const_ids.txt
   A helper file to copy-paste constants for all services and messages.
@@ -67,7 +63,7 @@ lib/interface_window_manager.js
   Definitions of the services with documentation of the messages.
 
 lib/json.js 
-  Implementation of JSON in js.
+  Implementation of JSON in Javascript.
 
 lib/namespace.js
   To register instantiated objects in a given namespace.
@@ -76,7 +72,7 @@ lib/service_base.js
   The basic interface of any service.
 
 lib/stp_0_wrapper.js   
-  Does re-implement the scope DOM API on top of a STP/0 protocol STP/1 compatible ( if e.g. the proxy in the middle does only talk STP/0 ).
+  Re-implements the scope DOM API on top of a STP/0 protocol STP/1 compatible (e.g. if the proxy in the middle only talks STP/0).
 
 lib/tag_manager.js
   To handle responses to request individually, separated of the default response handlers.
@@ -97,11 +93,11 @@ First we need to edit the ``window_manager.js``. Each service has default notifi
 
 ``requestListWindows`` will return all windows or tabs of the host. 
 
-Then we need to set a window filter. The ``window-manager`` service does block any message by default, or more precisely a given message gets only created if it will pass the active filter. The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a boolean, representing ``true`` and  indicating if an existing filter should be cleared. The next element is a list of window-id's to specify for which windows messages should be created, in our case it is empty. The following is a list of rules, ``"*"`` means that messages shall be created for all windows.
+Then we need to set a window filter. The ``window-manager`` service blocks all messages by default, or more precisely a given message is only created if it will pass the active filter. The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a boolean, representing ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
 
 This code is actually enough to get the messages of the ``console-logger``. If you are running ``dragonkeeper`` with the ``d`` and ``f`` flag you will see the messages in the shell console.
 
-To display the messages in the browser we need to write a little bit more code. The following code does create for each window a container and adds the title of the current top document of that window.
+To display the messages in the browser we need to write a bit more code. The following code creates for each window a container and adds the title of the current top document of that window.
 
 .. code-block:: javascript
 
@@ -120,7 +116,7 @@ To display the messages in the browser we need to write a little bit more code. 
     container.appendChild(document.createElement('h2')).textContent = win[TITLE];
   }
 
-We use this method to handle messages in the ``handleListWindows`` response handler and in the ``onWindowUpdated`` event like:
+We use this method to handle messages in the ``handleListWindows`` response handler and in the ``onWindowUpdated`` event like this:
 
 .. code-block:: javascript
 
@@ -135,7 +131,7 @@ We use this method to handle messages in the ``handleListWindows`` response hand
     this.display_window_title(message);
   }
 
-So far we have achieved that the console-logger will create error messages for all windows and we have created for each window a basic html document structure. Now we need to edit ``console_logger.js``.
+So far we have achieved a console-logger that will create error messages for all windows and we have created a basic HTML document structure for each window. Now we need to edit ``console_logger.js``.
 
 Edit console_logger.js
 ======================
