@@ -172,9 +172,9 @@ Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper``
     tag: 0
     payload: ["window-manager"]
 
- That shows that the client has connected successfully, requested the ``HostInfo`` and enabled the available services according to the response. 
+That shows that the client has connected successfully, requested the ``HostInfo`` and enabled the available services according to the response. 
 
- Now we need to edit some files and write some code.
+Now we need to edit some files and write some code.
 
 Edit window_manager.js
 =========================
