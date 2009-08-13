@@ -179,7 +179,7 @@ Now we need to edit some files and write some code.
 Edit window_manager.js
 =========================
 
-First we need to edit the ``window_manager.js``. This file contains a single class, the ``cls.WindowManager["2.0"].Service``. Each service has default notification events, ``on_enable_success``, ``on_window_filter_change``, ``on_quit``. As we can see in the log above the last messages are the confirmations that the enable command has succseeded. The framework tells that each service with the ``on_enable_success`` call. We implement this call as:
+First we need to edit the ``window_manager.js``. This file contains a single class, the ``cls.WindowManager["2.0"].Service``. Each service has default notification events, ``on_enable_success``, ``on_window_filter_change``, ``on_quit``. As we can see in the log above the last messages are the confirmations that the enable command has succeeded. The framework tells that each service with the ``on_enable_success`` call. We implement this call as:
 
 .. code-block:: javascript
 
@@ -194,7 +194,7 @@ First we need to edit the ``window_manager.js``. This file contains a single cla
 
 Then we need to set a window filter. The ``window-manager`` service blocks all messages by default, or more precisely a given message is only created if it will pass the active filter. The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a boolean, representing ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
 
-The above filter is to get quickly something up and running. Normaly we are only interested in the messages of a specific window, e.g. the one with the document we are working one, all other messages should just not show up. But with the knowalege of this tutorial and the code in the test frame work ( see `Walk through the log entries`_ ) it should be possible to create your own application which will fit exactely your needs.
+The above filter is to get quickly something up and running. Normaly we are only interested in the messages of a specific window, e.g. the one with the document we are working one, all other messages should just not show up. But with the knowledge of this tutorial and the code in the test frame work ( see `Walk through the log entries`_ ) it should be possible to create your own application which will fit exactely your needs.
 
 We can now now run again ``client.html``. There should be now some more entries:
 
