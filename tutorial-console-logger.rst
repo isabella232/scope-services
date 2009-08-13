@@ -1,6 +1,6 @@
-======================================
-Tutorial for very basic console logger
-======================================
+========================================
+Tutorial for a very basic console logger
+========================================
 
 It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_.
 
