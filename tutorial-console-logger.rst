@@ -2,14 +2,14 @@
 Tutorial for a very basic console logger
 ========================================
 
-It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show how you can create a very simple console looger with the Opera scope interface. The console logger is a part of Opera which logs any type of errors which can occure during browsing and exposes them throgh the scope interface.
+It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show how you can create a very simple console logger with the Opera scope interface. The console logger is a part of Opera which logs any type of errors which can occure during browsing and exposes them throgh the scope interface.
 
 Create the files
 ================
 
 To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` specifies that we only want to create the console logger service. Without any argument it would create all services. ``scope`` and ``window-manager`` are always created. 
 
-It will create in the current directory a new ``js-out`` repository. These are the created files:
+That creates in the current directory a new ``js-out`` repository. These are the created files:
 
 ::
 
@@ -172,7 +172,40 @@ Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper``
     tag: 0
     payload: ["window-manager"]
 
-That shows that the client has connected successfully, requested the ``HostInfo`` and enabled the available services according to the response. 
+The framework starts automatically by default. This is done in ``build_application.js`` at the bottom:
+
+.. code-block:: javascript
+
+  window.onload = function()
+  {
+    window.app.build_application();
+  }
+
+The ``window.app.build_application`` call creates default objects, setups the connection with the host, requestes the ``HostInfo`` and enables the available services according to the response as the log above shows. 
+
+There are two moments to hock into that process, when the services are created and when they are enabled. This can either be done by passing according callbacks to the ``window.app.build_application`` call or by defining ``window.app.on_services_created`` and `` window.app.on_services_enabled``. The former has a ``service_descriptions`` objectsa with all information of the ``HostInfo`` message. 
+
+Now we can start to create our console logger as e.g. ``simpleconsolelogger.js``. We make a simple class like:
+
+.. code-block:: javascript
+
+  var SimpleConsolLogger = function()
+  {
+    var self = this;
+
+    window.app.on_services_enabled = function()
+    {
+      var window_manager = window.services['window-manager'];
+      window_manager.requestListWindows();
+      window_manager.requestModifyFilter(0, [1, [], ['*']]);
+    }
+
+  }
+
+simpleConsolLogger = new SimpleConsolLogger();
+
+
+
 
 Now we need to edit some files and write some code.
 
