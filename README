@@ -1,0 +1,7 @@
+for pdf:
+
+  put the following in the .tex file:
+
+  \DeclareUnicodeCharacter{200B}{\allowbreak}
+
+  the download pdf link points to: ./pdf/ScopeInterface.pdf
