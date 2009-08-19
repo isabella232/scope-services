@@ -63,6 +63,7 @@
                      rel="nofollow">{{ _('Show Source') }}</a></li>
              <li><a href="./pdf/ScopeInterface.pdf" rel="nofollow">Download as PDF</a></li>
             </ul>
+            
           {%- endif %}
           {%- endblock %}
           {%- if customsidebar %}
@@ -82,9 +83,13 @@
               {{ _('Enter search terms or a module, class or function name.') }}
               </p>
           </div>
+          
           <script type="text/javascript">$('#searchbox').show(0);</script>
           {%- endif %}
           {%- endblock %}
+          {%- if pagename != "glossary" %}
+          <h3><a href="glossary.html">Glossary</a></h3>
+          {%- endif %}
         </div>
       </div>
       {%- endif %}{% endif %}

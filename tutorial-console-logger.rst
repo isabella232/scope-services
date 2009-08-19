@@ -2,12 +2,45 @@
 Tutorial for a very basic console logger
 ========================================
 
-It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show how you can create a very simple console logger with the Opera scope interface. The console logger is a part of Opera which logs any type of errors which can occur during browsing and exposes them through the scope interface.
+It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show you how you can create a very simple error message logger with the Opera scope interface. We will use for that the ``ConsoleLogger`` :term:`service`, the part of the scope interface which exposes any type of errors and warnings which can occur during browsing.
+
+Scope exposes an interface to an Opera instance. More detailed it looks like:
+
+::
+
+  +----------------------+
+  |      Opera host      |
+  +----------------------+
+  |         scope        |
+  +----------------------+
+  |          UMS         |  
+  +----------------------+
+  |         STP/1        |  ?
+  +----------------------+
+  |  (standalone) proxy  |  ?
+  +----------------------+
+  |    HTTP interface    |  ?
+  +----------------------+
+  |       DOM API        |
+  +----------------------+
+  |     services API     |
+  +----------------------+
+  |     Opera client     |
+  +----------------------+
+
+
+The layers with a question mark exist only if they are really needed. For example in a debug session on desktop, where the :term:`client` and :term:`host` are the same instance, the UMS layer is bound directly to the DOM API, no socket connection is created. Similarly remote debugging with the Opera built-in proxy does not use an HTTP interface. For more details see `Scope Interface Version 1`_.
+
+The DOM API is like any good API small, normally it is a native part of Opera, exposed to a privileged window. It can be implemented in ECMA script on top of an HTTP interface to a standalone proxy. The main methods are ``scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)`` and the ``receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)`` callback of ``scopeAddClient``. For more details about the API see `Scope DOM API`_.
+
+The service API unfolds the DOM API to different services. They are counterparts of the according services on the host side and expose there interface as an ECMA script API. They are part of the basic framework which is generated with ``opprotoc``, a code generation command line utility. For more details about ``opprotoc`` see `How to setup a Test Environment for STP 1`_. 
+
+It is of course also possible to work directly with the DOM API, the service API layer is in this regard only a convenience.
 
 Create the files
 ================
 
-To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` specifies that we only want to create the console logger :term:`service`. Without any argument it would create all services. ``scope`` and ``window-manager`` are always created. 
+To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` specifies that we only want to create the ``ConsoleLogger`` :term:`service`. Without any argument it would create all services. ``Scope`` and ``WindowManager`` are always created. 
 
 That creates in the current directory a new ``js-out`` repository. These are the created files:
 
@@ -44,7 +77,7 @@ client.js
   Definition of the client class.
 
 console_logger.js, scope.js, window_manager.js
-  Implementations of the services. These files are the starting points to create your own application.
+  The service API's to bind your application to the scope interface.
 
 helper_const_ids.txt
   A helper file to copy-paste constants for all services and messages.
@@ -60,7 +93,7 @@ lib/interface_console_logger.js
 lib/interface_scope.js
 
 lib/interface_window_manager.js
-  Definitions of the services with documentation of the messages.
+  Definitions of the service API's with documentation of the messages.
 
 lib/json.js 
   Implementation of JSON in Javascript.
@@ -69,7 +102,7 @@ lib/namespace.js
   To register instantiated objects in a given namespace.
 
 lib/service_base.js
-  The basic interface of any service.
+  The abstract base class for any service.
 
 lib/stp_0_wrapper.js   
   Re-implements the scope DOM API on top of a STP/0 protocol STP/1 compatible (e.g. if the proxy in the middle only talks STP/0).
@@ -77,7 +110,7 @@ lib/stp_0_wrapper.js
 lib/tag_manager.js
   To handle responses to request individually, separated of the default response handlers.
 
-Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper`` proxy and open with any browser the created ``client.html`` as described in `How to setup a Test Environment for STP 1`_. You should see the following output in the console:
+Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper`` proxy and open with any browser the created ``client.html`` as described in `How to setup a Test Environment for STP 1`_. You should see the following output in the ``dragonkeeper`` console window:
 
 .. code-block:: none
 
@@ -172,7 +205,9 @@ Now we are ready to try it out. Start the Opera gogi build, the ``dragonkeeper``
     tag: 0
     payload: ["window-manager"]
 
-There are three points where we can hook up to this process:
+This log documents that the client connects to the host, requests the ``HostInfo`` and enables accordingly the services.
+
+It happens as part of the building process of the client application. There are three points where we can hook up to it:
 
 * the load event
 * a frame work specific ``on_services_created`` event
@@ -198,7 +233,7 @@ A callback for the ``on_services_created`` event can be passed as first argument
     
   }
 
-As the name suggests this event gets dispatched after all services are build but not jet enabled. It has as argument the ``service_descriptions`` of the of the ``HostInfo`` message.
+As the name suggests this event gets dispatched after all services are built but not jet enabled. It has as argument the ``service_descriptions`` of the of the ``HostInfo`` :term:`message`.
 
 A callback for the ``on_services_enabled`` event can be passed as second argument to the ``build_application`` call or it can be defined in the ``app`` namesapce as:
 
@@ -209,17 +244,17 @@ A callback for the ``on_services_enabled`` event can be passed as second argumen
 
   }
 
-Write the SimpleConsolLogger class
-==================================
+Write the SimpleLogger class
+============================
 
-Now we can start to create our console logger in e.g. ``simpleconsolelogger.js``. We make a simple class like:
+Now we can start to create our logger in e.g. ``simpleconsolelogger.js``. You will have to create that file, it is not a part of the generted framework. We make a simple class like:
 
 .. code-block:: javascript
 
-  var SimpleConsolLogger = function()
+  var SimpleLogger = function()
   {
 
-    this.setup = function()
+    this.bind = function()
     {
 
     }
@@ -233,46 +268,50 @@ We instantiate and setup it in the ``build_application.js`` by adding the follow
   window.onload = function()
   {
     window.app.build_application();
-    window.simple_consol_logger = new SimpleConsolLogger();
+    window.simple_logger = new SimpleLogger();
   }
    
   window.app.on_services_enabled = function()
   {
-    window.simple_consol_logger.setup();
+    window.simple_logger.bind();
   }
 
 The ``window.onload`` callback was already there. We instantiate our class here because it does not depend in any way on the created services. We define the ``window.app.on_services_enabled`` callback and add the ``setup`` call to our ``simple_consol_logger`` here.
 
-As mentioned before ``scope`` and ``window-manager`` services are created always. They are special. 
+.. topic:: Sidenote
+
+  The hookup in the application building process is done here in the most simple way. Depending on your needs there is a more differntiated way with ``window.app.builders`` and event callbacks per service object. For details see the comments in ``build_application.js`` and the common methods of all services in ``service_base.js``.
+
+As mentioned before ``Scope`` and ``WindowManager`` services are created always. They are special. 
 
 
-``scope`` and ``window-manager`` services
+``Scope`` and ``WindowManager`` services
 -----------------------------------------
 
-``scope`` is a system service to setup the connection with the host and to control the other services. Normally you will not have to interact with this service directly.
+``Scope`` is a system service to setup the connection with the host and to control the other services. Normally you will not have to interact with it directly.
 
-``window-manger`` gets events about all changes regarding windows or tabs and can also query general informations about them. It also controls the messages for all other services. By default it blocks all messages, or more precisely a given message is only created if it will pass the active filter. That is the reason that we first must set a filter to define which messages shall be created. 
+``WindowManager`` gets events about all changes regarding windows or tabs and can also query general informations about them. It also controls the messages for all other services. By default it blocks all messages, or more precisely a given :term:`message` is only created if it will pass the active filter. That is the reason that we first must set a filter to define which messages shall be created. 
 
 set a window filter
 -------------------
 
-We do that in the ``setup`` call of our ``SimpleConsoleLogger`` class like:
+We do that in the ``bind`` call of our ``SimpleLogger`` class like:
 
 .. code-block:: javascript
 
-  this.setup = function()
+  this.bind = function()
   {
     window_manager.requestModifyFilter(0, [1, [], ['*']]);
   }
 
-The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a boolean, representing ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
+The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a number, representing the boolean ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
 
 
 .. topic:: Sidenote
 
   That filter is to get quickly something up and running. Normally we are only interested in the messages of a specific window, e.g. the one with the document we are working one, all other messages should just not show up. But with the knowledge of this tutorial and the code in the test frame work ( see `Walk through the log entries`_ ) it should be possible to create your own application which will fit exactely your needs.
 
-We can now run again ``client.html``. There should be some more entries:
+We can now reload ``client.html``. There should be some more entries:
 
 .. code-block:: none
 
@@ -300,7 +339,7 @@ If you now type in the address field of the Opera gogi build for example:
 
   javascript:opera.postError("hello world")
 
-you should see the according message in the console:
+you should see the according message in the ``dragonkeeper`` console window:
 
 .. code-block:: none
 
@@ -318,24 +357,26 @@ you should see the according message in the console:
 get all windows
 ---------------
 
-The service interfaces are build around messages. A message can either be an event, a command or a response to a command. All messages for the ``window-manager`` are specified `here`_. 
+The service interfaces are build around messages. A message can either be an event, a command, a response to a command, or an error. A command is sent from the host to the client, the others the other way around. All messages for the ``window-manager`` are specified `here`_. 
 
-A command is exposed in the framework as ``window.<service name>.request<command class>(tag, message)``. 
+A command is exposed in the framework as ``window.<service name>.request<command name>(tag, message)``. 
 
 A callback to handle the response can be registered in the ``tag_manager``. That requires that the according ``tag`` was passed in the request call. 
 
-A default request handler can be implemented as ``window.<service name>.handle<command class>(status, message)``. These methods will only get called if the ``tag_manager`` has not an according ``tag`` registered. By default all these methods yield an error warning if the according handlers are not implemented.
+A default request handler can be implemented as ``window.<service name>.handle<command name>(status, message)``. These methods will only get called if the ``tag_manager`` has not an according ``tag`` registered. By default all these methods yield an error warning if the according handlers are not implemented.
 
-We like to sort out in our simple console logger the messages per window. For that reason we use the ``ListWindows`` command and the ``OnWindowUpdated`` event of the ``window-manager`` service.
+An event is exposed as ``window.<service name>.<event name>(status, message)``. It has the same rules as a response handler.
+
+We like to sort out in our simple logger the messages per window. For that reason we use the ``ListWindows`` command and the ``OnWindowUpdated`` event of the ``window-manager`` service. The ``OnWindowUpdated`` event is dispatched when a new window or tab is opened or the main document of an existing window changes so that the window gets a new title.
 
 We implement them in our class like:
 
 .. code-block:: javascript
 
-  var SimpleConsolLogger = function()
+  var SimpleLogger = function()
   {
    
-    var _get_container = function(window_id)
+    var _get_or_create_container = function(window_id)
     {
       var container = document.getElementById('window-id-' + window_id);
       if (!container)
@@ -349,11 +390,11 @@ We implement them in our class like:
     var _display_window_title = function(win)
     {
       const WINDOW_ID = 0, TITLE = 1;
-      _get_container(win[WINDOW_ID]).
+      _get_or_create_container(win[WINDOW_ID]).
         appendChild(document.createElement('h2')).textContent = win[TITLE];
     }
    
-    this.setup = function()
+    this.bind = function()
     {
       var window_manager = window.services['window-manager'];
       window_manager.handleListWindows = function(status, message)
@@ -371,11 +412,11 @@ We implement them in our class like:
    
   }
 
-``_get_container`` is a helper function which ensures that there is always a container with the passed window id and returns that container.
+``_get_or_create_container`` is a helper function which ensures that there is always a container with the passed window id and returns that container.
 
-``_display_window_title`` is a function to display the title of a window in the according container, using the ``_get_container`` helper.
+``_display_window_title`` is a function to display the title of a window in the according container, using the ``_get_or_create_container`` helper.
 
-The implementation of the ``handleListWindows`` request handler and the ``onWindowUpdated`` event is done in the ``setup`` call. We can open ``window_manager.js`` and search for ``handleListWindows``. The according code looks like:
+The implementation of the ``handleListWindows`` response handler and the ``onWindowUpdated`` event is done in the ``bind`` call. We can open ``window_manager.js`` and search for ``handleListWindows``. The according code looks like:
 
 .. code-block:: javascript
 
@@ -415,13 +456,13 @@ We can search in the same file for ``onWindowUpdated``. That code looks like:
 
 We see again the default warning. The message represents a single window. So we can pass the message directly to our ``_display_window_title`` method.
 
-If we now run ``client.html`` again we should see all the titles of all the tabs in the :term:`client`.
+If we now reload ``client.html`` again we should see all the titles of all the tabs in the :term:`client`.
 
 
 Implement the ``OnConsoleMessage`` event
 ----------------------------------------
 
-Now we only need to implement the ``OnConsoleMessage`` event handler of the ``console-logger`` service. We do that in the ``setup`` call like:
+Now we only need to implement the ``OnConsoleMessage`` event handler of the ``ConsoleLogger`` service. We do that in the ``bind`` call like:
 
 .. code-block:: javascript
 
@@ -436,7 +477,7 @@ Now we only need to implement the ``OnConsoleMessage`` event handler of the ``co
       SOURCE = 5,
       SEVERITY = 6;
  
-      var pre = _get_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
+      var pre = _get_or_create_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
       pre.textContent = new Date(message[TIME]) + '\n' +
         "source: " + message[SOURCE] + '\n' +
         "uri: " + message[URI] + '\n' +
@@ -460,10 +501,10 @@ The whole class looks now:
 
 .. code-block:: javascript
 
-  var SimpleConsolLogger = function()
+  var SimpleLogger = function()
   {
    
-    var _get_container = function(window_id)
+    var _get_or_create_container = function(window_id)
     {
       var container = document.getElementById('window-id-' + window_id);
       if (!container)
@@ -477,11 +518,11 @@ The whole class looks now:
     var _display_window_title = function(win)
     {
       const WINDOW_ID = 0, TITLE = 1;
-      _get_container(win[WINDOW_ID]).
+      _get_or_create_container(win[WINDOW_ID]).
         appendChild(document.createElement('h2')).textContent = win[TITLE];
     }
    
-    this.setup = function()
+    this.bind = function()
     {
       var window_manager = window.services['window-manager'];
       window_manager.handleListWindows = function(status, message)
@@ -504,7 +545,7 @@ The whole class looks now:
         SOURCE = 5,
         SEVERITY = 6;
    
-        var pre = _get_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
+        var pre = _get_or_create_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
         pre.textContent = new Date(message[TIME]) + '\n' +
           "source: " + message[SOURCE] + '\n' +
           "uri: " + message[URI] + '\n' +
@@ -536,4 +577,6 @@ You can run ``opprotoc --js --console-logger-tutorial console-logger`` to genera
 .. _How to setup a Test Environment for STP 1: walk-through.html
 .. _Walk through the log entries: walk-through.html
 .. _here: WindowManager.html
+.. _Scope Interface Version 1: index.html#scope-interface-version-1
+.. _Scope DOM API: scope-dom-interface.html
 
