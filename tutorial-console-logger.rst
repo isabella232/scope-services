@@ -240,7 +240,13 @@ A callback for the ``on_services_enabled`` event can be passed as second argumen
 Write the SimpleLogger class
 ============================
 
-Now we can start to create our logger in for example ``simpleconsolelogger.js``. You will have to create that file, it is not a part of the generted framework. We make a simple class like:
+Now we can start to create our logger in for example ``simpleconsolelogger.js``. You will have to create that file and add a script tag in ``client.html`` like:
+
+.. code-block:: html
+
+  <script src="simpleconsolelogger.js"></script>
+
+We make a simple class in the new file like:
 
 .. code-block:: javascript
 
@@ -556,7 +562,7 @@ The whole class looks now:
 
 We can add minimal style in ``client.html`` to separate the log messages with e.g. something like:
 
-::
+.. code-block:: html
 
   <style> pre { border-bottom: 1px solid #999; padding-bottom: 1em; } </style>
 
