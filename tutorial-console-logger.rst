@@ -570,6 +570,35 @@ We can add minimal style in ``client.html`` to separate the log messages with e.
 
 This is our very basic ``console-logger``. It should be easy to extend it from here to your own needs.
 
+.. topic:: Sidenote
+
+  If you open or close a tab in the host you will see errors in the error console of the client like:
+
+  ::
+
+    JavaScript
+    Unknown thread
+    NotImplementedError: WindowManager, OnWindowClosed, message: [9]
+
+    JavaScript
+    Unknown thread
+    NotImplementedError: WindowManager, OnWindowActivated, message: [4]
+
+  This is because we have only bound the messages which we need for our simple logger. If you like to get rid of these errors, you could add something like the following to the bind method:
+
+  .. code-block:: javascript
+
+    window_manager.onWindowClosed = 
+    window_manager.onWindowActivated = 
+    function(status, message){};
+
+  This is an explicit statement that you we will not handle these events.
+
+
+
+
+  
+
 You can run ``opprotoc --js --console-logger-tutorial console-logger`` to generate all code described in the tutorial as part of the default framework.
 
 
