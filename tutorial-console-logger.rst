@@ -6,28 +6,19 @@ It is recommended that you first read `How to setup a Test Environment for STP 1
 
 Scope exposes an interface to an Opera instance. More detailed it looks like:
 
-::
-
-  +----------------------+
-  |      Opera Host      |
-  +----------------------+
-  |         Scope        |
-  +----------------------+
-  |          UMS         |
-  +----------------------+
-  |         STP/1        |  ?
-  +----------------------+
-  |  (Standalone) Proxy  |  ?
-  +----------------------+
-  |    HTTP Interface    |  ?
-  +----------------------+
-  |       DOM API        |
-  +----------------------+
-  |     Service API      |
-  +----------------------+
-  |     Opera Client     |
-  +----------------------+
-
+.. raw:: html
+  
+  <div class="illustration">
+    <p class="main">Opera Host
+    <p>Scope
+    <p>UMS
+    <p class="optional">STP/1
+    <p class="optional">(Standalone) Proxy
+    <p class="optional">HTTP Interface 
+    <p>DOM API
+    <p>Service API
+    <p class="main">Opera Client
+  </div>
 
 The layers with a question mark exist only if they are really needed. For example in a debug session on desktop, where the :term:`client` and :term:`host` are the same instance, the UMS layer is bound directly to the DOM API, no socket connection is created. Similarly remote debugging with the Opera built-in proxy does not use an HTTP interface. For more details see `Scope Interface Version 1`_.
 
