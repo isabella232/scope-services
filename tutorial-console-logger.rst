@@ -300,7 +300,8 @@ We do that in the ``bind`` call of our ``SimpleLogger`` class like:
 
   this.bind = function()
   {
-    window_manager.requestModifyFilter(0, [1, [], ['*']]);
+    var window_manager = window.services['window-manager'];
+    window_manager.requestModifyFilter(0, [1, [], ["*"]]);
   }
 
 The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a number, representing the boolean ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
@@ -358,17 +359,17 @@ Get all windows
 
 The service interfaces are build around messages. A message can either be an event, a command, a response to a command, or an error. A command is sent from the host to the client, the others the other way around. All messages for the ``window-manager`` are specified `here`_.
 
-A command is exposed in the framework as ``window.<service name>.request<command name>(tag, message)``.
+A command is exposed in the framework as ``window.services[<service name>].request<command name>(tag, message)``.
 
-A callback to handle the response can be registered in the ``tag_manager``. That requires that the according ``tag`` was passed in the request call.
+A callback to handle the response can be registered in the ``tag_manager``. That requires that the respective ``tag`` was passed in the request call.
 
-A default request handler can be implemented as ``window.<service name>.handle<command name>(status, message)``. These methods will only get called if the ``tag_manager`` has not an according ``tag`` registered. By default all these methods yield an error warning if the according handlers are not implemented.
+A default request handler can be implemented as ``window.services[<service name>].handle<command name>(status, message)``. These methods will only get called if the ``tag_manager`` does not have an according ``tag`` registered. By default all these methods yield a warning if the according handlers are not implemented.
 
-An event is exposed as ``window.<service name>.<event name>(status, message)``. It has the same rules as a response handler.
+An event is exposed as ``window.services[<service name>].<event name>(status, message)``. It has the same rules as a response handler.
 
-We like to sort out in our simple logger the messages per window. For that reason we use the ``ListWindows`` command and the ``OnWindowUpdated`` event of the ``window-manager`` service. The ``OnWindowUpdated`` event is dispatched when a new window or tab is opened or the main document of an existing window changes so that the window gets a new title.
+We would like to sort the messages per window in our simple logger. To do that, we use the ``ListWindows`` command and the ``OnWindowUpdated`` event of the ``window-manager`` service. The ``OnWindowUpdated`` event is dispatched when a new window or tab is opened or the main document of an existing window changes so that the window gets a new title.
 
-We implement them in our class like:
+We implement them in our class as follows:
 
 .. code-block:: javascript
 
@@ -461,7 +462,7 @@ If we now reload ``client.html`` again we should see all the titles of all the t
 Implement the ``OnConsoleMessage`` event
 ----------------------------------------
 
-Now we only need to implement the ``OnConsoleMessage`` event handler of the ``ConsoleLogger`` service. We do that in the ``bind`` call like:
+Now we only need to implement the ``OnConsoleMessage`` event handler of the ``ConsoleLogger`` service. We do that by adding the following code to the ``bind`` call of ``SimpleLogger``:
 
 .. code-block:: javascript
 
@@ -571,7 +572,7 @@ This is our very basic ``console-logger``. It should be easy to extend it from h
 
 .. topic:: Sidenote
 
-  If you open or close a tab in the host you will see errors in the error console of the client like:
+  If you open or close a tab in the host you will see the following errors in the error console of the client:
 
   ::
 
