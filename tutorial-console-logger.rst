@@ -83,7 +83,7 @@ lib/interface_console_logger.js, lib/interface_scope.js, lib/interface_window_ma
   Definitions of the service APIs with documentation of the messages.
 
 lib/json.js
-  Implementation of :term:`JSON` in Javascript.
+  Implementation of :term:`JSON` in ECMAScript.
 
 lib/namespace.js
   To register instantiated objects in a given namespace.
@@ -353,7 +353,7 @@ you should see the according message in the ``dragonkeeper`` console window:
     payload: [8,1250183583,"hello world","","Javascript URL thread: \"javascript:void(opera.postError(\"hello world\"))\""
   ,"ecmascript","information"]
 
-get all windows
+Get all windows
 ---------------
 
 The service interfaces are build around messages. A message can either be an event, a command, a response to a command, or an error. A command is sent from the host to the client, the others the other way around. All messages for the ``window-manager`` are specified `here`_.
