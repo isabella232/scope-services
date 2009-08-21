@@ -1,6 +1,6 @@
-========================================
-Tutorial for a very basic console logger
-========================================
+==============================================
+Tutorial for a very basic error message logger
+==============================================
 
 It is recommended that you first read `How to setup a Test Environment for STP 1`_ and `Walk through the log entries`_. The tutorial will show you how you can create a very simple error message logger with the Opera Scope interface. We will use for that the ``ConsoleLogger`` :term:`service`, the part of the Scope interface which exposes any type of errors and warnings which can occur during browsing.
 
@@ -40,20 +40,17 @@ That creates in the current directory a new ``js-out`` repository. These are the
   client.html
   build_application.js
   client.js
-  console_logger.js
-  scope.js
-  window_manager.js
-  helper_const_ids.txt
   lib/
-    clientlib_async.js
-    http_interface.js
-    interface_console_logger.js
-    interface_scope.js
-    interface_window_manager.js
-    json.js
-    namespace.js
-    service_base.js
-    stp_0_wrapper.js
+    clientlib_async.js  
+    http_interface.js  
+    messages.js   
+    scope.js         
+    stp_0_wrapper.js  
+    window_manager.js
+    console_logger.js   
+    json.js            
+    namespace.js  
+    service_base.js  
     tag_manager.js
 
 Only files in the relative root should be edited. In short, the files contain:
@@ -67,11 +64,8 @@ build_application.js
 client.js
   Definition of the client class.
 
-console_logger.js, scope.js, window_manager.js
-  The service APIs to bind your application to the Scope interface.
-
-helper_const_ids.txt
-  A helper file to copy-paste constants for all services and messages.
+lib/console_logger.js, lib/scope.js, lib/window_manager.js
+  The service APIs to bind your application to the Scope interface with documentation links and constant identifiers to handle messages.
 
 lib/clientlib_async.js
   Convenience library for interacting with the Scope proxy.
@@ -79,14 +73,14 @@ lib/clientlib_async.js
 lib/http_interface.js
   Implementation of the Scope DOM API as an HTTP interface.
 
-lib/interface_console_logger.js, lib/interface_scope.js, lib/interface_window_manager.js
-  Definitions of the service APIs with documentation of the messages.
-
 lib/json.js
   Implementation of :term:`JSON` in ECMAScript.
 
 lib/namespace.js
   To register instantiated objects in a given namespace.
+
+lib/messages.js
+  A message broker singleton for framework specific events.
 
 lib/service_base.js
   The abstract base class for any service.
@@ -198,13 +192,13 @@ See `How to setup a Test Environment for STP 1`_ for details on the setup. You s
     tag: 0
     payload: ["window-manager"]
 
-This log documents that the client connects to the host, requests the ``HostInfo`` and enables the required services.
+This log documents that the client connects to the host, requests the ``HostInfo`` and enables the required services. 
 
-It happens as part of the building process of the client application. There are three points where we can hook up to it:
+This happens as part of the building process of the client application. There are three points where we can hook up to it:
 
 * the load event
-* a framework specific ``on_services_created`` event
-* another framework specific ``on_services_enabled`` event
+* a framework specific ``services-created`` event
+* another framework specific ``services-enabled`` event
 
 The load event callback is defined in ``build_application.js`` at the bottom:
 
@@ -217,25 +211,19 @@ The load event callback is defined in ``build_application.js`` at the bottom:
 
 The ``window.app.build_application`` call creates default objects, setups the connection with the :term:`host`, requests the ``HostInfo`` and enables the available services according to the response as shown in the log above.
 
-A callback for the ``on_services_created`` event can be passed as first argument to the ``build_application`` call or it can be defined in the ``app`` namesapce as:
+A callback for the ``services-created`` event can be passed as first argument to the ``build_application`` call. ``window.app`` has also the method ``addListener`` to register callbacks for this event:
 
 .. code-block:: javascript
 
-  window.app.on_services_created = function(service_descriptions)
-  {
+  window.app.addListener('services-created', function(msg){});
 
-  }
+The event gets dispatched after all services are built but not yet enabled. The ``msg`` has a property ``service_descriptions`` with the ``service_descriptions`` of the ``HostInfo`` :term:`message`.
 
-As the name suggests this event gets dispatched after all services are built but not yet enabled. The argument is ``service_descriptions`` of the ``HostInfo`` :term:`message`.
-
-A callback for the ``on_services_enabled`` event can be passed as second argument to the ``build_application`` call or it can be defined in the ``app`` namesapce as:
+A callback for the ``services-enabled`` event can be passed as second argument to the ``build_application`` call or it can be registered as above:
 
 .. code-block:: javascript
 
-  window.app.on_services_enabled = function()
-  {
-
-  }
+  window.app.addListener('services-enabled', function(msg){});
 
 Write the SimpleLogger class
 ============================
@@ -253,14 +241,9 @@ We make a simple class in the new file like:
   var SimpleLogger = function()
   {
 
-    this.bind = function()
-    {
-
-    }
-
   }
 
-We instantiate and setup it in the ``build_application.js`` by adding the following code at the bottom of the file:
+We instantiate it in the ``build_application.js`` by adding the following code at the bottom of the file:
 
 .. code-block:: javascript
 
@@ -270,12 +253,7 @@ We instantiate and setup it in the ``build_application.js`` by adding the follow
     window.simple_logger = new SimpleLogger();
   }
 
-  window.app.on_services_enabled = function()
-  {
-    window.simple_logger.bind();
-  }
-
-The ``window.onload`` callback was already there. We instantiate our class here because it does not depend in any way on the created services. We define the ``window.app.on_services_enabled`` callback and add the ``setup`` call to our ``simple_consol_logger`` here.
+The ``window.onload`` callback was already there. We add the instantiation of our class here.
 
 .. topic:: Sidenote
 
@@ -294,15 +272,14 @@ As mentioned before, the ``Scope`` and ``WindowManager`` services are always cre
 Set a window filter
 -------------------
 
-We do that in the ``bind`` call of our ``SimpleLogger`` class like:
+We do that by setting a callback for the ``services-enabled`` event in our ``SimpleLogger`` class like:
 
 .. code-block:: javascript
 
-  this.bind = function()
+  window.app.addListener('services-enabled', function(msg)
   {
-    var window_manager = window.services['window-manager'];
-    window_manager.requestModifyFilter(0, [1, [], ["*"]]);
-  }
+    window.services['window-manager'].requestModifyFilter(0, [1, [], ['*']]);
+  });
 
 The filter we are using here is ``[1, [], ["*"]]``. The ``1`` is a number, representing the boolean ``true`` and indicates that the existing filter should be cleared. The next element is a list of window-ids to specify for which windows messages should be created. In our case it is empty. Following that is a list of rules. ``"*"`` means that messages shall be created for all windows.
 
@@ -394,21 +371,26 @@ We implement them in our class as follows:
         appendChild(document.createElement('h2')).textContent = win[TITLE];
     }
 
-    this.bind = function()
+    // service API bindings
+
+    window.services['window-manager'].handleListWindows = function(status, message)
     {
-      var window_manager = window.services['window-manager'];
-      window_manager.handleListWindows = function(status, message)
-      {
-        const WINDOW_LIST = 0;
-        message[WINDOW_LIST].forEach(_display_window_title);
-      }
-      window_manager.onWindowUpdated = function(status, message)
-      {
-        _display_window_title(message);
-      }
-      window_manager.requestListWindows();
-      window_manager.requestModifyFilter(0, [1, [], ['*']]);
+      const WINDOW_LIST = 0;
+      message[WINDOW_LIST].forEach(_display_window_title);
     }
+
+    window.services['window-manager'].onWindowUpdated = function(status, message)
+    {
+      _display_window_title(message);
+    }
+
+    // 'services-enabled' event listener
+
+    window.app.addListener('services-enabled', function(msg)
+    {
+      window.services['window-manager'].requestListWindows();
+      window.services['window-manager'].requestModifyFilter(0, [1, [], ['*']]);
+    });
 
   }
 
@@ -416,26 +398,25 @@ We implement them in our class as follows:
 
 ``_display_window_title`` is a function to display the title of a window in the according container, using the ``_get_or_create_container`` helper.
 
-The implementation of the ``handleListWindows`` response handler and the ``onWindowUpdated`` event is done in the ``bind`` call. We can open ``window_manager.js`` and search for ``handleListWindows``. The according code looks like:
+The binding of the ``handleListWindows`` response handler and the ``onWindowUpdated`` event is done directly in our class. We can open ``lib/window_manager.js`` and search for ``handleListWindows``. The according code looks like:
 
 .. code-block:: javascript
 
   this.handleListWindows = function(status, message)
   {
+    /*
     const
     WINDOW_LIST = 0,
-    /* sub message WindowInfo */
+    // sub message WindowInfo 
     WINDOW_ID = 0,
     TITLE = 1,
     WINDOW_TYPE = 2,
     OPENER_ID = 3;
-
-    // implement the handling of the message here
-    opera.postError("NotImplementedError: WindowManager, ListWindows, " +
-              "message: " + JSON.stringify(message) );
+    */
+    opera.postError("NotBoundWarning: WindowManager, ListWindows");
   }
 
-Here is the default error warning dispatched in the case of a missing implementation. We also see all the constants to read the message. For our implementation we need only ``const WINDOW_LIST = 0;`` to get the actual list of windows from the message. We pass each window object to our ``_display_window_title`` method.
+Here is the default error warning dispatched in the case of a missing binding. We also see all the constants to read the message. For our implementation we need only ``const WINDOW_LIST = 0;`` to get the actual list of windows from the message. We pass each window object to our ``_display_window_title`` method. Above is the implementation of the according request call and the url `http://dragonfly.opera.com/app/scope-interface/WindowManager.html#listwindows`_, linking to the the documentation of the whole command.
 
 We can search in the same file for ``onWindowUpdated``. That code looks like:
 
@@ -443,15 +424,14 @@ We can search in the same file for ``onWindowUpdated``. That code looks like:
 
   this.onWindowUpdated = function(status, message)
   {
+    /*
     const
     WINDOW_ID = 0,
     TITLE = 1,
     WINDOW_TYPE = 2,
     OPENER_ID = 3;
-
-    // implement the handling of the message here
-    opera.postError("NotImplementedError: WindowManager, OnWindowUpdated, " +
-              "message: " + JSON.stringify(message));
+    */
+    opera.postError("NotBoundWarning: WindowManager, OnWindowUpdated");
   }
 
 We see again the default warning. The message represents a single window. So we can pass the message directly to our ``_display_window_title`` method.
@@ -462,7 +442,7 @@ If we now reload ``client.html`` again we should see all the titles of all the t
 Implement the ``OnConsoleMessage`` event
 ----------------------------------------
 
-Now we only need to implement the ``OnConsoleMessage`` event handler of the ``ConsoleLogger`` service. We do that by adding the following code to the ``bind`` call of ``SimpleLogger``:
+Now we only need to implement the ``OnConsoleMessage`` event handler of the ``ConsoleLogger`` service. We do that by adding the following code:
 
 .. code-block:: javascript
 
@@ -487,7 +467,7 @@ Now we only need to implement the ``OnConsoleMessage`` event handler of the ``Co
       pre.scrollIntoView();
     }
 
-We can search as before in ``console_logger.js`` for ``onConsoleMessage``. This time we use all of the constant identifiers. We get the according container with our helper function and display all available information in a preserved text block. Then we scroll the new created text block into view.
+We can search as before in ``lib/console_logger.js`` for ``onConsoleMessage``. This time we use all of the constant identifiers. We get the according container with our helper function and display all available information in a preserved text block. Then we scroll the new created text block into view.
 
 If we reload ``client.html`` and type again in the address field of the Opera Gogi build:
 
@@ -503,7 +483,7 @@ The whole class looks now:
 
   var SimpleLogger = function()
   {
-
+   
     var _get_or_create_container = function(window_id)
     {
       var container = document.getElementById('window-id-' + window_id);
@@ -514,50 +494,56 @@ The whole class looks now:
       }
       return container;
     }
-
+   
     var _display_window_title = function(win)
     {
       const WINDOW_ID = 0, TITLE = 1;
       _get_or_create_container(win[WINDOW_ID]).
         appendChild(document.createElement('h2')).textContent = win[TITLE];
     }
+   
+    // service API bindings
 
-    this.bind = function()
+    window.services['window-manager'].handleListWindows = function(status, message)
     {
-      var window_manager = window.services['window-manager'];
-      window_manager.handleListWindows = function(status, message)
-      {
-        const WINDOW_LIST = 0;
-        message[WINDOW_LIST].forEach(_display_window_title);
-      }
-      window_manager.onWindowUpdated = function(status, message)
-      {
-        _display_window_title(message);
-      }
-      window.services['console-logger'].onConsoleMessage = function(status, message)
-      {
-        const
-        WINDOW_ID = 0,
-        TIME = 1,
-        DESCRIPTION = 2,
-        URI = 3,
-        CONTEXT = 4,
-        SOURCE = 5,
-        SEVERITY = 6;
-
-        var pre = _get_or_create_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
-        pre.textContent = new Date(message[TIME]) + '\n' +
-          "source: " + message[SOURCE] + '\n' +
-          "uri: " + message[URI] + '\n' +
-          "context: " + message[CONTEXT] + '\n' +
-          "severity: " + message[SEVERITY] + '\n' +
-          message[DESCRIPTION];
-        pre.scrollIntoView();
-      }
-      window_manager.requestListWindows();
-      window_manager.requestModifyFilter(0, [1, [], ['*']]);
+      const WINDOW_LIST = 0;
+      message[WINDOW_LIST].forEach(_display_window_title);
     }
 
+    window.services['window-manager'].onWindowUpdated = function(status, message)
+    {
+      _display_window_title(message);
+    }
+
+    window.services['console-logger'].onConsoleMessage = function(status, message)
+    {
+      const
+      WINDOW_ID = 0,
+      TIME = 1,
+      DESCRIPTION = 2,
+      URI = 3,
+      CONTEXT = 4,
+      SOURCE = 5,
+      SEVERITY = 6;
+
+      var pre = _get_or_create_container(message[WINDOW_ID]).appendChild(document.createElement('pre'));
+      pre.textContent = new Date(message[TIME]) + '\n' +
+        "source: " + message[SOURCE] + '\n' +
+        "uri: " + message[URI] + '\n' +
+        "context: " + message[CONTEXT] + '\n' +
+        "severity: " + message[SEVERITY] + '\n' +
+        message[DESCRIPTION];
+      pre.scrollIntoView();
+    }
+
+    // 'services-enabled' event listener
+
+    window.app.addListener('services-enabled', function(msg)
+    {
+      window.services['window-manager'].requestListWindows();
+      window.services['window-manager'].requestModifyFilter(0, [1, [], ['*']]);
+    });
+   
   }
 
 
@@ -578,21 +564,21 @@ This is our very basic ``console-logger``. It should be easy to extend it from h
 
     JavaScript
     Unknown thread
-    NotImplementedError: WindowManager, OnWindowClosed, message: [9]
+    NotBoundWarning: WindowManager, OnWindowClosed
 
     JavaScript
     Unknown thread
-    NotImplementedError: WindowManager, OnWindowActivated, message: [4]
+    NotBoundWarning: WindowManager, OnWindowActivated
 
-  This is because we have only bound the messages which we need for our simple logger. If you like to get rid of these errors, you could add something like the following to the bind method:
+  This is because we have only bound the messages which we need for our simple logger. If you like to get rid of these warnings, you could add something like the following:
 
   .. code-block:: javascript
 
-    window_manager.onWindowClosed = 
-    window_manager.onWindowActivated = 
+    window.services['window-manager'].onWindowClosed = 
+    window.services['window-manager'].onWindowActivated = 
     function(status, message){};
 
-  This is an explicit statement that you we will not handle these events.
+  This is an explicit statement that we will not handle these events.
 
 
 
@@ -608,4 +594,5 @@ You can run ``opprotoc --js --console-logger-tutorial console-logger`` to genera
 .. _here: WindowManager.html
 .. _Scope Interface Version 1: index.html#scope-interface-version-1
 .. _Scope DOM API: scope-dom-interface.html
+.. _http://dragonfly.opera.com/app/scope-interface/WindowManager.html#listwindows: http://dragonfly.opera.com/app/scope-interface/WindowManager.html#listwindows
 
