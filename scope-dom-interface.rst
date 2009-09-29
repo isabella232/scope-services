@@ -104,6 +104,7 @@ Example code for `STP/1`:
 
   var connected = function(services)
   {
+    services = services.split(","); // TODO: Does this exist?
     for service in services
     {
       if (service.substring(0, 5) == "stp-0")
@@ -146,19 +147,27 @@ Example code for `STP/1`:
 Enabling a service
 ------------------
 
-``scopeEnableService`` is used to enable a service for the client.
-
-For `STP/0` the function signature is:
-
-.. function:: scopeEnableService(service: string)
-
-For `STP/1` a callback is available which is called when the service has been
-enabled or an error has occured. The signature of the callback is the same as
-the ``receive`` callback.
+For `STP/0` the client must use ``scopeEnableService`` to enable a service.
 
 The function signature is:
 
-.. function:: scopeEnableService(service: string, response: callback)
+.. function:: scopeEnableService(service: string)
+
+For `STP/1` the client must enable the service by sending a message to the
+``scope`` service, using ``scopeEnableService`` will do nothing.
+The command `Enable` has integer value 5 and uses the following structure::
+
+  message ServiceSelection
+  {
+    required string name = 1;
+  }
+
+For instance to enable the WindowManager one would do::
+
+  scopeTransmit("scope", ["window-manager"], 5 /*scope.Enable*/, tag);
+
+The client will receive a normal message in the `receive` callback when the
+service is enabled.
 
 Transmitting data
 -----------------
