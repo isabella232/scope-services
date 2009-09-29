@@ -162,7 +162,9 @@ The command `Enable` has integer value 5 and uses the following structure::
     required string name = 1;
   }
 
-For instance to enable the WindowManager one would do::
+For instance to enable the WindowManager one would do:
+
+.. code-block:: javascript
 
   scopeTransmit("scope", ["window-manager"], 5 /*scope.Enable*/, tag);
 
