@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 # Service: HttpLogger (core-2.2)
 
@@ -10,11 +10,12 @@ header = Message("Header",
                         ,Field(Proto.String, "header",    4)
                         ])
 
-http_logger = Service("HttpLogger", version="2.0", coreRelease="2.4",
+http_logger = Service("HttpLogger",
                       commands=[Event(1,  "OnRequest",  header)
                                ,Event(2,  "OnResponse", header)
                                ],
-                      cpp_class="OpScopeHttpLogger", cpp_hfile="modules/scope/src/scope_http_logger.h")
+                      options=Options(version="2.0", core_release="2.4",
+                                      cpp_class="OpScopeHttpLogger", cpp_hfile="modules/scope/src/scope_http_logger.h"))
 
 # Service: HttpLogger (core-2.3?)
 #log_mode = Message("LogMode",

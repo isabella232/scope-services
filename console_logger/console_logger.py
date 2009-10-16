@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 console_message = Message("ConsoleMessage",
                           fields=[Field(Proto.Uint32, "windowID",    1)
@@ -11,7 +11,8 @@ console_message = Message("ConsoleMessage",
                                  ,Field(Proto.String, "severity",    7, q=Quantifier.Optional) # TODO: Make enum
                                  ])
 
-console_logger = Service("ConsoleLogger", version="2.0", coreRelease="2.4",
+console_logger = Service("ConsoleLogger",
                          commands=[Event(1,  "OnConsoleMessage",  console_message)
                                   ],
-                         cpp_class="OpScopeConsoleLogger", cpp_hfile="modules/scope/src/scope_console_logger.h")
+                         options=Options(version="2.0", core_release="2.4",
+                                         cpp_class="OpScopeConsoleLogger", cpp_hfile="modules/scope/src/scope_console_logger.h"))

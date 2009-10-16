@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 window_id = Message("WindowID",
                     fields=[Field(Proto.Uint32, "windowID", 1)
@@ -24,7 +24,7 @@ window_filter = Message("WindowFilter",
                                ,Field(Proto.String, "excludePatternList", 5, q=Quantifier.Repeated)
                                ])
                                
-window_manager = Service("WindowManager", version="2.0", coreRelease="2.4",
+window_manager = Service("WindowManager",
                          commands=[Request(1, "GetActiveWindow", False,         window_id)
                                   ,Request(2, "ListWindows",     False,         window_list) # core_2_2=window_list_c22
                                   ,Request(3, "ModifyFilter",    window_filter, False)
@@ -33,4 +33,5 @@ window_manager = Service("WindowManager", version="2.0", coreRelease="2.4",
                                   ,Event(6, "OnWindowActivated", window_id)
                                   ,Event(7, "OnWindowLoaded", window_id)
                                   ],
-                         cpp_class="OpScopeWindowManager", cpp_hfile="modules/scope/src/scope_window_manager.h")
+                         options=Options(version="2.0", core_release="2.4",
+                                         cpp_class="OpScopeWindowManager", cpp_hfile="modules/scope/src/scope_window_manager.h"))

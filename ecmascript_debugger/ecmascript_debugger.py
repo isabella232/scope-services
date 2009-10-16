@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 runtime_selection = Message("RuntimeSelection",
                             fields=[Field(Proto.Uint32, "runtimeList",  1, q=Quantifier.Repeated)
@@ -388,7 +388,7 @@ css_node_decls = Message("CssStyleDeclarations", children=[css_node_style],
                                 ,Field(Proto.Message, "nodeStyleList",      2, q=Quantifier.Repeated, message=css_node_style)
                                 ])
 
-es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
+es_debugger = Service("EcmascriptDebugger",
                       commands=[Request(1,  "ListRuntimes",        runtime_selection,   runtime_list)
                                ,Request(2,  "ContinueThread",      thread_mode,         False)
                                ,Request(3,  "Eval",                eval_data,           eval_result, async=True)
@@ -429,4 +429,5 @@ es_debugger = Service("EcmascriptDebugger", version="5.0", coreRelease="2.4",
                                        'immediately. IMPORTANT: After this call, no object IDs received earlier are valid! All objects needs to be requested again.'
                                        )
                                ],
-                      cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h")
+                      options=Options(version="5.0", core_release="2.4",
+                                      cpp_class="ES_ScopeDebugFrontend", cpp_hfile="modules/scope/src/scope_ecmascript_debugger.h"))

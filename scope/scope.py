@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 client_info = Message("ClientInfo",
                       fields=[Field(Proto.String, "format", 1),
@@ -117,7 +117,7 @@ error_info = Message("ErrorInfo",
                      fields=[Field(Proto.String, "description", 1)
                             ])
 
-window_manager = Service("Scope", version="1.0", coreRelease="2.4",
+window_manager = Service("Scope",
                          commands=[Request(3, "Connect",    client_info,       connection_info)
                                   ,Request(4, "Disconnect", client_id,         False)
                                   ,Request(5, "Enable",     service_selection, service_result)
@@ -131,4 +131,5 @@ window_manager = Service("Scope", version="1.0", coreRelease="2.4",
                                   ,Event(2, "OnConnectionLost", False)
                                   ,Event(9, "OnError",          error_info)
                                   ],
-                         cpp_class="OpScopeProtocolService", cpp_hfile="modules/scope/src/scope_protocol_service.h")
+                         options=Options(version="1.0", core_release="2.4",
+                                         cpp_class="OpScopeProtocolService", cpp_hfile="modules/scope/src/scope_protocol_service.h"))

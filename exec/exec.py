@@ -1,5 +1,5 @@
 # OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service
+from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 # Service: Exec
 
@@ -119,7 +119,7 @@ Note that the mouse cursor is not moved visibly.
 The coordinates are relative to the upper left corner of the tab
 (not including chrome)."""
 
-exec_service = Service("Exec", version="2.0", coreRelease="2.4",
+exec_service = Service("Exec",
                        doc="""The Opera Exec protocol can be used to control an Opera instance from\nthe outside, and various operations can be initiated. This\nfunctionality is mainly useful for QA testing.""",
                        commands=[Request(1, "Exec", exec_data, False),
                                  Request(2, "GetActionInfoList", False, get_action_list),
@@ -127,4 +127,5 @@ exec_service = Service("Exec", version="2.0", coreRelease="2.4",
 #                                 Event(4,   "OnScreenWatcherEvent", screenwatcher_event),
                                  Request(5, "SendMouseAction", mouse_action, False, doc=mouse_doc),
                                 ],
-                       cpp_class="OpScopeExec", cpp_hfile="modules/scope/src/scope_exec.h")
+                       options=Options(version="2.0", core_release="2.4",
+                                       cpp_class="OpScopeExec", cpp_hfile="modules/scope/src/scope_exec.h"))
