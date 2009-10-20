@@ -1,5 +1,5 @@
-# OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
+# hob
+from hob.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 # Service: UrlPlayer
 # TODO: This service should probable be replaced with the Exec service.

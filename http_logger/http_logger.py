@@ -1,5 +1,5 @@
-# OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
+# hob
+from hob.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 # Service: HttpLogger (core-2.2)
 

@@ -1,5 +1,5 @@
-# OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
+# hob
+from hob.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 window_id = Message("WindowID",
                     fields=[Field(Proto.Uint32, "windowID", 1)

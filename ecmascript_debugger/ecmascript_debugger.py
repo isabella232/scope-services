@@ -1,5 +1,5 @@
-# OpProtoc
-from opprotoc.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
+# hob
+from hob.proto import Proto, Quantifier, Field, Message, Request, Event, Service, Options
 
 runtime_selection = Message("RuntimeSelection",
                             fields=[Field(Proto.Uint32, "runtimeList",  1, q=Quantifier.Repeated)
