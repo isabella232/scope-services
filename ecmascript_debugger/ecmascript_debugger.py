@@ -27,7 +27,7 @@ script_info = Message("ScriptInfo",
                              ,Field(Proto.Uint32, "scriptID",   2)
                              ,Field(Proto.String, "scriptType", 3)
                              ,Field(Proto.String, "scriptData", 4)
-                             ,Field(Proto.String, "uri",        5, q=Quantifier.Optional, comment="present if `scriptType` is Linked")
+                             ,Field(Proto.String, "uri",        5, q=Quantifier.Optional, doc="present if `scriptType` is Linked")
                              ])
 
 thread_info = Message("ThreadInfo",
@@ -35,8 +35,8 @@ thread_info = Message("ThreadInfo",
                              ,Field(Proto.Uint32, "threadID",       2)
                              ,Field(Proto.Uint32, "parentThreadID", 3)
                              ,Field(Proto.String, "threadType",     4)
-                             ,Field(Proto.String, "eventNamespace", 5, q=Quantifier.Optional, comment="present if `threadType` is Event")
-                             ,Field(Proto.String, "eventType",      6, q=Quantifier.Optional, comment="present if `threadType` is Event")
+                             ,Field(Proto.String, "eventNamespace", 5, q=Quantifier.Optional, doc="present if `threadType` is Event")
+                             ,Field(Proto.String, "eventType",      6, q=Quantifier.Optional, doc="present if `threadType` is Event")
                              ])
 
 thread_stopinfo = Message("ThreadStopInfo",
@@ -76,9 +76,9 @@ object_value = Message("ObjectValue",
                       fields=[Field(Proto.Uint32,  "objectID",    1)
                              ,Field(Proto.Bool,    "isCallable",  2)
                              ,Field(Proto.Bool,    "isFunction",  3)
-                             ,Field(Proto.String,  "type",        4, comment="type, function or object") # TODO Make it an enum
+                             ,Field(Proto.String,  "type",        4, doc="type, function or object") # TODO Make it an enum
                              ,Field(Proto.Uint32,  "prototypeID", 5, q=Quantifier.Optional)
-                             ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, comment="Name of class (object) or function")
+                             ,Field(Proto.String,  "name",        6, q=Quantifier.Optional, doc="Name of class (object) or function")
                              ])
 
 eval_variable = Message("Variable",
@@ -97,8 +97,8 @@ eval_data = Message("EvalData", children=[eval_variable],
 eval_result = Message("EvalResult",
                       fields=[Field(Proto.String,  "status",       1)
                              ,Field(Proto.String,  "type",         2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
-                             ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
-                             ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, comment="Only present for `Object`")
+                             ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, doc="Only present for `Number`, `String` or `Boolean`")
+                             ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, doc="Only present for `Object`")
                              ])
 
 examine_list = Message("ExamineList",
@@ -115,8 +115,8 @@ frame_selection = Message("FrameSelection",
 property_data = Message("Property",
                         fields=[Field(Proto.String,  "name",         1)
                                ,Field(Proto.String,  "type",         2) # TODO Make an enum, "number", "boolean", "string", "null", "undefined", "object-id"
-                               ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, comment="Only present for `Number`, `String` or `Boolean`")
-                               ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, comment="Only present for `Object`")
+                               ,Field(Proto.String,  "value",        3, q=Quantifier.Optional, doc="Only present for `Number`, `String` or `Boolean`")
+                               ,Field(Proto.Message, "objectValue",  4, q=Quantifier.Optional, message=object_value, doc="Only present for `Object`")
                                ])
 
 object_data = Message("ObjectInfo", children=[property_data],
@@ -143,17 +143,17 @@ e.g.:
                             ,
                         fields=[Field(Proto.Uint32, "boxType",    1, doc="Valid values:\n  0: dimension\n  1: padding\n  2: border\n  3: margin")
                                ,Field(Proto.Uint32, "fillColor",  2, q=Quantifier.Optional)
-                               ,Field(Proto.Uint32, "frameColor", 3, q=Quantifier.Optional, comment="Drawn with 1px width inside the box")
-                               ,Field(Proto.Uint32, "gridColor",  4, q=Quantifier.Optional, comment="Drawn with 1px width inside the box over the whole document")
+                               ,Field(Proto.Uint32, "frameColor", 3, q=Quantifier.Optional, doc="Drawn with 1px width inside the box")
+                               ,Field(Proto.Uint32, "gridColor",  4, q=Quantifier.Optional, doc="Drawn with 1px width inside the box over the whole document")
                                ]) 
 
-spotlight_object = Message("SpotlightObject",  children=[spotlight_box], comment="The drawing order is box, reference-box-frame, box-frame, grid.",
+spotlight_object = Message("SpotlightObject",  children=[spotlight_box], doc="The drawing order is box, reference-box-frame, box-frame, grid.",
                               fields=[Field(Proto.Uint32,  "objectID",       1)
-                                     ,Field(Proto.Bool,    "scrollIntoView", 2, comment="Chooses whether the given object should be scrolled into view or not.")
+                                     ,Field(Proto.Bool,    "scrollIntoView", 2, doc="Chooses whether the given object should be scrolled into view or not.")
                                      ,Field(Proto.Message, "boxList",        3, q=Quantifier.Repeated, message=spotlight_box)
                                      ]) 
 
-spotlight_selection = Message("SpotlightSelection", comment="To highlight elements in the document",
+spotlight_selection = Message("SpotlightSelection", doc="To highlight elements in the document",
                               fields=[Field(Proto.Message, "spotlightObjectList", 1, q=Quantifier.Repeated, message=spotlight_object)
                                      ]) 
 
@@ -166,10 +166,10 @@ breakpoint_pos = Message("BreakpointPosition", # TODO: Perhaps it is better to c
                          fields=[Field(Proto.Uint32, "breakpointID", 1)
                                 ,Field(Proto.String, "type",         2) # TODO: enum, "line", "function", "event"
 
-                                ,Field(Proto.Uint32, "scriptID",     3, q=Quantifier.Optional, comment="Present when `Type` is `Line`")
-                                ,Field(Proto.Uint32, "lineNumber",   4, q=Quantifier.Optional, comment="Present when `Type` is `Line`")
+                                ,Field(Proto.Uint32, "scriptID",     3, q=Quantifier.Optional, doc="Present when `Type` is `Line`")
+                                ,Field(Proto.Uint32, "lineNumber",   4, q=Quantifier.Optional, doc="Present when `Type` is `Line`")
 
-                                ,Field(Proto.String, "eventType",    5, q=Quantifier.Optional, comment="Present when `Type` is `Event`")
+                                ,Field(Proto.String, "eventType",    5, q=Quantifier.Optional, doc="Present when `Type` is `Event`")
                                 ]) 
 
 breakpoint_id = Message("BreakpointID",
@@ -177,16 +177,16 @@ breakpoint_id = Message("BreakpointID",
                                ]) 
 
 event_handler = Message("EventHandler",
-                        fields=[Field(Proto.Uint32,  "handlerID",       1, comment="`handlerID` is set by the client and is referred to by both client and host.")
+                        fields=[Field(Proto.Uint32,  "handlerID",       1, doc="`handlerID` is set by the client and is referred to by both client and host.")
                                ,Field(Proto.Uint32,  "objectID",        2)
-                               ,Field(Proto.String,  "namespace",       3, comment="Namespace of the event. If empty, it will match any namespace.")
+                               ,Field(Proto.String,  "namespace",       3, doc="Namespace of the event. If empty, it will match any namespace.")
                                ,Field(Proto.String,  "eventType",       4)
-                               ,Field(Proto.Bool,    "preventDefaultHandler", 5, comment="Prevents the default event handler from running.")
-                               ,Field(Proto.Bool,    "stopPropagation",       6, comment="Stops propagation of the event beyond this `objectID` (it will however run for all handlers on the object).")
+                               ,Field(Proto.Bool,    "preventDefaultHandler", 5, doc="Prevents the default event handler from running.")
+                               ,Field(Proto.Bool,    "stopPropagation",       6, doc="Stops propagation of the event beyond this `objectID` (it will however run for all handlers on the object).")
                                ],
-                        comment="Add an event handler. This will generate a HANDLE-EVENT event every time the XML event defined by the pair (NAMESPACE, EVENT-TYPE) reaches the object defined by OBJECT-ID in the capturing phase. XML events are defined in http://www.w3.org/TR/xml-events")
+                        doc="Add an event handler. This will generate a HANDLE-EVENT event every time the XML event defined by the pair (NAMESPACE, EVENT-TYPE) reaches the object defined by OBJECT-ID in the capturing phase. XML events are defined in http://www.w3.org/TR/xml-events")
 event_handler_id = Message("EventHandlerID",
-                           fields=[Field(Proto.Uint32,  "handlerID", 1, comment="`handlerID` as specified in EventHandler.handlerID.")
+                           fields=[Field(Proto.Uint32,  "handlerID", 1, doc="`handlerID` as specified in EventHandler.handlerID.")
                                   ])
 
 configuration  = Message("Configuration",
@@ -201,7 +201,7 @@ configuration  = Message("Configuration",
 backtrace_selection = Message("BacktraceSelection",
                               fields=[Field(Proto.Uint32, "runtimeID", 1)
                                      ,Field(Proto.Uint32, "threadID",  2)
-                                     ,Field(Proto.Uint32, "maxFrames", 3, q=Quantifier.Optional, default=0, comment="If `maxFrames` is omitted, all frames are returned")
+                                     ,Field(Proto.Uint32, "maxFrames", 3, q=Quantifier.Optional, default=0, doc="If `maxFrames` is omitted, all frames are returned")
                                      ])
 
 break_selection = Message("BreakSelection",
@@ -326,8 +326,8 @@ css_stylesheet_rule = Message("StylesheetRule", update=False,
                                      ,Field(Proto.Bool,    "priorityList",        6, q=Quantifier.Repeated)
 
                                      # Common to STYLE and PAGE
-                                     ,Field(Proto.String,  "selectorList",        7, q=Quantifier.Repeated, comment="0..1 for PAGE and 0..* for STYLE")
-                                     ,Field(Proto.Uint32,  "specificityList",     8, q=Quantifier.Repeated, comment="1..1 for PAGE and 0..* for STYLE")
+                                     ,Field(Proto.String,  "selectorList",        7, q=Quantifier.Repeated, doc="0..1 for PAGE and 0..* for STYLE")
+                                     ,Field(Proto.Uint32,  "specificityList",     8, q=Quantifier.Repeated, doc="1..1 for PAGE and 0..* for STYLE")
 
                                      # Common to MEDIA and IMPORT
                                      ,Field(Proto.String,  "mediaList",           9, q=Quantifier.Repeated)
