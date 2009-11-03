@@ -1,4 +1,4 @@
-syntax = proto2; // TODO: Change to scope syntax
+syntax = scope;
 
 message CssStylesheetList
 {
