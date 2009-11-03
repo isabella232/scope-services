@@ -6,7 +6,7 @@ from hob.proto import Proto, Quantifier, Field, Message, Request, Event, Service
 header = Message("Header",
                  fields=[Field(Proto.Uint32, "requestID", 1)
                         ,Field(Proto.Uint32, "windowID",  2)
-                        ,Field(Proto.String, "time",      3, comment="Float encoded as string")
+                        ,Field(Proto.String, "time",      3, doc="Float encoded as string")
                         ,Field(Proto.String, "header",    4)
                         ])
 
