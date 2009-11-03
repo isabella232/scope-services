@@ -1,0 +1,46 @@
+syntax = scope;
+
+message WindowInfo
+{
+    required uint32 windowID   = 1;
+    required string title      = 2;
+    required string windowType = 3;
+    required uint32 openerID   = 4;
+}
+
+ 
+service WindowManager
+{
+    option (cpp_hfile) = "modules/scope/src/scope_window_manager.h";
+    option (core_release) = "2.4";
+    option (version) = "2.0";
+    option (cpp_class) = OpScopeWindowManager;
+ 
+    command GetActiveWindow(Default) returns (WindowID) = 1;
+    command ListWindows(Default) returns (WindowList) = 2;
+    command ModifyFilter(WindowFilter) returns (Default) = 3;
+    event OnWindowUpdated returns (WindowInfo) = 4;
+    event OnWindowClosed returns (WindowID) = 5;
+    event OnWindowActivated returns (WindowID) = 6;
+    event OnWindowLoaded returns (WindowID) = 7;
+}
+
+message WindowID
+{
+    required uint32 windowID = 1;
+}
+
+message WindowFilter
+{
+    required bool   clearFilter        = 1 [default = false];
+    repeated uint32 includeIDList      = 2;
+    repeated string includePatternList = 3;
+    repeated uint32 excludeIDList      = 4;
+    repeated string excludePatternList = 5;
+}
+
+message WindowList
+{
+    repeated WindowInfo windowList = 1;
+}
+

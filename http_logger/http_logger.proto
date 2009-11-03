@@ -1,0 +1,25 @@
+syntax = scope;
+
+ 
+service HttpLogger
+{
+    option (cpp_hfile) = "modules/scope/src/scope_http_logger.h";
+    option (core_release) = "2.4";
+    option (version) = "2.0";
+    option (cpp_class) = OpScopeHttpLogger;
+ 
+    event OnRequest returns (Header) = 1;
+    event OnResponse returns (Header) = 2;
+}
+
+message Header
+{
+    required uint32 requestID = 1;
+    required uint32 windowID  = 2;
+    /**
+     * Float encoded as string
+     */
+    required string time      = 3;
+    required string header    = 4;
+}
+

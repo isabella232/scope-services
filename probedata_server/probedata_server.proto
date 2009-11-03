@@ -1,0 +1,18 @@
+syntax = scope;
+
+ 
+service ProbedataServer
+{
+    option (cpp_hfile) = "modules/scope/src/scope_probedata_server.h";
+    option (core_release) = "2.4";
+    option (version) = "2.0";
+    option (cpp_class) = OpScopeProbedataServer;
+ 
+    command AllData(Default) returns (ProbeData) = 1;
+}
+
+message ProbeData
+{
+    required bytes data = 1;
+}
+

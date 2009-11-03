@@ -1,0 +1,32 @@
+syntax = scope;
+
+message WindowCount
+{
+    required uint32 windowCount = 1;
+}
+
+ 
+service UrlPlayer
+{
+    option (cpp_hfile) = "modules/scope/src/urlplayer_command.h";
+    option (core_release) = "2.4";
+    option (version) = "2.0";
+    option (cpp_class) = OpScopeUrlPlayer;
+ 
+    command CreateWindows(WindowCount) returns (WindowCount) = 1;
+    command LoadUrl(Request) returns (Window) = 2;
+    event OnUrlLoaded returns (Window) = 3;
+    event OnConnectionFailed returns (Window) = 4;
+}
+
+message Request
+{
+    required uint32 windowNumber = 1;
+    required string url          = 2;
+}
+
+message Window
+{
+    required uint32 windowID = 1;
+}
+

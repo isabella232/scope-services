@@ -1,0 +1,178 @@
+syntax = proto2; // TODO: Change to scope syntax
+
+/**
+ * List all valid `Action` `name`s
+ */
+message ActionInfoList
+{
+    repeated ActionInfo actionInfoList = 1;
+}
+
+/**
+ * Name of an action, to be used in the `Action` message.
+ */
+message ActionInfo
+{
+    required string name = 1;
+}
+
+ 
+/**
+ * The Opera Exec protocol can be used to control an Opera instance from
+ * the outside, and various operations can be initiated. This
+ * functionality is mainly useful for QA testing.
+ */
+service Exec
+{
+    option (cpp_hfile) = "modules/scope/src/scope_exec.h";
+    option (core_release) = "2.4";
+    option (version) = "2.0";
+    option (cpp_class) = OpScopeExec;
+ 
+    command Exec(ActionList) returns (Default) = 1;
+    command GetActionInfoList(Default) returns (ActionInfoList) = 2;
+    command SetupScreenWatcher(ScreenWatcher) returns (ScreenWatcherResult) = 3 {
+        option (cpp_response) = deferred;
+    };
+    /**
+     * Move mouse to the given position on the screen/window.
+     * Note that the mouse cursor is not moved visibly.
+     * 
+     * The coordinates are relative to the upper left corner of the tab
+     * (not including chrome).
+     */
+    command SendMouseAction(MouseAction) returns (Default) = 5;
+}
+
+message Area
+{
+    required int32 x = 1;
+    required int32 y = 2;
+    required int32 w = 3;
+    required int32 h = 4;
+}
+
+message ColorMatch
+{
+    /**
+     * The `ColorSpec.id` which matched a color
+     */
+    required uint32 id    = 1;
+    required uint32 count = 2;
+}
+
+message ScreenWatcherResult
+{
+    /**
+     * The ID of the window that was triggered by a screen watch, or 0 if the screen watch failed or was cancelled
+     */
+    required uint32     windowID       = 1;
+    required string     md5            = 2;
+    optional bytes      png            = 3;
+    repeated ColorMatch colorMatchList = 4;
+}
+
+message MouseAction
+{
+    required uint32 windowID     = 1;
+    required int32  x            = 2;
+    required int32  y            = 3;
+    /**
+     * `buttonAction` specifies the buttons to press or release
+     * It is specifies as the sum of button actions:
+     *       1 - Button 1 down
+     *       2 - Button 1 up
+     * 
+     *       4 - Button 2 down
+     *       8 - Button 2 up
+     * 
+     *      16 - Button 3 down
+     *      32 - Button 3 up
+     * 
+     * For example, to press button 1 and release button 2, the value is 9 (1+8)
+     * 
+     * Buttons are clicked in the sequence listed above. Note that down actions are
+     * listed before up actions, thus allowing single-clicking with one command
+     * (e.g. using value 3)
+     */
+    required uint32 buttonAction = 4;
+}
+
+/**
+ * Specifies a new color specification.
+ * The `id` is used when reporting back the results.
+ * You can have overlapping color specifications.
+ * Note: There can be a maximum of 16 color specifications!
+ * 
+ * Color values ranges from 0 (no color) to 255 (maximal saturation), other values are not allowed.
+ * Default (meaning field missing) is 0 for *Low elements and 255 for *High fields.
+ */
+message ColorSpec
+{
+    required uint32 id        = 1;
+    optional uint32 redLow    = 2;
+    optional uint32 redHigh   = 3;
+    optional uint32 greenLow  = 4;
+    optional uint32 greenHigh = 5;
+    optional uint32 blueLow   = 6;
+    optional uint32 blueHigh  = 7;
+}
+
+message ScreenWatcher
+{
+    /**
+     * Number of milliseconds to wait before capturing the screen area.
+     */
+    required uint32    timeOut       = 1;
+    required Area      area          = 2;
+    repeated string    md5List       = 3;
+    /**
+     * The ID of the window to watch, the default (or 0) is to watch the current window
+     */
+    optional uint32    windowID      = 4;
+    repeated ColorSpec colorSpecList = 5;
+    /**
+     * If true then the image data will be sent in the response WatcherResult.png, otherwise the field will be omitted
+     */
+    optional bool      includeImage  = 6 [default = true];
+}
+
+message ActionList
+{
+    repeated Action actionList = 1;
+}
+
+/**
+ * Executes a series of actions in the opera host,
+ * each action consists of a name identifying the
+ * action and optionally a value for the action.
+ * The value depends on the type of action.
+ */
+message Action
+{
+    /**
+     * The name of the action to execute. 
+     * This is either a regular Opera action (e.g. "Page Down"),
+     * or a special exec-action. Both kinds can be found by 
+     * calling `GetActionInfoList`. The special cases are
+     * prefixed with underscore ("_"), and these require `value` 
+     * parameter to work, but always ignores `windowID`.
+     * 
+     * The special cases may include:
+     *     _keydown | _keyup: 
+     *         The `value` is either a key-name ("ctrl", "down", etc.)
+     *         or a single character ("a", "b", etc.)
+     *     _type: 
+     *         Types the text present in `value` 
+     *         (a different approach is the "Insert" action)
+     * 
+     * It is currently not possible to figure out which actions 
+     * take parameters (`value`), and which don't. Optimistically, 
+     * we have made the `Action` type extendable to include 
+     * such information later.
+     */
+    required string name     = 1;
+    optional string value    = 2;
+    optional uint32 windowID = 3;
+}
+
