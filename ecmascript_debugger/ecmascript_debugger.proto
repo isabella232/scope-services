@@ -2,6 +2,19 @@ syntax = scope;
 
 message CssStylesheetList
 {
+    message Stylesheet
+    {
+        required uint32 objectID           = 1;
+        required bool   isDisabled         = 2;
+        required string href               = 3;
+        required string title              = 4;
+        required string type               = 5;
+        repeated string mediaList          = 6;
+        optional uint32 ownerNodeID        = 7;
+        optional uint32 ownerRuleID        = 8;
+        optional uint32 parentStylesheetID = 9;
+    }
+
     repeated Stylesheet stylesheetList = 1;
 }
 
@@ -14,74 +27,6 @@ message ExamineList
 message BreakpointID
 {
     required uint32 breakpointID = 1;
-}
-
-message Attribute
-{
-    required string namePrefix = 1;
-    required string name       = 2;
-    required string value      = 3;
-}
-
-/**
- * Common to FONT_FACE, PAGE and STYLE is:
- * - indexList
- * - valueList
- * - priorityList
- *
- * Common to STYLE and PAGE is:
- * - selectorList
- * - specificityList
- *
- * Common to MEDIA and IMPORT
- * - mediaList
- *
- * For MEDIA
- * - ruleList
- *
- * For IMPORT
- * - href
- * - importStylesheetID
- *
- * For PAGE
- * - pseudoClass
- *
- * For CHARSET
- * - charset
- */
-message StylesheetRule
-{
-    /**
-     * Type values:
-     * 0 - UNKNOWN
-     * 1 - STYLE
-     * 2 - CHARSET
-     * 3 - IMPORT
-     * 4 - MEDIA
-     * 5 - FONT_FACE
-     * 6 - PAGE
-     * 7 - NAMESPACE // Not supported
-     */
-    required uint32         type               =  1;
-    required uint32         stylesheetID       =  2;
-    required uint32         ruleID             =  3;
-    repeated uint32         indexList          =  4;
-    repeated string         valueList          =  5;
-    repeated bool           priorityList       =  6;
-    /**
-     * 0..1 for PAGE and 0..* for STYLE
-     */
-    repeated string         selectorList       =  7;
-    /**
-     * 1..1 for PAGE and 0..* for STYLE
-     */
-    repeated uint32         specificityList    =  8;
-    repeated string         mediaList          =  9;
-    repeated StylesheetRule ruleList           = 10;
-    optional string         href               = 11;
-    optional uint32         importStylesheetID = 12;
-    optional uint32         pseudoClass        = 13;
-    optional string         charset            = 14;
 }
 
 message BacktraceSelection
@@ -99,6 +44,40 @@ message BacktraceSelection
  */
 message SpotlightObject
 {
+    /**
+     * Colors are encoded as RGBA with 8 bits for each channel.
+     * encoded_color = ( red << 24 ) + ( green << 16 ) + ( blue << 8 ) + ( alpha ) 
+     * with red, green, blue and alpha in a range of 0 - 255
+     * e.g.:
+     * 
+     *     red     4278190335
+     *     green     16711935
+     *     blue         65535
+     *     yellow  4294902015
+     *     cyan      16777215
+     *     magenta 4278255615
+     */
+    message SpotlightBox
+    {
+        /**
+         * Valid values:
+         *   0: dimension
+         *   1: padding
+         *   2: border
+         *   3: margin
+         */
+        required uint32 boxType    = 1;
+        optional uint32 fillColor  = 2;
+        /**
+         * Drawn with 1px width inside the box
+         */
+        optional uint32 frameColor = 3;
+        /**
+         * Drawn with 1px width inside the box over the whole document
+         */
+        optional uint32 gridColor  = 4;
+    }
+
     required uint32       objectID       = 1;
     /**
      * Chooses whether the given object should be scrolled into view or not.
@@ -118,6 +97,13 @@ message RuntimeInfo
 
 message NodeInfo
 {
+    message Attribute
+    {
+        required string namePrefix = 1;
+        required string name       = 2;
+        required string value      = 3;
+    }
+
     required uint32    objectID        =  1;
     required uint32    type            =  2;
     required string    name            =  3;
@@ -191,39 +177,6 @@ message RuntimeID
     required uint32 runtimeID = 1;
 }
 
-/**
- * Common to all origins:
- * - indexList
- * - valueList
- * - priorityList
- * - statusList
- *
- * Common to AUTHOR and LOCAL
- * - selector
- * - specificity
- *
- * For AUTHOR
- * - stylesheetID
- * - ruleID
- * - ruleType
- */
-message StyleDeclaration
-{
-    /**
-     * 1 = USER-AGENT, 2=LOCAL, 3=AUTHOR, 4=ELEMENT
-     */
-    required uint32 origin       =  1;
-    repeated uint32 indexList    =  2;
-    repeated string valueList    =  3;
-    repeated bool   priorityList =  4;
-    repeated uint32 statusList   =  5;
-    optional string selector     =  6;
-    optional uint32 specificity  =  7;
-    optional uint32 stylesheetID =  8;
-    optional uint32 ruleID       =  9;
-    optional uint32 ruleType     = 10;
-}
-
 message RuntimeSelection
 {
     repeated uint32 runtimeList = 1;
@@ -232,6 +185,20 @@ message RuntimeSelection
 
 message ObjectInfo
 {
+    message Property
+    {
+        required string      name        = 1;
+        required string      type        = 2;
+        /**
+         * Only present for `Number`, `String` or `Boolean`
+         */
+        optional string      value       = 3;
+        /**
+         * Only present for `Object`
+         */
+        optional ObjectValue objectValue = 4;
+    }
+
     required ObjectValue value        = 1;
     repeated Property    propertyList = 2;
 }
@@ -316,15 +283,6 @@ service EcmascriptDebugger
     event OnHandleEvent returns (DomEvent) = 20;
     event OnObjectSelected returns (ObjectSelection) = 21;
     event OnParseError returns (DomParseError) = 28;
-
-    // CSS inspector, should be moved to separate service
-}
-
-message NodeStyle
-{
-    required uint32           objectID    = 1;
-    required string           elementName = 2;
-    repeated StyleDeclaration styleList   = 3;
 }
 
 message DomParseError
@@ -370,6 +328,46 @@ message BreakpointPosition
 
 message CssStyleDeclarations
 {
+    message NodeStyle
+    {
+        /**
+         * Common to all origins:
+         * - indexList
+         * - valueList
+         * - priorityList
+         * - statusList
+         *
+         * Common to AUTHOR and LOCAL
+         * - selector
+         * - specificity
+         *
+         * For AUTHOR
+         * - stylesheetID
+         * - ruleID
+         * - ruleType
+         */
+        message StyleDeclaration
+        {
+            /**
+             * 1 = USER-AGENT, 2=LOCAL, 3=AUTHOR, 4=ELEMENT
+             */
+            required uint32 origin       =  1;
+            repeated uint32 indexList    =  2;
+            repeated string valueList    =  3;
+            repeated bool   priorityList =  4;
+            repeated uint32 statusList   =  5;
+            optional string selector     =  6;
+            optional uint32 specificity  =  7;
+            optional uint32 stylesheetID =  8;
+            optional uint32 ruleID       =  9;
+            optional uint32 ruleType     = 10;
+        }
+    
+        required uint32           objectID    = 1;
+        required string           elementName = 2;
+        repeated StyleDeclaration styleList   = 3;
+    }
+
     repeated string    computedStyleList = 1;
     repeated NodeStyle nodeStyleList     = 2;
 }
@@ -483,23 +481,6 @@ message RuntimeList
     repeated RuntimeInfo runtimeList = 1;
 }
 
-message Property
-{
-    required string      name        = 1;
-    /**
-     * "number", "boolean", "string", "null", "undefined", "object-id"
-     */
-    required string      type        = 2;
-    /**
-     * Only present for `Number`, `String` or `Boolean`
-     */
-    optional string      value       = 3;
-    /**
-     * Only present for `Object`
-     */
-    optional ObjectValue objectValue = 4;
-}
-
 message SpotlightObjectSelection
 {
     required uint32 objectID       = 1;
@@ -526,8 +507,6 @@ message DomTraversal
      *     get node data for that node
      * - subtree
      *     get node data for the subtree in the flow of it
-     *
-     * TODO: Enum, "subtree", "node", "children", "parent-node-chain-with-children"
      */
     required string traversal = 2;
 }
@@ -548,17 +527,78 @@ message SpotlightSelection
 
 message CssStylesheetRules
 {
-    repeated StylesheetRule ruleList = 1;
-}
+    /**
+     * Common to FONT_FACE, PAGE and STYLE is:
+     * - indexList
+     * - valueList
+     * - priorityList
+     *
+     * Common to STYLE and PAGE is:
+     * - selectorList
+     * - specificityList
+     *
+     * Common to MEDIA and IMPORT
+     * - mediaList
+     *
+     * For MEDIA
+     * - ruleList
+     *
+     * For IMPORT
+     * - href
+     * - importStylesheetID
+     *
+     * For PAGE
+     * - pseudoClass
+     *
+     * For CHARSET
+     * - charset
+     */
+    message StylesheetRule
+    {
+        /**
+         * Type values:
+         * 0 - UNKNOWN
+         * 1 - STYLE
+         * 2 - CHARSET
+         * 3 - IMPORT
+         * 4 - MEDIA
+         * 5 - FONT_FACE
+         * 6 - PAGE
+         * 7 - NAMESPACE // Not supported
+         */
+        required uint32         type               =  1;
+        required uint32         stylesheetID       =  2;
+        required uint32         ruleID             =  3;
+        repeated uint32         indexList          =  4;
+        repeated string         valueList          =  5;
+        repeated bool           priorityList       =  6;
+        /**
+         * 0..1 for PAGE and 0..* for STYLE
+         */
+        repeated string         selectorList       =  7;
+        /**
+         * 1..1 for PAGE and 0..* for STYLE
+         */
+        repeated uint32         specificityList    =  8;
+        repeated string         mediaList          =  9;
+        repeated StylesheetRule ruleList           = 10;
+        optional string         href               = 11;
+        optional uint32         importStylesheetID = 12;
+        optional uint32         pseudoClass        = 13;
+        optional string         charset            = 14;
+    }
 
-message Variable
-{
-    required string name     = 1;
-    required uint32 objectID = 2;
+    repeated StylesheetRule ruleList = 1;
 }
 
 message EvalData
 {
+    message Variable
+    {
+        required string name     = 1;
+        required uint32 objectID = 2;
+    }
+
     required uint32   runtimeID    = 1;
     /**
      * The ID of the thread to use for executing the script data, or 0
@@ -573,52 +613,5 @@ message CssStylesheetSelection
 {
     required uint32 runtimeID    = 1;
     required uint32 stylesheetID = 2;
-}
-
-message Stylesheet
-{
-    required uint32 objectID           = 1;
-    required bool   isDisabled         = 2;
-    required string href               = 3;
-    required string title              = 4;
-    required string type               = 5;
-    repeated string mediaList          = 6;
-    optional uint32 ownerNodeID        = 7;
-    optional uint32 ownerRuleID        = 8;
-    optional uint32 parentStylesheetID = 9;
-}
-
-/**
- * Colors are encoded as RGBA with 8 bits for each channel.
- * encoded_color = ( red << 24 ) + ( green << 16 ) + ( blue << 8 ) + ( alpha ) 
- * with red, green, blue and alpha in a range of 0 - 255
- * e.g.:
- * 
- *     red     4278190335
- *     green     16711935
- *     blue         65535
- *     yellow  4294902015
- *     cyan      16777215
- *     magenta 4278255615
- */
-message SpotlightBox
-{
-    /**
-     * Valid values:
-     *   0: dimension
-     *   1: padding
-     *   2: border
-     *   3: margin
-     */
-    required uint32 boxType    = 1;
-    optional uint32 fillColor  = 2;
-    /**
-     * Drawn with 1px width inside the box
-     */
-    optional uint32 frameColor = 3;
-    /**
-     * Drawn with 1px width inside the box over the whole document
-     */
-    optional uint32 gridColor  = 4;
 }
 

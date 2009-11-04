@@ -10,6 +10,52 @@ message ServiceList
  */
 message MessageInfo
 {
+    message FieldInfo
+    {
+        required string name       = 1;
+        /**
+         * The protocol buffer type for this field. The types are:
+         * 
+         * == ============================
+         * 1  Double
+         * 2  Float
+         * 3  Int32
+         * 4  Uint32
+         * 5  Sint32
+         * 6  Fixed32
+         * 7  Sfixed32
+         * 8  Bool
+         * 9  String
+         * 10 Bytes
+         * 11 Message
+         * 12 Int64 (not supported yet)
+         * 13 Uint64 (not supported yet)
+         * 14 Sint64 (not supported yet)
+         * 15 Fixed64 (not supported yet)
+         * 16 Sfixed64 (not supported yet)
+         * == ============================
+         */
+        required uint32 type       = 2;
+        /**
+         * The unique protocol buffer number for this field.
+         */
+        required uint32 number     = 3;
+        /**
+         * Specifies whether the fields is required, optional or repeated:
+         * 
+         * = ========
+         * 0 Required
+         * 1 Optional
+         * 2 Repeated
+         * = ========
+         */
+        optional uint32 quantifier = 4 [default = 0];
+        /**
+         * ID of message this field references, only set for Message fields
+         */
+        optional uint32 messageID  = 5;
+    }
+
     required uint32    id        = 1;
     required string    name      = 2;
     repeated FieldInfo fieldList = 3;
@@ -60,52 +106,6 @@ message MessageInfoList
 message ServiceSelection
 {
     required string name = 1;
-}
-
-message FieldInfo
-{
-    required string name       = 1;
-    /**
-     * The protocol buffer type for this field. The types are:
-     * 
-     * == ============================
-     * 1  Double
-     * 2  Float
-     * 3  Int32
-     * 4  Uint32
-     * 5  Sint32
-     * 6  Fixed32
-     * 7  Sfixed32
-     * 8  Bool
-     * 9  String
-     * 10 Bytes
-     * 11 Message
-     * 12 Int64 (not supported yet)
-     * 13 Uint64 (not supported yet)
-     * 14 Sint64 (not supported yet)
-     * 15 Fixed64 (not supported yet)
-     * 16 Sfixed64 (not supported yet)
-     * == ============================
-     */
-    required uint32 type       = 2;
-    /**
-     * The unique protocol buffer number for this field.
-     */
-    required uint32 number     = 3;
-    /**
-     * Specifies whether the fields is required, optional or repeated:
-     * 
-     * = ========
-     * 0 Required
-     * 1 Optional
-     * 2 Repeated
-     * = ========
-     */
-    optional uint32 quantifier = 4 [default = 0];
-    /**
-     * ID of message this field references, only set for Message fields
-     */
-    optional uint32 messageID  = 5;
 }
 
 message ServiceInfo
