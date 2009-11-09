@@ -46,7 +46,9 @@ are received (responses or events), and when the remote host disconnects.
 
 The signature is:
 
-.. function:: scopeAddClient(connected: callback, receive: callback, quit: callback, port: number)
+.. function:: scopeAddClient(connected: callback, receive: callback, quit: callback [, port: number])
+
+``port` is optional and 0 by default.
 
 The ``connected`` callback is called when the service list has been sent from the
 host and is available for the client to look at. For `STP/0` that means right
