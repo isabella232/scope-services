@@ -523,8 +523,6 @@ error message.
 Code Description
 ==== ==========================
 0    OK
-1    Conflict
-2    Unsupported Type
 3    Bad Request
 4    Internal Error
 5    Command Not Found
