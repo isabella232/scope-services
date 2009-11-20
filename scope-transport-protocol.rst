@@ -448,10 +448,6 @@ For commands the message will be::
       required uint32 format = 3;
       required uint32 tag = 5;
       required bytes  payload = 8;
-
-      // either clientID or uuid must be sent
-      optional uint32 clientID = 6;
-      optional string uuid = 7;
     }
 
 For responses the message is defined as::
