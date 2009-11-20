@@ -433,8 +433,6 @@ The headers are defined using a Protocol Buffer message::
       required uint32 format = 3;
       optional uint32 status = 4;
       optional uint32 tag = 5;
-      optional uint32 clientID = 6;
-      optional string uuid = 7;
       required bytes payload = 8;
     }
 
