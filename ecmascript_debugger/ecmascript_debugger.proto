@@ -26,6 +26,9 @@ message ExamineList
 
 message BreakpointID
 {
+    /**
+     * See BreakpointPosition.breakpointID.
+     */
     required uint32 breakpointID = 1;
 }
 
@@ -307,21 +310,24 @@ message Configuration
 
 message BreakpointPosition
 {
+    /**
+	 * A nonzero ID chosen by the client.
+	 */
     required uint32 breakpointID = 1;
     /**
      * "line", "function", "event"
      */
     required string type         = 2;
     /**
-     * Present when `Type` is `Line`
+     * Present when `type` is `line`
      */
     optional uint32 scriptID     = 3;
     /**
-     * Present when `Type` is `Line`
+     * Present when `type` is `line`
      */
     optional uint32 lineNumber   = 4;
     /**
-     * Present when `Type` is `Event`
+     * Present when `type` is `event`
      */
     optional string eventType    = 5;
 }
@@ -424,7 +430,8 @@ message ObjectList
 message EventHandler
 {
     /**
-     * `handlerID` is set by the client and is referred to by both client and host.
+     * A nonzero ID chosen by the client. The host may also use this ID to refer to the
+	 * event handler.
      */
     required uint32 handlerID             = 1;
     required uint32 objectID              = 2;
@@ -451,11 +458,11 @@ message EvalResult
      */
     required string      type        = 2;
     /**
-     * Only present for `Number`, `String` or `Boolean`
+     * Only present when `type` is `number`, `string` or `boolean`
      */
     optional string      value       = 3;
     /**
-     * Only present for `Object`
+     * Only present when `type` is `object`
      */
     optional ObjectValue objectValue = 4;
 }
