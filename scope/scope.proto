@@ -73,8 +73,6 @@ message Service
 {
     required string name          = 1;
     required string version       = 2;
-    required uint32 activeClients = 3;
-    required uint32 maxClients    = 4;
 }
 
 message HostInfo
@@ -90,12 +88,6 @@ message HostInfo
 message ClientInfo
 {
     required string format = 1;
-    required string uuid   = 2;
-}
-
-message ConnectionInfo
-{
-    required uint32 clientID = 1;
 }
 
 message MessageInfoList
@@ -122,8 +114,7 @@ service Scope
     option (version) = "1.0";
     option (cpp_class) = OpScopeProtocolService;
  
-    command Connect(ClientInfo) returns (ConnectionInfo) = 3;
-    command Disconnect(ClientID) returns (Default) = 4;
+    command Configure(ClientInfo) returns (Default) = 3;
     command Enable(ServiceSelection) returns (ServiceResult) = 5;
     command Disable(ServiceSelection) returns (ServiceResult) = 6;
     command Info(ServiceSelection) returns (ServiceInfo) = 7;
@@ -162,11 +153,6 @@ message MessageSelection
      * Set to true if all message in the service should be included. Overrides includeRelated and idList.
      */
     optional bool   includeAll     = 4;
-}
-
-message ClientID
-{
-    required string uuid = 1;
 }
 
 message ServiceResult
