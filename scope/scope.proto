@@ -114,7 +114,8 @@ service Scope
     option (version) = "1.0";
     option (cpp_class) = OpScopeProtocolService;
  
-    command Configure(ClientInfo) returns (Default) = 3;
+    command Connect(ClientInfo) returns (Default) = 3;
+    command Disconnect(Default) returns (Default) = 4;
     command Enable(ServiceSelection) returns (ServiceResult) = 5;
     command Disable(ServiceSelection) returns (ServiceResult) = 6;
     command Info(ServiceSelection) returns (ServiceInfo) = 7;
