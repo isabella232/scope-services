@@ -431,7 +431,7 @@ message EventHandler
 {
     /**
      * A nonzero ID chosen by the client. The host may also use this ID to refer to the
-  	 * event handler.
+	 * event handler.
      */
     required uint32 handlerID             = 1;
     required uint32 objectID              = 2;
@@ -611,9 +611,6 @@ message EvalData
      * The ID of the thread to use for executing the script data, or 0
      */
     required uint32   threadID     = 2;
-    /**
-     * Test comment.
-     */
     required uint32   frameIndex   = 3;
     required string   scriptData   = 4;
     repeated Variable variableList = 5;
