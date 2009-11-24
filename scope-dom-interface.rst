@@ -8,7 +8,7 @@ available in the host.
 When only `STP/0` is available in host, scope will perform these steps.
 
 - Receive initial service list.
-- Initiate `STP/0` fallback if the host runs core-2.4 or higher,
+- Initiate `STP/0` fallback if the host runs core-2.5 or higher,
   otherwise it is up the JS client to handle older core versions.
   The fallback will be setup to send data as ``JSON``.
 
@@ -23,11 +23,14 @@ For `STP/1` scope will perform these steps.
 Determine DOM API version
 -------------------------
   
-The new ``DOM`` API can be detected by checking if the ``stpVersion`` function
-is available on the ``opera`` object. This can be called to get
-the version of the built-in transport layer.
+The new ``DOM`` API can be detected by checking if the ``stpVersion`` property
+is available on the ``opera`` object. This can be accessed to get
+current the version of the transport layer. It should only be accessed after
+a connection has been established (ie. the callback `connected`, see below).
 
-For instance, calling it on core-2.4 would return::
+For instance, accessing it on core-2.5 build would return:
+
+.. code-block:: javascript
 
   "STP/1"
 
@@ -177,7 +180,7 @@ Transmitting data
 -----------------
 
 ``scopeTransmit`` will now accept data into services in native JavaScript objects
-if the host is running core-2.4 or higher. If the host is core-2.3 or lower,
+if the host is running core-2.5 or higher. If the host is core-2.3 or lower,
 it will be transmitted as a string as before.
 
 For `STP/0` the signature is:
@@ -219,7 +222,3 @@ Example code for `STP/1`:
   }
 
   opera.scopeTransmit("ecmascript-debugger", [], 1, 42);
-
-
-
-
