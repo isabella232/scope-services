@@ -611,6 +611,9 @@ message EvalData
      * The ID of the thread to use for executing the script data, or 0
      */
     required uint32   threadID     = 2;
+    /**
+     * Test comment.
+     */
     required uint32   frameIndex   = 3;
     required string   scriptData   = 4;
     repeated Variable variableList = 5;
