@@ -24,7 +24,7 @@ The Scope interface
 
   interface Scope {
     readonly attribute DOMString stpVersion;
-    boolean scopeAddClient(in ConnectListener connected, in ReceiveListener received, in DisconnectListener disconnected, [Optional] in unsigned long port);
+    boolean scopeAddClient(in ConnectListener onconnect, in ReceiveListener onreceive, in DisconnectListener ondisconnect, [Optional] in unsigned long port);
   };
 
 .. _stpVersion:
@@ -35,10 +35,10 @@ The Scope interface
     ``"STP/0"`` when no connection has been made.
 
 .. _scopeAddClient:
-.. function:: scopeAddClient(connected, received, disconnected, port)
+.. function:: scopeAddClient(onconnect, onreceive, ondisconnect, port)
 
-    Registers a new client in scope along with the callbacks `connected`,
-    `received` and `disconnected`. The call will initiate contact with the
+    Registers a new client in scope along with the callbacks `onconnect`,
+    `onreceive` and `ondisconnect`. The call will initiate contact with the
     builtin scope or a remote host depending on the `port` parameter.
     If a remote host debugging is used then scope will await a connection from
     the remote host, in other words the remote host must connect using
@@ -47,9 +47,9 @@ The Scope interface
     :note: It will remove any existing client before setting the new one as
            the current client
 
-    :param connected:    ConnectListener_ which is called when connection to host is established.
-    :param received:     ReceiveListener_ which is called when new messages arrive from the host.
-    :param disconnected: DisconnectListener_ which is called when connection to host is lost.
+    :param onconnect:    ConnectListener_ which is called when connection to host is established.
+    :param onreceive:    ReceiveListener_ which is called when new messages arrive from the host.
+    :param ondisconnect: DisconnectListener_ which is called when connection to host is lost.
     :param port:         The port on to the remote host or *0* if the builtin host is to be used.
     :returns: `true` if the client was successfully created, `false` otherwise.
 
@@ -61,10 +61,10 @@ The ConnectListener interface
 .. code-block:: java
 
   [Callback=FunctionOnly] interface ConnectedListener {
-    void connected(in DOMString services);
+    void onconnected(in DOMString services);
   };
 
-.. function:: connected(services)
+.. function:: onconnected(services)
 
     Called when the connection with the (remote or builtin) host has been made.
     For an *STP/0* host this means right after the service list is received,
@@ -82,10 +82,10 @@ The DisconnectListener interface
 .. code-block:: java
 
   [Callback=FunctionOnly] interface DisconnectListener {
-    void disconnected();
+    void ondisconnect();
   };
 
-.. function:: disconnected()
+.. function:: ondisconnect()
 
     Called when the connection to the host is disconnected.
 
@@ -138,10 +138,10 @@ The ReceiveListener interface
 .. code-block:: java
 
   [Callback=FunctionOnly] interface ReceiveListener {
-    void received(in DOMString service, in DOMString payload);
+    void onreceived(in DOMString service, in DOMString payload);
   };
 
-.. function:: received(service, payload, command, status, tag)
+.. function:: onreceived(service, payload, command, status, tag)
 
     Called when a new message has been sent to the client, this can either
     be a response, an event or an error.
@@ -196,10 +196,10 @@ is received from the host.
 .. code-block:: java
 
   [Callback=FunctionOnly] interface ReceiveListener {
-    void received(in DOMString service, in any payload, unsigned long command, unsigned long status, unsigned long tag);
+    void onreceived(in DOMString service, in any payload, unsigned long command, unsigned long status, unsigned long tag);
   };
 
-.. function:: received(service, payload, command, status, tag)
+.. function:: onreceived(service, payload, command, status, tag)
 
     Called when a new message has been sent to the client, this can either
     be a response, an event or an error.
@@ -241,7 +241,7 @@ Example code:
 
 .. code-block:: javascript
 
-  var connected = function(services)
+  var onconnect = function(services)
   {
     alert("Services " + services);
     if ("stpVersion" in opera)
@@ -269,7 +269,7 @@ Example code:
     }
   }
 
-  var receive = function(service, message, command, status, tag)
+  var onreceive = function(service, message, command, status, tag)
   {
     if (status != 0)
     {
@@ -286,12 +286,12 @@ Example code:
     }
   }
 
-  var quit = function()
+  var ondisconnect = function()
   {
     alert("Host has been disconnected");
   }
 
-  opera.scopeAddClient(connected, receive, quit, 0)
+  opera.scopeAddClient(onconnect, onreceive, ondisconnect, 0)
 
 Enabling a service
 ------------------
@@ -314,7 +314,7 @@ Example code to enable :doc:`WindowManager` in an STP/1 host:
 
   scopeTransmit("scope", ["window-manager"], 5 /*scope.Enable*/, tag);
 
-The client will receive a normal message in the `receive` callback when the
+The client will receive a normal message in the `onreceive` callback when the
 service is enabled.
 
 Transmitting data
@@ -328,7 +328,7 @@ Example code for *STP/0*:
 
 .. code-block:: javascript
 
-  var receive = function(service, message)
+  var onreceive = function(service, message)
   {
   }
 
@@ -338,7 +338,7 @@ Example code for *STP/1*:
 
 .. code-block:: javascript
 
-  var receive = function(service, message, command, status, tag)
+  var onreceive = function(service, message, command, status, tag)
   {
   }
 
