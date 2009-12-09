@@ -128,9 +128,8 @@ A better system for handling the tags is needed.
 
 The protocol was designed to handle multiple clients with the use of
 the proxy. However, there are problems with multiple clients
-in some services (ecmascript-debugger). Services that cannot handle
-this should deny multiple `*enable` requests and send back an error message
-to the client.
+in some services (ecmascript-debugger). Multi-client will be removed and the
+proxy updated to only allow one client at a time.
   
 Overview
 ========
@@ -469,9 +468,6 @@ For events it looks like::
       required uint32 commandID = 2;
       required uint32 format = 3;
       required bytes  payload = 8;
-
-      // Events can only be sent to clients that has received a clientID value
-      optional uint32 clientID = 6;
     }
 
 For errors the message contains::
@@ -483,10 +479,6 @@ For errors the message contains::
       required uint32 format = 3;
       optional uint32 status = 4;
       optional uint32 tag = 5;
-
-      // either clientID or uuid must be sent
-      optional uint32 clientID = 6;
-      optional string uuid = 7;
     }
 
 service
@@ -546,33 +538,6 @@ Code   Description            Encoding
 1      JSON structures (UMS)  UTF-8
 2      XML structures (UMS)   UTF-8
 =====  =====================  ========
-
-clientID
---------
-
-The field `clientID` is used to represent a client using a numerical ID.
-This ID will be valid for one connection and must be reattained when a new
-connection is achieved. See also the `uuid` field.
-
-This field will be filled in by the client when it sends commands to the host,
-and will be present in the responses and errors.
-
-uuid
-----
-
-The field `uuid` represents a Universal Unique ID which globally identifies a
-given client. This field will only be used when the client does not yet have
-a `clientID` which means the initial connection to the host.
-The client must fill in a unique string which represents the client. The host
-will then use this string in any response going to the client.
-
-It is recommended that the client generates an MD5 or SHA1 based upon a random
-value and the current date. This will even allow running the same client
-multiple times.
-
-For instance, the client could send a string like this::
-
-  "md5:d41d8cd98f00b204e9800998ecf8427e"
 
 tag
 ---
@@ -729,15 +694,13 @@ Definition:
   data        : "STP/" `version` `terminator` `header_size` `terminator` `header` <payload>
   version     : `number`
   header_size : `number`
-  header      : "[" `service_name` "," `stp_type` "," `command_id` "," `format` ["," `client_id` ["," `tag` ["," `status` ["," `uuid`] ] ] ] "]"
+  header      : "[" `service_name` "," `stp_type` "," `command_id` "," `format` ["," `tag` ["," `status` ] ] "]"
   service_name: <json string>
   stp_type    : <json int>
   command-id  : <json int>
   format      : <json int>
-  client-id   : <json int>
   tag         : <json int>
   status      : <json int>
-  uuid        : <json string>
 
 Messages must always be sent to the  "scope" service. This ensures that
 there is only one service that needs to be enabled in the old proxies. This
