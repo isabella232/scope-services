@@ -579,9 +579,8 @@ the underlying format. This allows the proxy to properly filter responses back
 to the correct client, and it also makes it easier for the clients to handle
 responses since it can map the tag value to a response handler.
 
-TAG is an unsigned integer in the range 1 to 2^31-1 and does not interfere
-with tags used by other clients. The client is free to reuse the Tag value as
-long as there is no current open requests using it.
+TAG is an unsigned integer in the range 0 to 2^31-1. The client is free to
+reuse the Tag value as long as there is no current open requests using it.
 
 payload
 -------
