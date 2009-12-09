@@ -522,8 +522,16 @@ Code Description
 9    Service Already Enabled
 ==== ==========================
 
-.. todo::
-   Add more error codes as needed.
+Further details on the error can be read from the payload which uses this
+structure::
+
+    message ErrorInfo
+    {
+        optional string description = 1;
+        optional sint32 line        = 2;
+        optional sint32 column      = 3;
+        optional sint32 offset      = 4;
+    }
 
 format
 ------
