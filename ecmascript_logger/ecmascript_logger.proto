@@ -7,12 +7,43 @@ message Config
 
 message ScriptInfo
 {
+    /**
+     * Type of script ("inline", "linked", etc; may be "none")
+     */
     required string context = 1;
+    /**
+     * The string `"none"` or the URL at which the script originated
+     */
     required string url     = 2;
+    /**
+     * The source code
+     */
     required string source  = 3;
 }
 
- 
+
+/**
+ * The `ecmascript-logger` is a noninteractive tool used to log
+ * all the source code executed by Opera's ECMAScript engine.
+ *
+ * Requirements
+ *
+ * req.log-source: Log script source
+ *
+ * [Status: strawman requirement; author: lth]
+ *
+ * All scripts compiled by the engine should be captured and displayed.
+ *
+ * A logged script has three parts: type, url, and text.
+ *
+ * (req.reformatting) Make Opera reformat the source code before logging
+ *
+ * [Status: strawman requirement; author: lth]
+ *
+ * The tool should allow the user to control whether Opera reformats
+ * the source code before sending it, provided the script logger is
+ * the only tool trying to control that behavior.
+ */
 service EcmascriptLogger
 {
     option (cpp_hfile) = "modules/scope/src/scope_ecmascript_logger.h";
@@ -20,6 +51,14 @@ service EcmascriptLogger
     option (version) = "2.0";
     option (cpp_class) = OpScopeEcmascriptLogger;
  
+    /**
+     * The tool can configure the logger by sending this command.
+     * If `reformat` is `true, source
+     * code will be reformatted before compilation (currently through an
+     * expensive process of compilation, decompilation, and recompilation of
+     * the decompiled data), and the reformatted code will be sent to the
+     * script logger tool.
+     */
     command Configure(Config) returns (Default) = 1;
     event OnNewScript returns (ScriptInfo) = 2;
 }

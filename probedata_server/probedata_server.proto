@@ -1,18 +1,35 @@
 syntax = scope;
 
- 
+/**
+ * The probedata server provides interactive online access to the data structures in the probetools infrastructure, if that
+ * is enabled. This allows online and offline profiling tools to be written.
+ *
+ * Ideas for these tools include task-manager like profiling, where the tool shows where the application has spent the last
+ * `n` seconds, cumulative profiling, and an interactive interface to control probetools (e.g., to clear its profiling
+ * data before an experiment).
+ *
+ * There will be other commands soon, as this is just preliminary work. These may be commands like `profiling-data`
+ * (to obtain just time profile), `profiling-snapshot` (to obtain time profile differences since last snapshot), and
+ * `memory-snapshot` (to obtain a representation of the heap).
+ */
 service ProbedataServer
 {
     option (cpp_hfile) = "modules/scope/src/scope_probedata_server.h";
     option (core_release) = "2.5";
     option (version) = "2.0";
     option (cpp_class) = OpScopeProbedataServer;
- 
+
+    /**
+     * The `all-data` command retrieves the current profiling data in full exactly as it would be written to the file `opprof0.out`.</p>
+     */
     command AllData(Default) returns (ProbeData) = 1;
 }
 
 message ProbeData
 {
+    /**
+     * The response to the `AllData` command is a single data element containing encoded binary data.
+     */
     required bytes data = 1;
 }
 
