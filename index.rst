@@ -28,8 +28,6 @@ Architecture
    
    scope-transport-protocol.rst
 
-   scope-stp1-services.rst
-
    unified-message-structure.rst
 
    scope-dom-interface.rst
