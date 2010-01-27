@@ -331,7 +331,6 @@ message FrameSelection
 service EcmascriptDebugger
 {
     option (cpp_hfile) = "modules/scope/src/scope_ecmascript_debugger.h";
-    option (core_release) = "2.5";
     option (version) = "5.0";
     option (cpp_class) = ES_ScopeDebugFrontend;
  

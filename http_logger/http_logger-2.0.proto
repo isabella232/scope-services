@@ -6,7 +6,6 @@ syntax = scope;
 service HttpLogger
 {
     option (cpp_hfile) = "modules/scope/src/scope_http_logger.h";
-    option (core_release) = "2.5";
     option (version) = "2.0";
     option (cpp_class) = OpScopeHttpLogger;
  
