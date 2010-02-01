@@ -233,6 +233,8 @@ version increases. For this to be possible the following rules apply:
    functionality or alternative behaviour. However, this must be confined to
    the client that requests the command.
 5. The order of fields can never be changed.
+6. New events can be added as long as they are optional. This also means that
+   clients must ignore events which they do not recognize.
 
 If the amount of work to keep backwards compatibility increases, or the code
 gets bloated, the major version must be increased. This will signal a major
