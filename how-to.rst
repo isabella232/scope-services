@@ -77,8 +77,8 @@ You need at least `Python`_ and `Mercurial`_. To get ``hob`` and ``dragonkeeper`
 
 ::
   
-  hg clone http://code.opera.com/scope/hob
-  hg clone http://code.opera.com/scope/dragonkeeper
+  hg clone http://bitbucket.org/scope/hob/
+  hg clone http://bitbucket.org/scope/dragonkeeper/
 
 To create the test frame go to the cloned hob direcory and type:
 
