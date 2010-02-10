@@ -85,7 +85,7 @@ To create the test frame go to the cloned hob direcory and type:
 ::
 
   hg up
-  python -m hob.script js --js-test--framework
+  python -m hob.script js --js-test-framework
 
 To start dragonkeeper, change to the dragonkeeper directory and type:
 
