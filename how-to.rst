@@ -7,8 +7,8 @@ With easy_install and Python scripts in the path variable
 =========================================================
 
 * Get an `Opera Gogi Core 2.4 build`_ .
-* Get opprotoc with ``easy_install opprotoc``
-* Run ``opprotoc --js --js-test-framework`` to create a HTML test framework. You should see the following output in our console:
+* Get hob with ``easy_install hob``
+* Run ``hob js --js-test-framework`` to create a HTML test framework. You should see the following output in our console:
 
   ::
 
@@ -73,19 +73,19 @@ With easy_install and Python scripts in the path variable
 With other setups
 =================
 
-You need at least `Python`_ and `Mercurial`_. To get ``opprotoc`` and ``dragonkeeper``, in the commandline type:
+You need at least `Python`_ and `Mercurial`_. To get ``hob`` and ``dragonkeeper``, in the commandline type:
 
 ::
   
-  hg clone http://code.opera.com/scope/opprotoc
+  hg clone http://code.opera.com/scope/hob
   hg clone http://code.opera.com/scope/dragonkeeper
 
-To create the test frame go to the cloned opprotoc direcory and type:
+To create the test frame go to the cloned hob direcory and type:
 
 ::
 
   hg up
-  python -m oppotoc.script --js --js-test--framework
+  python -m hob.script js --js-test--framework
 
 To start dragonkeeper, change to the dragonkeeper directory and type:
 
