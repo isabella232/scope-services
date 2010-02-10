@@ -24,14 +24,14 @@ The layers with a question mark exist only if they are really needed. For exampl
 
 The DOM API is, like any good API, small. Normally it is a native part of Opera, exposed to a privileged window. It can be implemented in ECMAScript on top of an HTTP interface to a standalone proxy. The main methods are ``scopeTransmit(service: string, message: datastructure|string, command: integer, tag: integer)`` and the ``receive(service: string, message: datastructure|string, command: integer, status: integer, tag: integer)`` callback of ``scopeAddClient``. For more details about the API see `Scope DOM API`_.
 
-The service API unfolds the DOM API to different services. They are counterparts of the according services on the host side and expose there interface as an ECMAScript API. They are part of the basic framework which is generated with ``opprotoc``, a code generation command line utility. For more details about ``opprotoc`` see `How to setup a Test Environment for STP 1`_.
+The service API unfolds the DOM API to different services. They are counterparts of the according services on the host side and expose there interface as an ECMAScript API. They are part of the basic framework which is generated with ``hob``, a code generation command line utility. For more details about ``hob`` see `How to setup a Test Environment for STP 1`_.
 
 It is of course also possible to work directly with the DOM API, the service API layer is in this regard only a convenience.
 
 Create the files
 ================
 
-To create a basic framework run ``opprotoc --js console-logger``. The argument ``console-logger`` specifies that we only want to create the ``ConsoleLogger`` :term:`service`. Without any argument it would create all services. ``Scope`` and ``WindowManager`` are always created.
+To create a basic framework run ``hob js console-logger``. The argument ``console-logger`` specifies that we only want to create the ``ConsoleLogger`` :term:`service`. Without any argument it would create all services. ``Scope`` and ``WindowManager`` are always created.
 
 That creates in the current directory a new ``js-out`` repository. These are the created files:
 
@@ -585,7 +585,7 @@ This is our very basic ``console-logger``. It should be easy to extend it from h
 
   
 
-You can run ``opprotoc --js --console-logger-tutorial console-logger`` to generate all code described in the tutorial as part of the default framework.
+You can run ``hob js --console-logger-tutorial console-logger`` to generate all code described in the tutorial as part of the default framework.
 
 
 

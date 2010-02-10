@@ -33,7 +33,7 @@ For more details, see `Scope transport protocol`_ and `Scope services`_.
 Enabling the services
 =====================
 
-Running ``opprotoc --js --js-test-framework`` creates a service class for each scope service on top of the Scope DOM API. Each command and event is implemented as::
+Running ``hob js --js-test-framework`` creates a service class for each scope service on top of the Scope DOM API. Each command and event is implemented as::
 
   <service name> {
     // to execute a command
