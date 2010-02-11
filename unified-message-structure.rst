@@ -31,10 +31,8 @@ are defined in the range of 1 to (2^31)-1.
 The name is a non-empty string written in camel-case.
 
 A tool written in Python is available for dealing with UMS data:
-http://dvcs.vlab.osa/cgi-bin/hgwebdir.cgi/home/jborsodi/opprotoc/
+http://bitbucket.org/scope/hob/
 
-.. note::
-   The URL will change when a proper name is found.
 
 Types
 =====
