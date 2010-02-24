@@ -183,6 +183,7 @@ service Scope
      * The internal `"scope"` service cannot be disabled since it is always enabled.
      *
      * Errors:
+     *
      * - If the service is not found it will return with a status of
      *   `"Service Not Found"` (6).
      * - If the service is not yet enabled it will return with a status of

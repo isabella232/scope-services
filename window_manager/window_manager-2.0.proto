@@ -104,7 +104,7 @@ service WindowManager
      * Sent whenever a window has finished loading. This
      * event happens after external resources are loaded.
      * Note: if the page uses scripting to dynamically change the page or load more data, this event may occur
-     *       multiple times for the same window. 
+     * multiple times for the same window. 
      */
     event OnWindowLoaded returns (WindowID) = 7;
 }
