@@ -31,7 +31,7 @@ It is of course also possible to work directly with the DOM API, the service API
 Create the files
 ================
 
-To create a basic framework run ``hob js console-logger``. The argument ``console-logger`` specifies that we only want to create the ``ConsoleLogger`` :term:`service`. Without any argument it would create all services. ``Scope`` and ``WindowManager`` are always created.
+To create a basic framework run ``hob js --js-test-framework ConsoleLogger Scope WindowManager`` inside the scope-services repository. The argument ``ConsoleLogger`` specifies that we only want to create the ``ConsoleLogger`` :term:`service`. Without any argument it would create all services. ``Scope`` and ``WindowManager`` are required.
 
 That creates in the current directory a new ``js-out`` repository. These are the created files:
 
@@ -93,8 +93,8 @@ lib/tag_manager.js
 
 Now we are ready to try it out:
 
-* Open the ``dragonkeeper`` proxy: ``python -m dragonkeeper.dragonkeeper -dfr <path-to-js-out>``
-* Start the Opera Gogi build and connect to ``dragonkeeper`` through opera:debug
+* Open the ``dragonkeeper`` proxy: ``dragonkeeper -dfr <path>`` (or ``python -m dragonkeeper.dragonkeeper -dfr <path-to-js-out>`` if you have not installed the module).
+* Start a recent Opera build and connect to ``dragonkeeper`` through opera:debug
 * In a browser, open the created ``client.html``: http://localhost:8002/client.html
 
 See `How to setup a Test Environment for STP 1`_ for details on the setup. You should see the following output in the ``dragonkeeper`` console window:
@@ -257,7 +257,7 @@ The ``window.onload`` callback was already there. We add the instantiation of ou
 
 .. topic:: Sidenote
 
-  The hookup in the application building process is done here in the most simple way. Depending on your needs there is a more differentiated way with ``window.app.builders`` and event callbacks per service object. For details see the comments in ``build_application.js`` and the common methods of all services in ``service_base.js``.
+  The hookup in the application building process is done here in the most simple way. Depending on your needs there is a more advanced way with ``window.app.builders`` and event callbacks per service object. For details see the comments in ``build_application.js`` and the common methods of all services in ``service_base.js``.
 
 As mentioned before, the ``Scope`` and ``WindowManager`` services are always created. They are special.
 
@@ -334,7 +334,7 @@ you should see the according message in the ``dragonkeeper`` console window:
 Get all windows
 ---------------
 
-The service interfaces are build around messages. A message can either be an event, a command, a response to a command, or an error. A command is sent from the host to the client, the others the other way around. All messages for the ``window-manager`` are specified `here`_.
+The service interfaces are build around messages. A message can either be an event, a command, a response to a command, or an error. A command is sent from the client to the host, the others the other way around. All messages for the ``window-manager`` are specified `here`_.
 
 A command is exposed in the framework as ``window.services[<service name>].request<command name>(tag, message)``.
 
@@ -398,7 +398,7 @@ We implement them in our class as follows:
 
 ``_display_window_title`` is a function to display the title of a window in the according container, using the ``_get_or_create_container`` helper.
 
-The binding of the ``handleListWindows`` response handler and the ``onWindowUpdated`` event is done directly in our class. We can open ``lib/window_manager.js`` and search for ``handleListWindows``. The according code looks like:
+The binding of the ``handleListWindows`` response handler and the ``onWindowUpdated`` event is done directly in our class. We can open ``lib/window_manager.js`` and search for ``handleListWindows``. The according code:
 
 .. code-block:: javascript
 
@@ -418,7 +418,7 @@ The binding of the ``handleListWindows`` response handler and the ``onWindowUpda
 
 Here is the default error warning dispatched in the case of a missing binding. We also see all the constants to read the message. For our implementation we need only ``const WINDOW_LIST = 0;`` to get the actual list of windows from the message. We pass each window object to our ``_display_window_title`` method. Above is the implementation of the according request call and the url `http://dragonfly.opera.com/app/scope-interface/WindowManager.html#listwindows`_, linking to the the documentation of the whole command.
 
-We can search in the same file for ``onWindowUpdated``. That code looks like:
+We can search in the same file for ``onWindowUpdated``. The code:
 
 .. code-block:: javascript
 
@@ -434,7 +434,17 @@ We can search in the same file for ``onWindowUpdated``. That code looks like:
     opera.postError("NotBoundWarning: WindowManager, OnWindowUpdated");
   }
 
-We see again the default warning. The message represents a single window. So we can pass the message directly to our ``_display_window_title`` method.
+We see again the default warning. The message represents a single window. So we can pass the message directly to our ``_display_window_title`` method as it is done with:
+
+
+.. code-block:: javascript
+
+    window.services['window-manager'].onWindowUpdated = function(status, message)
+    {
+      _display_window_title(message);
+    }
+
+in our ``SimpleLogger``.
 
 If we now reload ``client.html`` again we should see all the titles of all the tabs in the :term:`client`.
 
@@ -585,7 +595,7 @@ This is our very basic ``console-logger``. It should be easy to extend it from h
 
   
 
-You can run ``hob js --console-logger-tutorial console-logger`` to generate all code described in the tutorial as part of the default framework.
+You can run ``hob js --console-logger-tutorial ConsoleLogger Scope WindowManager`` to generate all code described in the tutorial as part of the default framework.
 
 
 
