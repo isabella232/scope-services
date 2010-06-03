@@ -516,6 +516,20 @@ Code Description
 9    Service Already Enabled
 ==== ==========================
 
+Protocol buffer definition::
+
+  enum Status
+  {
+    OK = 0;
+    BAD_REQUEST = 3;
+    INTERNAL_ERROR = 4;
+    COMMAND_NOT_FOUND = 5;
+    SERVICE_NOT_FOUND = 6;
+    OUT_OF_MEMORY = 7;
+    SERVICE_NOT_ENABLED = 8;
+    SERVICE_ALREADY_ENABLED = 9;
+  }
+
 Further details on the error can be read from the payload which uses this
 structure::
 
