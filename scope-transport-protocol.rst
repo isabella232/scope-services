@@ -418,6 +418,16 @@ STP1-TYPE Proto message
 4         Error
 ========= =============
 
+Protocol buffer definition::
+
+  enum STPType
+  {
+      COMMAND = 1;
+      RESPONSE = 2;
+      EVENT = 3;
+      ERROR = 4;
+  }
+
 Other types can be added in the future, so any unknown type should be ignored
 by clients and passed on by proxies.
 
@@ -554,6 +564,15 @@ Code   Description            Encoding
 1      JSON structures (UMS)  UTF-8
 2      XML structures (UMS)   UTF-8
 =====  =====================  ========
+
+Protocol buffer definition::
+
+  enum Format
+  {
+      PROTOCOL_BUFFER = 0;
+      JSON = 1;
+      XML = 2;
+  }
 
 tag
 ---
