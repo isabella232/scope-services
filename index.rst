@@ -88,16 +88,16 @@ Scope Services
 * `Opera Exec protocol`_
 
 
-.. _Requirements for the debugging infrastructure: ./services-stp-0/requirements.html
-.. _Architecture overview: ./services-stp-0/architecture.html
-.. _HTTPD interface to the proxy: ./services-stp-0/httpd-interface.html
-.. _HTTP Logger: ./services-stp-0/http-logger-protocol-1.html
-.. _Console Logger: ./services-stp-0/console-logger.html
-.. _Window Manager Service: ./services-stp-0/window-manager.html
-.. _ECMAScript debugger protocol: ./services-stp-0/ecmascript-debugger-protocol.html
-.. _Opera Exec protocol: ./services-stp-0/exec-protocol.html
-.. _Scope JavaScript API: ./services-stp-0/scope-js-api.html
-.. _Transport protocol: ./services-stp-0/transport-protocol.html
+.. _Requirements for the debugging infrastructure: ./_static/services-stp-0/requirements.html
+.. _Architecture overview: ./_static/services-stp-0/architecture.html
+.. _HTTPD interface to the proxy: ./_static/services-stp-0/httpd-interface.html
+.. _HTTP Logger: ./_static/services-stp-0/http-logger-protocol-1.html
+.. _Console Logger: ./_static/services-stp-0/console-logger.html
+.. _Window Manager Service: ./_static/services-stp-0/window-manager.html
+.. _ECMAScript debugger protocol: ./_static/services-stp-0/ecmascript-debugger-protocol.html
+.. _Opera Exec protocol: ./_static/services-stp-0/exec-protocol.html
+.. _Scope JavaScript API: ./_static/services-stp-0/scope-js-api.html
+.. _Transport protocol: ./_static/services-stp-0/transport-protocol.html
 
 License 
 =======

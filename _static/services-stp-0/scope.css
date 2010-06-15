@@ -1,0 +1,51 @@
+﻿/**
+ *
+ * Copyright (c) 2008, Opera Software ASA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, 
+ * with or without modification, are permitted provided 
+ * that the following conditions are met:
+ *
+ *  - Redistributions of source code must retain the above copyright notice, 
+ *    this list of conditions and the following disclaimer.
+ *
+ *  - Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ *  - Neither the name of Opera Software nor the names of its contributors 
+ *    may be used to endorse or promote products derived from this software 
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * 
+ **/
+
+
+@import url('data:text/css;charset=utf-8;base64,77u/LyogQ29tbW9uIHN0eWxlIHNoZWV0IGZvciBhbGwgY29yZSBkb2N1bWVudGF0aW9uICovDQoNCmJvZHkgeyANCiAgbWFyZ2luOiAyZW07DQogIHBhZGRpbmc6IDFlbSAwOw0KICAvKiBmb250LWZhbWlseTogc2Fucy1zZXJpZjsgKi8NCiAgYmFja2dyb3VuZDogd2hpdGU7DQogIGNvbG9yOiBibGFjazsNCn0NCg0KRElWLmxvZ28geyAvKiB0aGUgT3BlcmEgbG9nbyAqLw0KICBmbG9hdDogcmlnaHQ7DQp9DQoNCmgxLCBoMiwgaDMgew0KICBmb250LXdlaWdodDogbm9ybWFsOw0KfQ0KDQpoMiB7DQoJY2xlYXI6IGJvdGg7DQp9DQogICANCmR0ew0KCWZvbnQtd2VpZ2h0OiBib2xkOw0KfQ0KaDEgew0KICAgY291bnRlci1yZXNldDogaGVhZGVyMjsNCiAgIGNsZWFyOiBib3RoOw0KfSAgDQogDQpoMjpiZWZvcmV7DQogICBjb3VudGVyLWluY3JlbWVudDogaGVhZGVyMjsgDQogICBjb250ZW50OiBjb3VudGVyKGhlYWRlcjIpICIgICI7DQogICBjb3VudGVyLXJlc2V0OmhlYWRlcjMgaGVhZGVyNDsNCn0NCg0KaDIgew0KICAgYmFja2dyb3VuZDogI0VFRTsNCn0NCg0KaDM6YmVmb3JlIHsNCiAgIGNvdW50ZXItaW5jcmVtZW50OiBoZWFkZXIzOyANCiAgIGNvbnRlbnQ6IGNvdW50ZXIoaGVhZGVyMikgIi4iIGNvdW50ZXIoaGVhZGVyMykgIiAgIjsNCiAgIGNvdW50ZXItcmVzZXQ6aGVhZGVyNDsNCn0NCg0KaDQ6YmVmb3JlIHsNCiAgIGNvdW50ZXItaW5jcmVtZW50OiBoZWFkZXI0OyANCiAgIGNvbnRlbnQ6IGNvdW50ZXIoaGVhZGVyMikgIi4iIGNvdW50ZXIoaGVhZGVyMykgIi4iIGNvdW50ZXIoaGVhZGVyNCkgIiAgIjsNCn0NCg0KZGwubWV0YWRhdGEgew0KICBtYXJnaW4tYm90dG9tOiAzZW07DQogIHBhZGRpbmc6IDAuM2VtOw0KICBiYWNrZ3JvdW5kOiAjRUVFOw0KfQ0KDQoubWV0YWRhdGEgZHQgeyANCiAgZm9udC13ZWlnaHQ6IGJvbGQ7DQoNCn0NCg0KLm1ldGFkYXRhIGR0OmFmdGVyIHsgDQogIGNvbnRlbnQ6ICI6IjsNCn0NCg0KLm1ldGFkYXRhIC5kaXN0cmlidXRpb24gew0KCXRleHQtdHJhbnNmb3JtOiB1cHBlcmNhc2U7IA0KCWZvbnQtd2VpZ2h0OiBib2xkOyANCgljb2xvcjogcmVkOw0KfQ0KLmV2ZW57DQoJYmFja2dyb3VuZDogI0ZGQzsNCn0NCg0KLm9kZHsNCgliYWNrZ3JvdW5kOiAjRkZFOw0KfQ0KDQp0aCB7dGV4dC1hbGlnbjogbGVmdDsgYmFja2dyb3VuZDogI0NDOX0gDQp0aCwgdGQge3ZlcnRpY2FsLWFsaWduOiB0b3A7ICBmb250LXNpemU6IHNtYWxsO30NCg0KLmVsZW1lbnQgew0KCWZvbnQtZmFtaWx5OiBtb25vc3BhY2U7DQoJZm9udC13ZWlnaHQ6IGJvbGQ7DQoJY29sb3I6ICMwMDY7DQp9DQoNCi5hdHRyaWJ1dGUgew0KCWZvbnQtZmFtaWx5OiBtb25vc3BhY2U7DQoJZm9udC13ZWlnaHQ6IGJvbGQ7DQoJY29sb3I6ICMwNjA7DQp9DQoNCi5jb2RlIHsgDQogIGZvbnQtZmFtaWx5OiBtb25vc3BhY2U7DQogIGZvbnQtc2l6ZTogc21hbGxlcjsNCn0NCg0KLmNvbW1lbnQgew0KICBjb2xvcjogIzBCMDsNCn0NCg0KLm9rIHsNCiAgY29sb3I6IGdyZWVuDQp9DQoNCi5ub3Qtc3RhcnRlZCB7DQogIGNvbG9yOiByZWQNCn0NCg0KLmluLXByb2dyZXNzIHsNCiAgY29sb3I6IG9yYW5nZQ0KfQ0KDQouYWN0aXZlIHsNCiAgYmFja2dyb3VuZC1jb2xvcjogeWVsbG93DQp9DQoNCi5taWxlc3RvbmUgew0KICBiYWNrZ3JvdW5kLWNvbG9yOiBsaWdodGJsdWUNCn0NCg0KLmRvbmUgew0KICBiYWNrZ3JvdW5kLWNvbG9yOiBsaWdodGdyZWVuOw0KfQ0K');
+
+h1:after
+{
+  content: "[Deprecated: STP 0 will be replaced by STP 1]";
+  color: #f60;
+  font-weight: bold;
+  display: block;
+}
+
+h3 { font-weight: bold; }
+h3::before { font-style: normal }
+.string { color: #600; }
+.comment { color: #060; text-decoration: none; }
+.comment a { color: #066; text-decoration: underline; }
+

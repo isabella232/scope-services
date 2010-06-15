@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<link rel=stylesheet href="scope.css" />
+<title>DOM inspector protocol</title>
+<script src="markup_grammar.js"></script>
+</head>
+
+<body onload="markup_grammar()">
+<h1>DOM inspector protocol</h1>
+
+<pre>
+<a name="PROTOCOL"></a>PROTOCOL ::= (<a href="#COMMAND">COMMAND</a> | <a href="#EVENT">EVENT</a>)* ;
+<span class="comment"># Extend commands with the following</span>
+
+<a name="COMMAND"></a>COMMAND ::= <a href="#INSPECT-DOM">INSPECT-DOM</a> ;
+
+<span class="comment"># Extend events with the following</span>
+
+<a name="EVENT"></a>EVENT ::= <a href="#DOM-INSPECTION-REPLY">DOM-INSPECTION-REPLY</a> ;
+
+<span class="comment"># The <a href="#FORMAT">FORMAT</a> option is for testing only, and will be removed in the final</span>
+<span class="comment"># version (choosing either XML or JSON)</span>
+
+<a name="INSPECT-DOM"></a>INSPECT-DOM ::=
+  <span class="string">"&lt;inspect-dom>"</span>
+    <a href="#TAG">TAG</a>
+    <a href="#OBJECT-ID">OBJECT-ID</a>
+    <a href="#TRAVERSAL">TRAVERSAL</a>
+    <a href="#FORMAT">FORMAT</a>
+  <span class="string">"&lt;/inspect-dom>"</span> ;
+
+<a name="FORMAT"></a>FORMAT ::=
+  <span class="string">"&lt;format>"</span>
+    ( <span class="string">"xml"</span> | <span class="string">"json"</span> )
+  <span class="string">"&lt;/format>"</span> ;
+
+<span class="comment"># The logic of each traversal is described in dom-inspector-protocol.txt</span>
+
+<a name="TRAVERSAL"></a>TRAVERSAL ::=
+  <span class="string">"&lt;traversal>"</span>
+    ( <span class="string">"subtree"</span> | <span class="string">"node"</span> | <span class="string">"children"</span> | <span class="string">"parent-node-chain-with-children"</span> )
+  <span class="string">"&lt;/traversal>"</span> ;
+
+<a name="DOM-INSPECTION-REPLY"></a>DOM-INSPECTION-REPLY ::=
+  <span class="string">"&lt;dom-inspection-reply>"</span>
+    <a href="#TAG">TAG</a>
+    <a href="#FLAT-DOM-DATA">FLAT-DOM-DATA</a>
+  <span class="string">"&lt;/dom-inspection-reply>"</span> ;
+
+<a name="FLAT-DOM-DATA"></a>FLAT-DOM-DATA ::= <a href="#NODE">NODE</a>* ;
+
+<span class="comment"># <a href="#NAMESPACE-PREFIX">NAMESPACE-PREFIX</a>, <a href="#ATTRIBUTES">ATTRIBUTES</a> and <a href="#CHILDREN-LENGTH">CHILDREN-LENGTH</a> only for type 1</span>
+<span class="comment"># <a href="#VALUE">VALUE</a> only for types 3, 4, 8</span>
+<span class="comment"># <a href="#PUBLIC-ID">PUBLIC-ID</a> and <a href="#SYSTEM-ID">SYSTEM-ID</a> only for type 10</span>
+<span class="comment">#</span>
+<span class="comment"># Note to implementors changing from JSON:</span>
+<span class="comment">#    Some names have changed from the JSON-protocol, namely dropping the -<a href="#NODE">NODE</a></span>
+<span class="comment">#    suffix and ATTRIBUTE- prefix, since it follows from the parent node.</span>
+<span class="comment">#    Also, the order have changed to keep optional arguments grouped.</span>
+
+<a name="NODE"></a>NODE ::=
+  <span class="string">"&lt;node>"</span>
+    <a href="#OBJECT-ID">OBJECT-ID</a>
+    <a href="#TYPE">TYPE</a>
+    <a href="#NAME">NAME</a>
+    <a href="#DEPTH">DEPTH</a>
+    <a href="#NAMESPACE-PREFIX">NAMESPACE-PREFIX</a>?
+    <a href="#ATTRIBUTES">ATTRIBUTES</a>?
+    <a href="#CHILDREN-LENGTH">CHILDREN-LENGTH</a>?
+    <a href="#VALUE">VALUE</a>?
+    <a href="#PUBLIC-ID">PUBLIC-ID</a>?
+    <a href="#SYSTEM-ID">SYSTEM-ID</a>?
+  <span class="string">"&lt;/node>"</span> ;
+
+<a name="TYPE"></a>TYPE ::= <span class="string">"&lt;type>"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/type>"</span> ;
+<a name="NAME"></a>NAME ::= <span class="string">"&lt;name>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/name>"</span> ;
+<a name="NAMESPACE-PREFIX"></a>NAMESPACE-PREFIX ::= <span class="string">"&lt;namespace-prefix>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/namespace-prefix>"</span> ;
+<a name="VALUE"></a>VALUE ::= <span class="string">"&lt;value>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/value>"</span> ;
+<a name="DEPTH"></a>DEPTH ::= <span class="string">"&lt;depth>"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/depth>"</span> ;
+<a name="CHILDREN-LENGTH"></a>CHILDREN-LENGTH ::= <span class="string">"&lt;children-length>"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/children-length>"</span> ;
+<a name="PUBLIC-ID"></a>PUBLIC-ID ::= <span class="string">"&lt;public-id>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/public-id>"</span> ;
+<a name="SYSTEM-ID"></a>SYSTEM-ID ::= <span class="string">"&lt;system-id>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/system-id>"</span> ;
+<a name="ATTRIBUTES"></a>ATTRIBUTES ::= <span class="string">"&lt;attributes>"</span> <a href="#ATTRIBUTE">ATTRIBUTE</a>* <span class="string">"&lt;/attributes>"</span> ;
+
+<a name="ATTRIBUTE"></a>ATTRIBUTE ::=
+  <span class="string">"&lt;attribute>"</span>
+    <a href="#NAME-PREFIX">NAME-PREFIX</a>?
+    <a href="#NAME">NAME</a>
+    <a href="#VALUE">VALUE</a>
+  <span class="string">"&lt;/attribute>"</span> ;
+
+<a name="NAME-PREFIX"></a>NAME-PREFIX ::= <span class="string">"&lt;name-prefix>"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/name-prefix>"</span> ;
+
+<span class="comment">###</span>
+<span class="comment"># From ecmascript-debugger-protocol.html</span>
+<span class="comment">#</span>
+
+<a name="TAG"></a>TAG ::= <span class="string">"&lt;tag&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/tag&gt;"</span> ;
+<a name="OBJECT-ID"></a>OBJECT-ID ::= <span class="string">"&lt;object-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/object-id&gt;"</span> ;
+<a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+<a name="TEXT"></a>TEXT ::= <a href="#BASE64-ENCODED-DATA">BASE64-ENCODED-DATA</a> | textual-data ;
+<a name="BASE64-ENCODED-DATA"></a>BASE64-ENCODED-DATA ::= <span class="string">"&lt;base64-encoded-data&gt;"</span> textual-data <span class="string">"&lt;/base64-encoded-data&gt;"</span> ;
+</pre></pre>
+
+</body>
+</html>

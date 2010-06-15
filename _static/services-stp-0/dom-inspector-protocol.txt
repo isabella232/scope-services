@@ -1,0 +1,147 @@
+DOM Inspector
+-------------
+
+we need one command:
+
+- COMMAND ::= INSPECT-DOM
+
+and one event:
+
+- EVENT ::= DOM-INSPECTION-REPLY
+
+all commands with the following pattern:
+
+  INSPECT-DOM ::=
+    '<inspect-dom>'
+      TAG
+      OBJECT-ID
+      TRAVERSAL
+    '</inspect-dom>' ;
+
+  TRAVERSAL ::=
+    '<traversal>'
+      'subtree' | 'node' | 'children' | 'parent-node-chain-with-children' 
+    '</traversal>'
+
+and the reply:
+  DOM-INSPECTION-REPLY ::=
+    '<dom-inspection-reply>'
+      TAG
+      JSON_STRING
+    '</dom-inspection-reply>' ;
+
+  JSON_STRING ::=
+    '<jsondata>'
+      STRING
+    '</jsondata>' ;
+
+the logic for the commands is as follow:
+
+- GET-DOM-PARENT-NODE-CHAIN
+  - take the parent node chain for the target node:
+  - add for each node in that chain all children, 
+    and for all children there first child,
+    if that is a text node and the only node, 
+    starting with the document node:
+
+      as pseudocode:
+
+        data
+        parentNodeChain
+        function getNodeData(node)
+			# ...
+
+        function getView(node):
+          for child in node.childNodes:
+            data.add(getNodeData(child))
+            if child.childNodes.length == 1 and child.childNodes[0].nodeType == 3:
+              data.add(getNodeData(child.childNodes[0]))
+            if child in parentNodeChain:
+              getView(child)
+        data.add(getNodeData(parentNodeChain[0]))
+        getView(parentNodeChain[0])
+
+- GET-DOM-CHILDREN
+  - get node data for all children in their flow
+
+- GET-DOM-NODE
+  - get node data for that node
+
+- GET-DOM
+  - get node data for the whole document in the flow of it
+
+      as pseudocode:
+
+        data
+        function getNodeData(node)
+			# ...
+
+        function getView(node):
+          for child in node.childNodes:
+            data.add(getNodeData(child))
+            if child.nodeType == 1:
+              getView(child)
+        data.add(getNodeData(documentNode))
+        getView(documentNode)
+
+
+
+the return value is always a json string [1]
+it can be extended to contain more fields later
+
+JSON_STRING = '[' + FLAT_DOM_DATA + ']'
+
+FLAT_DOM_DATA = NODE_DATA + ( ',' + NODE_DATA )*
+
+/*
+  where the order of NODE_DATA is given by the document flow as described above
+*/
+
+NODE_DATA = '[' + ( NODE_TYPE_1_DATA | NODE_TYPE_3_4_8_DATA | NODE_TYPE_10_DATA ) + ']'
+
+NODE_TYPE_1_DATA =
+  OBJECT_ID + ',' +
+  NODE_TYPE + ',' +
+  NODE_NAME + ',' +
+  DEPTH + ',' +
+  NAMESPACE_PREFIX + ',' +
+  ATTRIBUTES + ','
+  CHILDREN_LENGTH
+
+
+NODE_TYPE_3_4_7_8_DATA =
+  OBJECT_ID + ',' +
+  NODE_TYPE + ',' +
+  NODE_NAME + ',' +
+  DEPTH + ',' +
+  NODE_VALUE
+
+
+NODE_TYPE_10_DATA =
+  OBJECT_ID + ',' +
+  NODE_TYPE + ',' +
+  NODE_NAME + ',' +
+  DEPTH + ',' +
+  PUBLICID + ',' +
+  SYSTEMID
+
+OBJECT_ID = <internal-object-id>
+NODE_TYPE = <nodeType>
+NODE_NAME = '"' + <nodeName> + '"'
+DEPTH = <depth in the dom tree>
+NAMESPACE_PREFIX = '"' + <namespacePrefix> + ':"'
+NODE_VALUE = <attribute value, json escaped>
+CHILDREN_LENGTH = <childNodes.length>
+PUBLICID = '"' + <publicId> + '"'
+SYSTEMID = '"' + <systemId> + '"'
+
+ATTRIBUTES = '[' + ATTRIBUTE + [',' + ATTRIBUTE ]* + ']'
+
+ATTRIBUTE = '["' + ATTRIBUTE_NAME_PREFIX '", "' + ATTRIBUTENAME + '", "' + ATTR_VALUE + '"]'
+ATTRIBUTE_NAME_PREFIX = <attribute name prefix>
+ATTRIBUTE_NAME = <attribute name>
+ATTRIBUTE_VALUE = <attribute value, json escaped>
+
+Json escaping
+-------------
+The following characters are escaped: \n \t \\ \' \r

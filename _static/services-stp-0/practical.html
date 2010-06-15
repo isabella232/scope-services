@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <link rel="stylesheet" href="scope.css" />
+  <title>Practical considerations</title>
+</head>
+<body>
+  <h1>
+    Practical considerations</h1>
+  <h2>
+    Programming language</h2>
+  <p>
+    <a href="architecture.html">The architecture</a> allows tools to be written in any language the author chooses. Previously
+    we have tried to standardise on Perl and Pike for core work. For the moment, I do not think the tools work should be restricted
+    to those languages. But there are a couple of general restrictions:</p>
+  <ul>
+    <li>The resulting tools should run on any reasonable desktop platform: Mac, Unix, Windows. So using some language or toolkit
+      not available in a high-quality implementation on all three platforms is not reasonable. If in doubt, ask.</li>
+    <li>Some of the tools may in the future be constrained to interoperate with tool platforms like Eclipse. We don't know enough
+      about that yet, but this means Java is a good default language if you are worried about future-proofing.</li>
+  </ul>
+  <p>
+    The proxy and the prototype tools are all written in Java (except the JavaScript debugger prototype, which is written in
+    Python).</p>
+  <h2>
+    Data representation</h2>
+  <p>
+    I urge you to consider formatting your data as XML. Structured data is good, and there are good XML kits for most major
+    languages as well as inside Opera. The scope module provides an XML parser and representations of XML data built on top
+    of facilities already in Java.</p>
+  <p>
+    The prototype tools currently use XML protocols and provide some good examples. The <a href="xml-style.html">XML protocols
+      style guide</a> provides some guidelines for how to write protocols.</p>
+</body>
+</html>

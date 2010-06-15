@@ -1,0 +1,221 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <link rel="stylesheet" href="scope.css" />
+    <title>Window Manager Service</title>
+
+    <script type="text/javascript" src="markup_grammar.js"></script>
+
+</head>
+<body onload="markup_grammar()">
+    <h1>
+        Window Manager Service</h1>
+    <h2>
+        Overall idea</h2>
+    <p>
+        We want to be able to work with windows on a higher level than before. One important goal is to opt-in on the messages you
+        get instead of being flooded.</p>
+    <p>
+        The name of this service is <code>window-manager</code>.</p>
+    <h2>
+        BNF</h2>
+    <p>
+        Here is the grammar describing the data. Some of the following data elements are described in more detail.</p>
+    <p>
+        This is the second version of the window-manager, version 2.</p>
+    <pre>
+  <span class="comment">###</span>
+  <span class="comment"># A grammar for listing and filtering windows</span>
+  <span class="comment">#</span>
+
+  <a name="PROTOCOL"></a>PROTOCOL ::= (<a href="#COMMAND">COMMAND</a> | <a href="#EVENT">EVENT</a>)* ;
+
+  <a name="COMMAND"></a>COMMAND ::= <a href="#GET-ACTIVE-WINDOW">GET-ACTIVE-WINDOW</a>
+            | <a href="#LIST-WINDOWS">LIST-WINDOWS</a>
+            | <a href="#FILTER">FILTER</a>
+            ;
+
+  <a name="EVENT"></a>EVENT ::= <a href="#LIST-WINDOWS-REPLY">LIST-WINDOWS-REPLY</a>
+          | <a href="#ACTIVE-WINDOW">ACTIVE-WINDOW</a>
+          | <a href="#UPDATED-WINDOW">UPDATED-WINDOW</a>
+          | <a href="#WINDOW-CLOSED">WINDOW-CLOSED</a>
+          | <a href="#FILTER-REPLY">FILTER-REPLY</a>        <span class="comment"># Introduced in version 2</span>
+          ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Commands. Sent from client.</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># The default <a href="#FILTER">FILTER</a> used to be <a href="#INCLUDE">INCLUDE</a> <span class="string">"*"</span>.</span>
+  <span class="comment"># After this command was introduced, the default filter is <a href="#INCLUDE">INCLUDE</a> <a href="#WINDOW-ID">WINDOW-ID</a> 0 (unknown).</span>
+  <span class="comment">#</span>
+  <span class="comment"># The filtering mechanism works by taking the appropriate window-id of the message and checks it.</span>
+  <span class="comment">#   If the <a href="#INCLUDE">INCLUDE</a> filter contains the window-id, or a window that has opened the window,</span>
+  <span class="comment">#   and the window-id is not in the <a href="#EXCLUDE">EXCLUDE</a> filter,</span>
+  <span class="comment">#     then send the message.</span>
+  <span class="comment">#   Otherwise,</span>
+  <span class="comment">#     discard the message</span>
+  <span class="comment">#</span>
+  <span class="comment"># <a href="#INCLUDE">INCLUDE</a> and <a href="#EXCLUDE">EXCLUDE</a> appends to the existing filter. This is true whether these occur in the</span>
+  <span class="comment"># same <a href="#FILTER">FILTER</a> command or occur in different <a href="#FILTER">FILTER</a> commands. If the <a href="#CLEAR">CLEAR</a> flag is present, the</span>
+  <span class="comment"># filter will cleared before the <a href="#INCLUDE">INCLUDE</a> and <a href="#EXCLUDE">EXCLUDE</a> appends to the filter.</span>
+  <span class="comment">#</span>
+  <span class="comment"># <span class="not-started">TODO</span>: Perhaps <a href="#FILTER">FILTER</a> should work on window types as well?</span>
+
+  <a name="FILTER"></a>FILTER ::= <span class="string">"&lt;filter&gt;"</span>
+               <a href="#TAG">TAG</a>?           <span class="comment"># Introduced in version 2</span>
+               <a href="#CLEAR">CLEAR</a>?
+               (<a href="#INCLUDE">INCLUDE</a> | <a href="#EXCLUDE">EXCLUDE</a>)*
+             <span class="string">"&lt;/filter&gt;"</span>
+             ;
+
+  <a name="INCLUDE"></a>INCLUDE ::= <span class="string">"&lt;include&gt;"</span>
+                <a href="#PATTERN">PATTERN</a>
+              <span class="string">"&lt;/include&gt;"</span>
+              ;
+
+  <a name="EXCLUDE"></a>EXCLUDE ::= <span class="string">"&lt;exclude&gt;"</span>
+                <a href="#PATTERN">PATTERN</a>
+              <span class="string">"&lt;/exclude&gt;"</span>
+              ;
+
+  <a name="CLEAR"></a>CLEAR ::= <span class="string">"&lt;clear /&gt;"</span> ;
+  <a name="GET-ACTIVE-WINDOW"></a>GET-ACTIVE-WINDOW ::= <span class="string">"&lt;get-active-window /&gt;"</span> ;
+  <a name="LIST-WINDOWS"></a>LIST-WINDOWS ::= <span class="string">"&lt;list-windows /&gt;"</span> ;
+
+  <span class="comment"># The <a href="#STRING">STRING</a> can currently only have one value: <span class="string">"*"</span>, meaing all window-ids.</span>
+  <span class="comment"># By default, the filter automatically includes windows that are opened from windows</span>
+  <span class="comment"># in the <a href="#INCLUDE">INCLUDE</a> filter. This can be prevented on a per-window basis by adding the</span>
+  <span class="comment"># <a href="#NOT-OPENED">NOT-OPENED</a> modifier.</span>
+
+  <a name="PATTERN"></a>PATTERN ::= <a href="#WINDOW-ID">WINDOW-ID</a> <a href="#NOT-OPENED">NOT-OPENED</a>? | <a href="#STRING">STRING</a> ;
+
+  <a name="NOT-OPENED"></a>NOT-OPENED ::= <span class="string">"&lt;not-opened /&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Events. Sent from host.</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># <a href="#ACTIVE-WINDOW">ACTIVE-WINDOW</a> is sent whenever the active window is changed, or</span>
+  <span class="comment"># if the <a href="#COMMAND">COMMAND</a> <a href="#GET-ACTIVE-WINDOW">GET-ACTIVE-WINDOW</a> is sent. In the latter case, the</span>
+  <span class="comment"># ID might be 0, meaning the active window is unknown.</span>
+
+  <a name="ACTIVE-WINDOW"></a>ACTIVE-WINDOW ::= <span class="string">"&lt;active-window&gt;"</span>
+                      <a href="#WINDOW-ID">WINDOW-ID</a>
+                    <span class="string">"&lt;/active-window&gt;"</span>
+                    ;
+
+  <a name="LIST-WINDOWS-REPLY"></a>LIST-WINDOWS-REPLY ::= <span class="string">"&lt;list-windows-reply&gt;"</span>
+                           <a href="#WINDOW">WINDOW</a>*
+                         <span class="string">"&lt;/list-windows-reply&gt;"</span>
+                         ;
+
+  <span class="comment"># This event will be sent every time there is a new window, or some window information changed.</span>
+
+  <a name="UPDATED-WINDOW"></a>UPDATED-WINDOW ::= <span class="string">"&lt;updated-window&gt;"</span>
+                       <a href="#WINDOW">WINDOW</a>
+                     <span class="string">"&lt;/updated-window&gt;"</span>
+                     ;
+
+  <a name="WINDOW-CLOSED"></a>WINDOW-CLOSED ::= <span class="string">"&lt;window-closed&gt;"</span>
+                      <a href="#WINDOW-ID">WINDOW-ID</a>
+                    <span class="string">"&lt;/window-closed&gt;"</span>
+                    ;
+
+  <span class="comment"># This event is sent as a reply to the <a href="#FILTER">FILTER</a> command if the <a href="#TAG">TAG</a> was present.</span>
+  <span class="comment"># Introduced in version 2:</span>
+
+  <a name="FILTER-REPLY"></a>FILTER-REPLY ::= <span class="string">"&lt;filter-reply&gt;"</span>
+                     <a href="#TAG">TAG</a>
+                     <a href="#RESULT">RESULT</a>
+                   <span class="string">"&lt;/filter-reply&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Other data types</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># <span class="not-started">TODO</span>: We probably want a lot more information about each window, like URL, shortcut</span>
+  <span class="comment">#       icon, etc.</span>
+
+  <a name="WINDOW"></a>WINDOW ::= <span class="string">"&lt;window&gt;"</span>
+               <a href="#WINDOW-ID">WINDOW-ID</a>
+               <a href="#TITLE">TITLE</a>
+               <a href="#WINDOW-TYPE">WINDOW-TYPE</a>
+               <a href="#OPENER-ID">OPENER-ID</a>
+             <span class="string">"&lt;/window&gt;"</span>
+             ;
+
+  <span class="comment"># <span class="not-started">TODO</span>: Some of these are obsolete, like <span class="string">"ad"</span>. Figure out which ones should really be present.</span>
+
+  <a name="WINDOW-TYPE"></a>WINDOW-TYPE ::= <span class="string">"&lt;window-type&gt;"</span>
+                  ( <span class="string">"normal"</span>
+                  | <span class="string">"download"</span>
+                  | <span class="string">"cache"</span>
+                  | <span class="string">"plugins"</span>
+                  | <span class="string">"history"</span>
+                  | <span class="string">"help"</span>
+                  | <span class="string">"mail_view"</span>
+                  | <span class="string">"mail_compose"</span>
+                  | <span class="string">"newsfeed_view"</span>
+                  | <span class="string">"ad"</span>
+                  | <span class="string">"im_view"</span>
+                  | <span class="string">"p2p_view"</span>
+                  | <span class="string">"brand_view"</span>
+                  | <span class="string">"print_selection"</span>
+                  | <span class="string">"js_console"</span>
+                  | <span class="string">"gadget"</span>
+                  | <span class="string">"controller"</span>
+                  | <span class="string">"info"</span>
+                  | <span class="string">"dialog"</span>
+                  | <span class="string">"thumbnail"</span>
+                  )
+                  <span class="string">"&lt;/window-type&gt;"</span>
+                  ;
+
+  <span class="comment"># The <a href="#OPENER-ID">OPENER-ID</a> is the <a href="#WINDOW-ID">WINDOW-ID</a> of the window who opened the window in question,</span>
+  <span class="comment"># or 0 if it was not opened by another window.</span>
+
+  <a name="OPENER-ID"></a>OPENER-ID ::= <span class="string">"&lt;opener-id&gt;"</span>
+                  <a href="#UNSIGNED">UNSIGNED</a>
+                <span class="string">"&lt;/opener-id&gt;"</span>
+                ;
+
+  <a name="TITLE"></a>TITLE ::= <span class="string">"&lt;title&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/title&gt;"</span> ;
+
+  <span class="comment"># This is the result of an operation. So far it is only used in <a href="#FILTER-REPLY">FILTER-REPLY</a>.</span>
+  <span class="comment"># Introduced in version 2:</span>
+  
+  <a name="RESULT"></a>RESULT ::= <span class="string">"&lt;result&gt;"</span>
+             ( <span class="string">"ok"</span>               <span class="comment"># everything went ok</span>
+             | <span class="string">"failed"</span>           <span class="comment"># failed for unknown reason</span>
+             | <span class="string">"parsing failed"</span>   <span class="comment"># data not according to BNF</span>
+             | <span class="string">"not supported"</span>    <span class="comment"># data according to BNF, but used in an unsupported way</span>
+             )
+             <span class="string">"&lt;/result&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Identifiers stolen from the ECMAScript debugger protocol:</span>
+  <span class="comment">#</span>
+
+  <a name="WINDOW-ID"></a>WINDOW-ID ::= <span class="string">"&lt;window-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/window-id&gt;"</span> ;
+  <a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+  <a name="STRING"></a>STRING ::= <span class="string">"&lt;string&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/string&gt;"</span> ;
+  <a name="TEXT"></a>TEXT ::= <a href="#BASE64-ENCODED-DATA">BASE64-ENCODED-DATA</a> | textual-data ;
+  <a name="TAG"></a>TAG ::= <span class="string">"&lt;tag&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/tag&gt;"</span> ;
+  <a name="BASE64-ENCODED-DATA"></a>BASE64-ENCODED-DATA ::= <span class="string">"&lt;base64-encoded-data&gt;"</span> textual-data <span class="string">"&lt;/base64-encoded-data&gt;"</span> ;
+
+</pre></pre>
+    <h2>
+        Discussion</h2>
+    <p>
+        This protocol will prevent a lot of flooding from the other services, but it will on the other hand flood a bit itself.
+        There is no way to stop it from sending <code>ACTIVE-WINDOW</code> messages for example.</p>
+    <p>
+        When Opera Dragonfly is used to debug on the desktop, it probably doesn't want to use this service at all, but just have
+        the filters automatically set to include the active window. We might cater for this later. The way to do it with the current
+        protocol would be to retrieve the active window and put that in the include filter manually. However the active window might
+        have changed by the time Opera Dragonfly gets to do that. Additionally, we would like Opera Dragonfly to start with a certain
+        DOM node selected. I see no other way than adding some C++ hooks to do this when debugging locally.</p>
+</body>
+</html>

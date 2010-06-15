@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>HTTP Logger</title>
+<link rel=stylesheet href="scope.css" />
+<style>
+h3 { font-weight: bold; font-style: italic }
+h3::before { font-style: normal }
+</style>
+<script src="markup_grammar.js"></script>
+</head>
+
+<body onload="markup_grammar()">
+<h1>HTTP Logger Protocol, version 1</h1>
+
+<p>
+   The <tt>http-logger</tt> is a noninteractive tool used to log interactions between Opera and the web servers it accesses.</p>
+
+<h2>BNF</h2>
+
+<p> Following is the grammar of the service, "http-logger":
+<pre>
+  <a name="PROTOCOL"></a>PROTOCOL ::= <a href="#EVENT">EVENT</a>* ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Events (messages from debugging host to debugger)</span>
+  <span class="comment">#</span>
+
+  <a name="EVENT"></a>EVENT ::= <a href="#REQUEST">REQUEST</a>
+          | <a href="#RESPONSE">RESPONSE</a>
+          ;
+  <span class="comment">##</span>
+  <span class="comment"># Events</span>
+  <span class="comment">#</span>
+
+  <a name="REQUEST"></a>REQUEST ::= <span class="string">"&lt;request&gt;"</span>
+                <a href="#REQUEST-ID">REQUEST-ID</a>
+                <a href="#WINDOW-ID">WINDOW-ID</a>
+                <a href="#TIME">TIME</a>
+                <a href="#HEADER">HEADER</a>
+              <span class="string">"&lt;/request&gt;"</span> ;
+
+  <span class="comment"># The <a href="#RESPONSE">RESPONSE</a> does not have it's own id, but refers to the generating <a href="#REQUEST-ID">REQUEST-ID</a></span>
+
+  <a name="RESPONSE"></a>RESPONSE ::= <span class="string">"&lt;response&gt;"</span>
+                 <a href="#REQUEST-ID">REQUEST-ID</a>
+                 <a href="#WINDOW-ID">WINDOW-ID</a>
+                 <a href="#TIME">TIME</a>
+                 <a href="#HEADER">HEADER</a>
+               <span class="string">"&lt;/response&gt;"</span> ;
+
+  <span class="comment">##</span>
+  <span class="comment"># Other data types</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># <a href="#REQUEST-ID">REQUEST-ID</a> is an identifier for the request; it is not necessarily unique across</span>
+  <span class="comment"># time, as it is just the memory address of the request object. </span>
+
+  <a name="REQUEST-ID"></a>REQUEST-ID ::= <span class="string">"&lt;request-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/request-id&gt;"</span> ;
+
+  <span class="comment"># Timestamp of the message, in milliseconds since 1970-01-01 00:00 UTC</span>
+  <span class="comment"># (be sure not to rely on the time being correct - this is client time, and</span>
+  <span class="comment"># may be wildly different than the host time)</span>
+
+  <a name="TIME"></a>TIME ::= <span class="string">"&lt;time&gt;"</span> <a href="#FLOAT">FLOAT</a> <span class="string">"&lt;/time&gt;"</span> ;
+
+  <span class="comment"># Header of the request/response, i.e. the HTTP data up until the first</span>
+  <span class="comment"># occurence of CR+LF+CR+LF, inclusive.</span>
+
+  <a name="HEADER"></a>HEADER ::= <span class="string">"&lt;header&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/header&gt;"</span> ;
+
+  <a name="FLOAT"></a>FLOAT ::= [0-9]+ <span class="string">"."</span> [0-9]+ ;
+
+  <span class="comment">###</span>
+  <span class="comment"># From ecmascript-debugger-protocol.html</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># The window ID is shared across scope. Notably, it's the same as in the ecmascript debugger.</span>
+  <span class="comment"># INTERNAL: The value is from Window::id</span>
+
+  <a name="WINDOW-ID"></a>WINDOW-ID ::= <span class="string">"&lt;window-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/window-id&gt;"</span> ;
+
+  <a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+
+  <a name="TEXT"></a>TEXT ::= textual-data ;
+</pre></pre>
+</body>
+</html>

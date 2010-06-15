@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>HTTP Logger</title>
+<link rel=stylesheet href="scope.css" />
+<style>
+h3 { font-weight: bold; font-style: italic }
+h3::before { font-style: normal }
+</style>
+<script src="markup_grammar.js"></script>
+</head>
+
+<body onload="markup_grammar()">
+<h1>HTTP Logger Protocol, version 2</h1>
+
+<p>Please refer to the <a href="http-logger.html">service document</a> for a general
+   description of the service.
+
+<h2>BNF</h2>
+
+<p> Following is the grammar of the service, "http-logger":
+<pre>
+  <a name="PROTOCOL"></a>PROTOCOL ::= (<a href="#COMMAND">COMMAND</a> | <a href="#EVENT">EVENT</a>)* ;
+
+
+  <span class="comment">##</span>
+  <span class="comment"># Commands (messages from debugger to debugging host)</span>
+  <span class="comment">#</span>
+
+  <a name="COMMAND"></a>COMMAND ::= <a href="#SET-LOG-MODE">SET-LOG-MODE</a>
+            | <a href="#GET-LOG-MODE">GET-LOG-MODE</a>
+            | <a href="#GET-RESPONSE-BODY">GET-RESPONSE-BODY</a>
+            ;
+
+  <a name="SET-LOG-MODE"></a>SET-LOG-MODE ::= <span class="string">"&lt;set-log-mode&gt;"</span> <a href="#LOG-MODE-TYPE">LOG-MODE-TYPE</a> <span class="string">"&lt;/set-log-mode&gt;"</span> ;
+
+  <a name="GET-RESPONSE-BODY"></a>GET-RESPONSE-BODY ::= <span class="string">"&lt;get-response-body&gt;"</span>
+                          <a href="#REQUEST-ID">REQUEST-ID</a>
+                          <a href="#ENCODING">ENCODING</a>?
+                          <a href="#DECODING">DECODING</a>?
+                        <span class="string">"&lt;/get-response-body&gt;"</span>
+                        ;
+
+  <a name="GET-LOG-MODE"></a>GET-LOG-MODE ::= <span class="string">"&lt;get-log-mode /&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Events (messages from debugging host to debugger)</span>
+  <span class="comment">#</span>
+
+  <a name="EVENT"></a>EVENT ::= <a href="#REQUEST">REQUEST</a>
+          | <a href="#RESPONSE-HEADER">RESPONSE-HEADER</a>
+          | <a href="#RESPONSE-BODY">RESPONSE-BODY</a>
+          | <a href="#LOG-MODE">LOG-MODE</a>
+          ;
+
+  <a name="REQUEST"></a>REQUEST ::= <span class="string">"&lt;request&gt;"</span>
+                <a href="#REQUEST-ID">REQUEST-ID</a>
+                <a href="#WINDOW-ID">WINDOW-ID</a>
+                <a href="#RUNTIME-ID">RUNTIME-ID</a> <span class="comment"># this is perhaps not neccessary if we have frame path</span>
+                <a href="#FRAME-PATH">FRAME-PATH</a>
+                <a href="#TIME">TIME</a>
+                <a href="#METHOD">METHOD</a>
+                <a href="#URL">URL</a>
+                <a href="#PARSED-HEADERS">PARSED-HEADERS</a>
+              <span class="string">"&lt;/request&gt;"</span> ;
+
+  <span class="comment"># The RESPONSE does not have it's own id, but refers to the generating <a href="#REQUEST-ID">REQUEST-ID</a></span>
+
+  <a name="RESPONSE-HEADER"></a>RESPONSE-HEADER ::= <span class="string">"&lt;response-header&gt;"</span>
+                        <a href="#REQUEST-ID">REQUEST-ID</a>
+                        <a href="#TIME">TIME</a>
+                        <a href="#MIME-TYPE">MIME-TYPE</a>
+                        <a href="#ENCODING">ENCODING</a>
+                        <a href="#STATUS">STATUS</a>
+                        <a href="#RAW-HEADER">RAW-HEADER</a>
+                        <a href="#PARSED-HEADERS">PARSED-HEADERS</a>
+                      <span class="string">"&lt;/response-header&gt;"</span> ;
+
+  <span class="comment"># <span class="not-started">TODO</span>: How should an event stream (e.g. server sent events) be represented? How about a really slow connection or big file?</span>
+  
+  <a name="RESPONSE-BODY"></a>RESPONSE-BODY ::= <span class="string">"&lt;response-body&gt;"</span>
+                      <a href="#REQUEST-ID">REQUEST-ID</a>
+                      <a href="#TIME">TIME</a>
+                      <a href="#BODY">BODY</a>?
+                    <span class="string">"&lt;/response-body&gt;"</span> ;
+  
+  <a name="LOG-MODE"></a>LOG-MODE ::= <span class="string">"&lt;log-mode&gt;"</span> <a href="#LOG-MODE-TYPE">LOG-MODE-TYPE</a> <span class="string">"&lt;/log-mode&gt;"</span> ;
+
+  <span class="comment">##</span>
+  <span class="comment"># Other data types</span>
+  <span class="comment">#</span>
+
+  <a name="BODY"></a>BODY ::= <span class="string">"&lt;body&gt;"</span>
+             <a href="#ENCODING">ENCODING</a>
+             <a href="#DECODING">DECODING</a>
+             <a href="#BODY-DATA">BODY-DATA</a>
+           <span class="string">"&lt;/body&gt;"</span>;
+
+  <span class="comment"># <a href="#REQUEST-ID">REQUEST-ID</a> is an identifier for the request; it is not necessarily unique across</span>
+  <span class="comment"># time, as it is just the memory address of the request object. </span>
+
+  <a name="REQUEST-ID"></a>REQUEST-ID ::= <span class="string">"&lt;request-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/request-id&gt;"</span> ;
+
+  <span class="comment"># Timestamp of the message, in milliseconds since 1970-01-01 00:00 UTC</span>
+  <span class="comment"># (be sure not to rely on the time being correct - this is client time, and</span>
+  <span class="comment"># may be wildly different than the host time)</span>
+
+  <a name="TIME"></a>TIME ::= <span class="string">"&lt;time&gt;"</span> <a href="#FLOAT">FLOAT</a> <span class="string">"&lt;/time&gt;"</span> ;
+
+  <span class="comment"># Header of the request/response, i.e. the HTTP data up until the first</span>
+  <span class="comment"># occurence of CR+LF+CR+LF, inclusive.</span>
+
+  <a name="RAW-HEADER"></a>RAW-HEADER ::= <span class="string">"&lt;raw-header&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/raw-header&gt;"</span> ;
+  
+  <a name="PARSED-HEADERS"></a>PARSED-HEADERS ::= <span class="string">"&lt;parsed-headers&gt;"</span> <a href="#HEADER">HEADER</a>* <span class="string">"&lt;/parsed-headers&gt;"</span> ;
+
+  <a name="HEADER"></a>HEADER ::= <span class="string">"&lt;header&gt;"</span>
+               <a href="#HEADER-NAME">HEADER-NAME</a>
+               <a href="#HEADER-VALUE">HEADER-VALUE</a> 
+             <span class="string">"&lt;/header&gt;"</span> ;
+
+  <a name="HEADER-NAME"></a>HEADER-NAME ::= <span class="string">"&lt;header-name&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/header-name&gt;"</span> ;
+
+  <a name="HEADER-VALUE"></a>HEADER-VALUE ::= <span class="string">"&lt;header-value&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/header-value&gt;"</span> ;
+
+  <a name="ENCODING"></a>ENCODING ::= <span class="string">"&lt;encoding&gt;"</span> <a href="#ENCODING-TYPE">ENCODING-TYPE</a> <span class="string">"&lt;/encoding&gt;"</span> ;
+
+  <a name="DECODING"></a>DECODING ::= <span class="string">"&lt;decoding&gt;"</span> <a href="#DECODING-TYPE">DECODING-TYPE</a> <span class="string">"&lt;/decoding&gt;"</span> ;
+  
+  <a name="BODY-DATA"></a>BODY-DATA ::= <span class="string">"&lt;body-data&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/body-data&gt;"</span> ;
+
+  <a name="FLOAT"></a>FLOAT ::= [0-9]+ <span class="string">"."</span> [0-9]+ ;
+
+  <span class="comment"># <span class="not-started">TODO</span>: These names does not really reflect what is going on. At the very</span>
+  <span class="comment">#       least they need an explanation.</span>
+
+  <a name="LOG-MODE-TYPE"></a>LOG-MODE-TYPE ::= <span class="string">"profiling"</span> | <span class="string">"logging"</span> ;
+
+  <span class="comment"># <a href="#DECODING-TYPE">DECODING-TYPE</a> is either </span>
+  <span class="comment">#   <span class="string">"none"</span>, meaning raw data, or</span>
+  <span class="comment">#   <span class="string">"used-by-opera"</span>, which is how Opera ended up decoding it</span>
+  <span class="comment"># <span class="not-started">TODO</span>: How will Opera tell the client which encoding it actually used?</span>
+
+  <a name="DECODING-TYPE"></a>DECODING-TYPE ::= <a href="#TEXT">TEXT</a> ;
+
+  <a name="ENCODING-TYPE"></a>ENCODING-TYPE ::= <span class="string">"none"</span> | <span class="string">"base64"</span> ;
+
+  <a name="FRAME-PATH"></a>FRAME-PATH ::= <a href="#TEXT">TEXT</a> ;
+
+  <a name="MIME-TYPE"></a>MIME-TYPE ::= <a href="#TEXT">TEXT</a> ;
+
+  <a name="STATUS"></a>STATUS ::= <a href="#UNSIGNED">UNSIGNED</a> ;
+  
+  <a name="METHOD"></a>METHOD ::= <a href="#TEXT">TEXT</a> ;
+  
+  <a name="URL"></a>URL ::= <a href="#TEXT">TEXT</a> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># From ecmascript-debugger-protocol.html</span>
+  <span class="comment">#</span>
+
+  <span class="comment"># The window ID is shared across scope. Notably, it's the same as in the ecmascript debugger.</span>
+  <span class="comment"># INTERNAL: The value is from Window::id</span>
+
+  <a name="WINDOW-ID"></a>WINDOW-ID ::= <span class="string">"&lt;window-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/window-id&gt;"</span> ;
+
+  <a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+  
+  <a name="RUNTIME-ID"></a>RUNTIME-ID ::= <a href="#UNSIGNED">UNSIGNED</a> ; 
+
+  <a name="TEXT"></a>TEXT ::= textual-data ;
+</pre></pre>
+</body>
+</html>

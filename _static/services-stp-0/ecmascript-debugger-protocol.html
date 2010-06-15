@@ -1,0 +1,576 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<link rel="stylesheet" href="scope.css" />
+
+<title>ECMAScript debugger protocol</title>
+<style type="text/css">
+h3 { font-weight: bold; font-style: italic }
+h3::before { font-style: normal }
+</style>
+<script type="text/javascript" src="markup_grammar.js"></script>
+</head>
+
+<body onload="markup_grammar()">
+<h1>ECMAScript debugger protocol</h1>
+
+
+<h2>Origins</h2>
+
+<p>The current XML protocol is based on the old "version 3" binary
+protocol with some structuring. See the end of this
+document for a critique.</p>
+
+
+<h2>Versioning</h2>
+
+<p>This document describes version 3 of the protocol. This number is
+sent as the PROTOCOL-VERSION in the HELLO message.</p>
+
+<h2>Flow</h2>
+
+<p>Control flow is on the pattern
+<code>EVENT&nbsp;(COMMAND&nbsp;RESPONSE?)*&nbsp;COMMAND</code>: Opera
+(aka "the debugging host") sends an event to the debugger which may
+issue commands to Opera (some of which have responses), and finally
+issues a command to relinquish control until the next event. The only
+command that relinquishes control is "continue".</p>
+
+<p> The initial event is "hello" which is sent once Opera discovers
+that a debugger is present.</p>
+
+<p> There is one exception to this scheme. While the debugger is not in
+control it may send a "break" command to Opera to force it to stop
+execution, and signal breakpoint events for all threads.</p>
+
+
+<h2>Central data types and how they work</h2>
+
+<p> A "runtime" represents a document context in which threads execute.
+There is a one-to-one mapping between runtimes and HTML documents.</p>
+
+<p> A "thread" represents a thread of execution in a runtime.  A "parent"
+thread can be preempted by another "child" thread in order to respond
+to a priority event; the parent thread will not run again until the
+child thread has finished.</p>
+
+<p> A "script" is a pair (id, source code) where the id is globally
+unique and the source code is Unicode text.</p>
+
+<p> An "object" is represented by a globally unique ID that is assigned by
+the debugger.</p>
+
+<p> Globally unique means unique within a running Opera session; that is
+from starting Opera to stopping it.</p>
+
+
+<h2>Protocol principles</h2>
+
+<p> The main principle is that the data should be self-describing.  This
+means that even enumerated values are passed as strings and that element
+names are verbose.</p>
+
+
+<h2>BNF</h2>
+
+<p> Here is the grammar describing the data. Some of the data elements
+are described in more detail below.</p>
+
+<pre>
+  <span class="comment">###</span>
+  <span class="comment"># The protocol can mostly be described as a context-free grammar of</span>
+  <span class="comment"># data flowing past an observer on the wire, where <a href="#HELLO">HELLO</a> and <a href="#EVENT">EVENT</a></span>
+  <span class="comment"># flows from host to client, and <a href="#COMMAND">COMMAND</a> flows from client to HOST.</span>
+  <span class="comment">#</span>
+
+  <a name="PROTOCOL"></a>PROTOCOL ::= <a href="#HELLO">HELLO</a> (<a href="#COMMAND">COMMAND</a> | <a href="#EVENT">EVENT</a>)* ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Events (messages from debugging host to debugger)</span>
+  <span class="comment">#</span>
+
+  <a name="EVENT"></a>EVENT ::= <a href="#RUNTIME-STARTED">RUNTIME-STARTED</a>
+          | <a href="#RUNTIME-STOPPED">RUNTIME-STOPPED</a>
+          | <a href="#NEW-SCRIPT">NEW-SCRIPT</a>
+          | <a href="#PARSE-ERROR">PARSE-ERROR</a>
+          | <a href="#THREAD-STARTED">THREAD-STARTED</a>
+          | <a href="#THREAD-FINISHED">THREAD-FINISHED</a>
+          | <a href="#THREAD-STOPPED-AT">THREAD-STOPPED-AT</a>
+          | <a href="#EVAL-REPLY">EVAL-REPLY</a>
+          | <a href="#EXAMINE-REPLY">EXAMINE-REPLY</a>
+          | <a href="#BACKTRACE-REPLY">BACKTRACE-REPLY</a>
+          | <a href="#RUNTIMES-REPLY">RUNTIMES-REPLY</a>
+          | <a href="#HANDLE-EVENT">HANDLE-EVENT</a>
+          | <a href="#OBJECT-SELECTED">OBJECT-SELECTED</a>
+          ;
+
+  <a name="HELLO"></a>HELLO ::= <span class="string">"&lt;hello&gt;"</span>
+              <a href="#PROTOCOL-VERSION">PROTOCOL-VERSION</a>      <span class="comment"># from debugging host</span>
+              <a href="#OPERATING-SYSTEM">OPERATING-SYSTEM</a>
+              <a href="#PLATFORM">PLATFORM</a>
+              <a href="#USER-AGENT">USER-AGENT</a>            <span class="comment"># the one that's statically configured</span>
+            <span class="string">"&lt;/hello&gt;"</span> ;
+
+  <a name="RUNTIME-STARTED"></a>RUNTIME-STARTED ::= <span class="string">"&lt;runtime-started&gt;"</span> <a href="#RUNTIME">RUNTIME</a> <span class="string">"&lt;/runtime-started&gt;"</span> ;
+
+  <a name="RUNTIME-STOPPED"></a>RUNTIME-STOPPED ::= <span class="string">"&lt;runtime-stopped&gt;"</span> <a href="#RUNTIME-ID">RUNTIME-ID</a> <span class="string">"&lt;/runtime-stopped&gt;"</span> ;
+
+  <a name="NEW-SCRIPT"></a>NEW-SCRIPT ::= <span class="string">"&lt;new-script&gt;"</span>
+                   <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                   <a href="#SCRIPT-ID">SCRIPT-ID</a>
+                   <a href="#SCRIPT-TYPE">SCRIPT-TYPE</a>
+                   <a href="#SCRIPT-DATA">SCRIPT-DATA</a>
+                   <a href="#URI">URI</a>?             <span class="comment"># present if <a href="#SCRIPT-TYPE">SCRIPT-TYPE</a> is <span class="string">"linked"</span></span>
+                 <span class="string">"&lt;/new-script&gt;"</span> ;
+
+  <span class="comment"># <a href="#OFFSET">OFFSET</a> represents the character offset in the script where the parse error occured</span>
+
+  <a name="OFFSET"></a>OFFSET ::= <span class="string">"&lt;offset&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/offset&gt;"</span> ;
+
+  <span class="comment"># <a href="#CONTEXT">CONTEXT</a> describes in what context the error occured</span>
+
+  <a name="CONTEXT"></a>CONTEXT ::= <span class="string">"&lt;context&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/context&gt;"</span> ;
+
+  <span class="comment"># <a href="#DESCRIPTION">DESCRIPTION</a> contains the human-readable description of the parse error</span>
+
+  <a name="DESCRIPTION"></a>DESCRIPTION ::= <span class="string">"&lt;description&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/description&gt;"</span> ;
+
+  <a name="PARSE-ERROR"></a>PARSE-ERROR ::= <span class="string">"&lt;parse-error&gt;"</span>
+                     <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                     <a href="#SCRIPT-ID">SCRIPT-ID</a>
+                     <a href="#LINE-NUMBER">LINE-NUMBER</a>
+                     <a href="#OFFSET">OFFSET</a>
+                     <a href="#CONTEXT">CONTEXT</a>
+                     <a href="#DESCRIPTION">DESCRIPTION</a>
+                   <span class="string">"&lt;/parse-error&gt;"</span> ;
+
+  <a name="THREAD-STARTED"></a>THREAD-STARTED ::= <span class="string">"&lt;thread-started&gt;"</span>
+                       <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                       <a href="#THREAD-ID">THREAD-ID</a>
+                       <a href="#PARENT-THREAD-ID">PARENT-THREAD-ID</a>
+                       <a href="#THREAD-TYPE">THREAD-TYPE</a>
+                       <a href="#EVENT-DESC">EVENT-DESC</a>?  <span class="comment"># present if <a href="#THREAD-TYPE">THREAD-TYPE</a> is <span class="string">"event"</span></span>
+                     <span class="string">"&lt;/thread-started&gt;"</span> ;
+
+  <a name="THREAD-FINISHED"></a>THREAD-FINISHED ::= <span class="string">"&lt;thread-finished&gt;"</span>
+                        <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                        <a href="#THREAD-ID">THREAD-ID</a>
+                        <a href="#STATUS">STATUS</a>
+                      <span class="string">"&lt;/thread-finished&gt;"</span> ;
+
+  <span class="comment"># <a href="#BREAKPOINT-ID">BREAKPOINT-ID</a> is present if and only if <a href="#STOPPED-REASON">STOPPED-REASON</a> is <span class="string">"breakpoint"</span></span>
+
+  <a name="THREAD-STOPPED-AT"></a>THREAD-STOPPED-AT ::= <span class="string">"&lt;thread-stopped-at&gt;"</span>
+                          <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                          <a href="#THREAD-ID">THREAD-ID</a>
+                          <a href="#SCRIPT-ID">SCRIPT-ID</a>
+                          <a href="#LINE-NUMBER">LINE-NUMBER</a>
+                          <a href="#STOPPED-REASON">STOPPED-REASON</a>
+                          <a href="#BREAKPOINT-ID">BREAKPOINT-ID</a>?
+                        <span class="string">"&lt;/thread-stopped-at&gt;"</span> ;
+
+  <span class="comment"># If <a href="#STATUS">STATUS</a> is <span class="string">"completed"</span> or <span class="string">"unhandled-exception"</span>, then</span>
+  <span class="comment"># <a href="#VALUE-DATA">VALUE-DATA</a> will be present.</span>
+
+  <a name="EVAL-REPLY"></a>EVAL-REPLY ::= <span class="string">"&lt;eval-reply&gt;"</span>
+                   <a href="#TAG">TAG</a>
+                   <a href="#STATUS">STATUS</a>
+                   <a href="#VALUE-DATA">VALUE-DATA</a>?
+                 <span class="string">"&lt;/eval-reply&gt;"</span> ;
+
+  <a name="EXAMINE-REPLY"></a>EXAMINE-REPLY ::= <span class="string">"&lt;examine-reply&gt;"</span>
+                      <a href="#TAG">TAG</a>
+                      <a href="#OBJECT">OBJECT</a>*
+                    <span class="string">"&lt;/examine-reply&gt;"</span> ;
+
+  <span class="comment"># Frames are in innermost-first order</span>
+
+  <a name="BACKTRACE-REPLY"></a>BACKTRACE-REPLY ::= <span class="string">"&lt;backtrace-reply&gt;"</span>
+                        <a href="#TAG">TAG</a>
+                        <a href="#FRAME">FRAME</a>*
+                      <span class="string">"&lt;/backtrace-reply&gt;"</span> ;
+
+  <a name="RUNTIMES-REPLY"></a>RUNTIMES-REPLY ::= <span class="string">"&lt;runtimes-reply&gt;"</span>
+                       <a href="#TAG">TAG</a>
+                       <a href="#RUNTIME">RUNTIME</a>*
+                     <span class="string">"&lt;/runtimes-reply&gt;"</span> ;
+
+  <span class="comment"># This event is issued for XML events on the host, if a corresponding</span>
+  <span class="comment"># <a href="#ADD-EVENT-HANDLER">ADD-EVENT-HANDLER</a> has been issued earlier by the client.</span>
+  <span class="comment"># <a href="#OBJECT-ID">OBJECT-ID</a> refers to the target of the event.</span>
+
+  <a name="HANDLE-EVENT"></a>HANDLE-EVENT ::= <span class="string">"&lt;handle-event&gt;"</span>
+                     <a href="#OBJECT-ID">OBJECT-ID</a>
+                     <a href="#HANDLER-ID">HANDLER-ID</a>
+                     <a href="#EVENT-TYPE">EVENT-TYPE</a>
+                   <span class="string">"&lt;/handle-event&gt;"</span> ;
+
+  <span class="comment"># Some hosts send this event to indicate that an object was selected for</span>
+  <span class="comment"># debugging, e.g., if the debugger was started by right-clicking an element</span>
+  <span class="comment"># and clicking <span class="string">"inspect"</span> in the context menu, this event will be sent</span>
+  <span class="comment"># right after startup. A client may safely choose to ignore this event.</span>
+
+  <a name="OBJECT-SELECTED"></a>OBJECT-SELECTED ::= <span class="string">"&lt;object-selected&gt;"</span>
+                        <a href="#OBJECT-ID">OBJECT-ID</a>
+                        <a href="#WINDOW-ID">WINDOW-ID</a>
+                      <span class="string">"&lt;/object-selected&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Commands (messages from debugger to debugging host)</span>
+  <span class="comment">#</span>
+
+  <a name="COMMAND"></a>COMMAND ::= <a href="#RUNTIMES">RUNTIMES</a>
+            | <a href="#CONTINUE">CONTINUE</a>
+            | <a href="#EVAL">EVAL</a>
+            | <a href="#EXAMINE-FRAME">EXAMINE-FRAME</a>
+            | <a href="#EXAMINE-OBJECTS">EXAMINE-OBJECTS</a>
+            | <a href="#SPOTLIGHT-OBJECT">SPOTLIGHT-OBJECT</a>
+            | <a href="#ADD-BREAKPOINT">ADD-BREAKPOINT</a>
+            | <a href="#REMOVE-BREAKPOINT">REMOVE-BREAKPOINT</a>
+            | <a href="#ADD-EVENT-HANDLER">ADD-EVENT-HANDLER</a>
+            | <a href="#REMOVE-EVENT-HANDLER">REMOVE-EVENT-HANDLER</a>
+            | <a href="#SET-CONFIGURATION">SET-CONFIGURATION</a>
+            | <a href="#BACKTRACE">BACKTRACE</a>
+            | <a href="#BREAK">BREAK</a>
+            ;
+
+  <a name="RUNTIMES"></a>RUNTIMES ::= <span class="string">"&lt;runtimes&gt;"</span>
+                 <a href="#TAG">TAG</a>
+                 <a href="#CREATE-ALL-RUNTIMES">CREATE-ALL-RUNTIMES</a>?
+                 <a href="#RUNTIME-ID">RUNTIME-ID</a>*        <span class="comment"># list the ones you want to see, or none if you want all</span>
+               <span class="string">"&lt;/runtimes&gt;"</span> ;
+
+  <span class="comment"># Create runtimes for all documents. Runtimes are normally not created for documents</span>
+  <span class="comment"># without ECMAScript.</span>
+
+  <a name="CREATE-ALL-RUNTIMES"></a>CREATE-ALL-RUNTIMES ::= <span class="string">"&lt;create-all-runtimes /&gt;"</span> ;
+
+  <a name="CONTINUE"></a>CONTINUE ::= <span class="string">"&lt;continue&gt;"</span>
+                 <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                 <a href="#THREAD-ID">THREAD-ID</a>
+                 <a href="#MODE">MODE</a>
+               <span class="string">"&lt;/continue&gt;"</span> ;
+
+  <span class="comment"># <a href="#SCRIPT-DATA">SCRIPT-DATA</a> represents a script to be executed; <a href="#PROPERTY">PROPERTY</a> values</span>
+  <span class="comment"># represent variables to set.</span>
+  <span class="comment"># If <a href="#THREAD-ID">THREAD-ID</a>, code is evaluated in the global scope.</span>
+
+  <a name="EVAL"></a>EVAL ::= <span class="string">"&lt;eval&gt;"</span>
+             <a href="#TAG">TAG</a>
+             <a href="#RUNTIME-ID">RUNTIME-ID</a>
+             <a href="#THREAD-ID">THREAD-ID</a>
+             <a href="#FRAME-ID">FRAME-ID</a>
+             <a href="#SCRIPT-DATA">SCRIPT-DATA</a>
+             <a href="#PROPERTY">PROPERTY</a>*
+           <span class="string">"&lt;/eval&gt;"</span> ;
+
+  <a name="EXAMINE-FRAME"></a>EXAMINE-FRAME ::= <span class="string">"&lt;examine-frame&gt;"</span>
+                      <a href="#TAG">TAG</a>
+                      <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                      <a href="#THREAD-ID">THREAD-ID</a>
+                      <a href="#FRAME-ID">FRAME-ID</a>
+                    <span class="string">"&lt;/examine-frame&gt;"</span> ;
+
+  <a name="EXAMINE-OBJECTS"></a>EXAMINE-OBJECTS ::= <span class="string">"&lt;examine-objects&gt;"</span>
+                        <a href="#TAG">TAG</a>
+                        <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                        <a href="#OBJECT-ID">OBJECT-ID</a>+
+                      <span class="string">"&lt;/examine-objects&gt;"</span> ;
+
+  <span class="comment"># Using <a href="#OBJECT-ID">OBJECT-ID</a> == 0 clears the spotlight.</span>
+  <span class="comment"># If <a href="#SCROLL-INTO-VIEW">SCROLL-INTO-VIEW</a> is present, the object will be scrolled into the view (at least part of it),</span>
+  <span class="comment"># otherwise the viewport will remain where it is.</span>
+
+  <a name="SPOTLIGHT-OBJECT"></a>SPOTLIGHT-OBJECT ::= <span class="string">"&lt;spotlight-object&gt;"</span>
+                         <a href="#OBJECT-ID">OBJECT-ID</a>
+                         <a href="#SCROLL-INTO-VIEW">SCROLL-INTO-VIEW</a>?
+                       <span class="string">"&lt;/spotlight-object&gt;"</span> ;
+
+  <a name="SCROLL-INTO-VIEW"></a>SCROLL-INTO-VIEW ::= <span class="string">"&lt;scroll-into-view /&gt;"</span> ;
+
+  <span class="comment"># The <a href="#SOURCE-POSITION">SOURCE-POSITION</a> element defines how</span>
+  <span class="comment"># to set the breakpoint.</span>
+
+  <a name="ADD-BREAKPOINT"></a>ADD-BREAKPOINT ::= <span class="string">"&lt;add-breakpoint&gt;"</span>
+                       <a href="#BREAKPOINT-ID">BREAKPOINT-ID</a>
+                       <a href="#SOURCE-POSITION">SOURCE-POSITION</a>
+                     <span class="string">"&lt;/add-breakpoint&gt;"</span> ;
+
+  <a name="REMOVE-BREAKPOINT"></a>REMOVE-BREAKPOINT ::= <span class="string">"&lt;remove-breakpoint&gt;"</span> <a href="#BREAKPOINT-ID">BREAKPOINT-ID</a> <span class="string">"&lt;/remove-breakpoint&gt;"</span> ;
+
+  <span class="comment"># Add an event handler. This will generate a <a href="#HANDLE-EVENT">HANDLE-EVENT</a> event every time the XML event defined</span>
+  <span class="comment"># by the pair (<a href="#NAMESPACE">NAMESPACE</a>, <a href="#EVENT-TYPE">EVENT-TYPE</a>) reaches the object defined by <a href="#OBJECT-ID">OBJECT-ID</a> in the capturing</span>
+  <span class="comment"># phase. XML events are defined in <a href="http://www.w3.org/TR/xml-events">http://www.w3.org/TR/xml-events</a></span>
+  <span class="comment">#</span>
+  <span class="comment"># <a href="#HANDLER-ID">HANDLER-ID</a> is set by the client and is referred to by both client and host.</span>
+  <span class="comment"># <a href="#NAMESPACE">NAMESPACE</a> of the event: if empty, it will match any namespace.</span>
+  <span class="comment"># <a href="#PREVENT-DEFAULT">PREVENT-DEFAULT</a> prevents the default event handler from running.</span>
+  <span class="comment"># <a href="#STOP-PROPAGATION">STOP-PROPAGATION</a> stops propagation of the event beyond this <a href="#OBJECT-ID">OBJECT-ID</a> (it will however run for</span>
+  <span class="comment"># all handlers on the object).</span>
+
+  <a name="ADD-EVENT-HANDLER"></a>ADD-EVENT-HANDLER ::= <span class="string">"&lt;add-event-handler&gt;"</span>
+                         <a href="#HANDLER-ID">HANDLER-ID</a>
+                         <a href="#OBJECT-ID">OBJECT-ID</a>
+                         <a href="#NAMESPACE">NAMESPACE</a>
+                         <a href="#EVENT-TYPE">EVENT-TYPE</a>
+                         <a href="#PREVENT-DEFAULT">PREVENT-DEFAULT</a>
+                         <a href="#STOP-PROPAGATION">STOP-PROPAGATION</a>
+                        <span class="string">"&lt;/add-event-handler&gt;"</span> ;
+
+  <a name="REMOVE-EVENT-HANDLER"></a>REMOVE-EVENT-HANDLER ::= <span class="string">"&lt;remove-event-handler&gt;"</span> <a href="#HANDLER-ID">HANDLER-ID</a> <span class="string">"&lt;/remove-event-handler&gt;"</span> ;
+
+  <a name="SET-CONFIGURATION"></a>SET-CONFIGURATION ::= <span class="string">"&lt;set-configuration&gt;"</span> <a href="#STOP-AT">STOP-AT</a>+ <span class="string">"&lt;/set-configuration&gt;"</span> ;
+
+  <span class="comment"># If <a href="#MAXFRAMES">MAXFRAMES</a> is omitted, all frames are returned.</span>
+
+  <a name="BACKTRACE"></a>BACKTRACE ::= <span class="string">"&lt;backtrace&gt;"</span>
+                  <a href="#TAG">TAG</a>
+                  <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                  <a href="#THREAD-ID">THREAD-ID</a>
+                  <a href="#MAXFRAMES">MAXFRAMES</a>?
+                <span class="string">"&lt;/backtrace&gt;"</span> ;
+
+  <a name="BREAK"></a>BREAK ::= <span class="string">"&lt;break&gt;"</span>
+              <a href="#RUNTIME-ID">RUNTIME-ID</a>
+              <a href="#THREAD-ID">THREAD-ID</a>
+            <span class="string">"&lt;/break&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Basis-data</span>
+  <span class="comment">#</span>
+
+  <a name="EVENT-DESC"></a>EVENT-DESC ::= <span class="string">"&lt;event-desc&gt;"</span>
+                   <a href="#NAMESPACE">NAMESPACE</a>
+                   <a href="#EVENT-TYPE">EVENT-TYPE</a>
+                 <span class="string">"&lt;/event-desc&gt;"</span> ;
+
+  <a name="PREVENT-DEFAULT"></a>PREVENT-DEFAULT ::= <span class="string">"&lt;prevent-default&gt;"</span>
+                         <a href="#YESNO">YESNO</a>                       <span class="comment"># default is yes</span>
+                      <span class="string">"&lt;/prevent-default&gt;"</span> ;
+
+  <a name="STOP-PROPAGATION"></a>STOP-PROPAGATION ::= <span class="string">"&lt;stop-propagation&gt;"</span>
+                         <a href="#YESNO">YESNO</a>                       <span class="comment"># default is yes</span>
+                       <span class="string">"&lt;/stop-propagation&gt;"</span> ;
+
+  <span class="comment"># If <a href="#DATA-TYPE">DATA-TYPE</a> is ... then ... is present:</span>
+  <span class="comment">#   <span class="string">"object"</span>, <a href="#OBJECT-ID">OBJECT-ID</a></span>
+  <span class="comment">#   <span class="string">"number"</span>, <a href="#STRING">STRING</a></span>
+  <span class="comment">#   <span class="string">"string"</span>, <a href="#STRING">STRING</a></span>
+  <span class="comment">#   <span class="string">"boolean"</span>, <a href="#STRING">STRING</a> (<span class="string">"true"</span> or <span class="string">"false"</span>)</span>
+  <span class="comment"># Otherwise (<span class="string">"undefined"</span> or <span class="string">"null"</span>), only <a href="#DATA-TYPE">DATA-TYPE</a> is present.</span>
+
+  <a name="VALUE-DATA"></a>VALUE-DATA ::= <span class="string">"&lt;value-data&gt;"</span>
+                   <a href="#DATA-TYPE">DATA-TYPE</a>
+                   ( <a href="#OBJECT-VALUE">OBJECT-VALUE</a> | <a href="#STRING">STRING</a> )?
+                 <span class="string">"&lt;/value-data&gt;"</span> ;
+
+  <a name="OBJECT-VALUE"></a>OBJECT-VALUE ::= <span class="string">"&lt;object-value&gt;"</span>
+                     <a href="#OBJECT-ID">OBJECT-ID</a>
+                     <a href="#PROTOTYPE-ID">PROTOTYPE-ID</a>?
+                     <a href="#OBJECT-ATTRIBUTES">OBJECT-ATTRIBUTES</a>
+                     <a href="#NAME">NAME</a>?
+                   <span class="string">"&lt;/object-value&gt;"</span> ;
+
+  <a name="RUNTIME"></a>RUNTIME ::= <span class="string">"&lt;runtime&gt;"</span>
+                <a href="#RUNTIME-ID">RUNTIME-ID</a>
+                <a href="#HTML-FRAME-PATH">HTML-FRAME-PATH</a>
+                <a href="#WINDOW-ID">WINDOW-ID</a>        <span class="comment"># the ID of the window</span>
+                <a href="#OBJECT-ID">OBJECT-ID</a>        <span class="comment"># the 'global' object</span>
+                <a href="#URI">URI</a>              <span class="comment"># the document's <a href="#URI">URI</a></span>
+              <span class="string">"&lt;/runtime&gt;"</span> ;
+
+  <a name="FRAME"></a>FRAME ::= <span class="string">"&lt;frame&gt;"</span>
+              <a href="#FUNCTION-ID">FUNCTION-ID</a>
+              <a href="#ARGUMENT-OBJECT">ARGUMENT-OBJECT</a>
+              <a href="#VARIABLE-OBJECT">VARIABLE-OBJECT</a>
+              <a href="#THIS-OBJECT">THIS-OBJECT</a>
+              <a href="#SOURCE-POSITION">SOURCE-POSITION</a>?
+              <a href="#OBJECT-VALUE">OBJECT-VALUE</a>*
+            <span class="string">"&lt;/frame&gt;"</span> ;
+
+  <span class="comment"># Default values are NO for every <a href="#STOP-TYPE">STOP-TYPE</a>, except</span>
+  <span class="comment"># <span class="string">"script"</span>, which is YES.</span>
+
+  <a name="STOP-AT"></a>STOP-AT ::= <span class="string">"&lt;stop-at&gt;"</span>
+                <a href="#YESNO">YESNO</a>
+                <a href="#STOP-TYPE">STOP-TYPE</a>
+              <span class="string">"&lt;/stop-at&gt;"</span> ;
+
+  <span class="comment"># Set this value to 0 to get all frames.</span>
+
+  <a name="MAXFRAMES"></a>MAXFRAMES ::= <span class="string">"&lt;maxframes&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/maxframes&gt;"</span> ;
+
+  <a name="SOURCE-POSITION"></a>SOURCE-POSITION ::= <span class="string">"&lt;source-position&gt;"</span>
+                        <a href="#SCRIPT-ID">SCRIPT-ID</a>
+                        <a href="#LINE-NUMBER">LINE-NUMBER</a>
+                      <span class="string">"&lt;/source-position&gt;"</span> ;
+
+  <a name="SCRIPT-DATA"></a>SCRIPT-DATA ::= <span class="string">"&lt;script-data&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/script-data&gt;"</span> ;
+
+  <a name="OBJECT"></a>OBJECT ::= <span class="string">"&lt;object&gt;"</span>
+               <a href="#OBJECT-VALUE">OBJECT-VALUE</a>
+               <a href="#PROPERTY">PROPERTY</a>*
+             <span class="string">"&lt;/object&gt;"</span> ;
+
+  <a name="PROPERTY"></a>PROPERTY ::= <span class="string">"&lt;property&gt;"</span>
+                 <a href="#OBJECT-ID">OBJECT-ID</a>?         <span class="comment"># if you want to set a property on an object</span>
+                 <a href="#PROPERTY-NAME">PROPERTY-NAME</a>
+                 <a href="#VALUE-DATA">VALUE-DATA</a>
+               <span class="string">"&lt;/property&gt;"</span> ;
+
+  <a name="PROPERTY-NAME"></a>PROPERTY-NAME ::= <span class="string">"&lt;property-name&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/property-name&gt;"</span> ;
+
+  <a name="OBJECT-ATTRIBUTES"></a>OBJECT-ATTRIBUTES ::= <span class="string">"&lt;object-attributes&gt;"</span> <a href="#OBJECT-ATTRIBUTE">OBJECT-ATTRIBUTE</a>* <span class="string">"&lt;/object-attributes&gt;"</span> ;
+
+  <a name="OBJECT-ATTRIBUTE"></a>OBJECT-ATTRIBUTE ::= <span class="string">"&lt;iscallable/&gt;"</span> | <span class="string">"&lt;isfunction/&gt;"</span> ;
+
+  <a name="NAME"></a>NAME ::= <a href="#CLASS-NAME">CLASS-NAME</a> | <a href="#FUNCTION-NAME">FUNCTION-NAME</a> ;
+
+  <a name="CLASS-NAME"></a>CLASS-NAME ::= <span class="string">"&lt;class-name&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/class-name&gt;"</span> ;
+
+  <a name="FUNCTION-NAME"></a>FUNCTION-NAME ::= <span class="string">"&lt;function-name&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/function-name&gt;"</span> ;
+
+  <a name="PROTOCOL-VERSION"></a>PROTOCOL-VERSION ::= <span class="string">"&lt;protocol-version&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/protocol-version&gt;"</span> ;
+
+  <a name="OPERATING-SYSTEM"></a>OPERATING-SYSTEM ::= <span class="string">"&lt;operating-system&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/operating-system&gt;"</span> ;
+
+  <a name="PLATFORM"></a>PLATFORM ::= <span class="string">"&lt;platform&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/platform&gt;"</span> ;
+
+  <a name="USER-AGENT"></a>USER-AGENT ::= <span class="string">"&lt;user-agent&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/user-agent&gt;"</span> ;
+
+  <a name="HTML-FRAME-PATH"></a>HTML-FRAME-PATH ::= <span class="string">"&lt;html-frame-path&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/html-frame-path&gt;"</span> ;
+
+  <a name="STOP-TYPE"></a>STOP-TYPE ::= <span class="string">"&lt;stop-type&gt;"</span>
+                  ( <span class="string">"script"</span> | <span class="string">"exception"</span> | <span class="string">"error"</span> | <span class="string">"abort"</span> )
+                <span class="string">"&lt;/stop-type&gt;"</span> ;
+
+  <a name="SCRIPT-TYPE"></a>SCRIPT-TYPE ::= <span class="string">"&lt;script-type&gt;"</span>
+                     ( <span class="string">"inline"</span> | <span class="string">"event"</span> | <span class="string">"linked"</span> | <span class="string">"timeout"</span> | <span class="string">"java"</span> | <span class="string">"generated"</span> | <span class="string">"unknown"</span> )
+                  <span class="string">"&lt;/script-type&gt;"</span> ;
+
+  <a name="THREAD-TYPE"></a>THREAD-TYPE ::= <span class="string">"&lt;thread-type&gt;"</span>
+                     ( <span class="string">"inline"</span> | <span class="string">"event"</span> | <span class="string">"linked"</span> | <span class="string">"timeout"</span> | <span class="string">"java"</span> | <span class="string">"unknown"</span> )
+                  <span class="string">"&lt;/thread-type&gt;"</span> ;
+
+  <a name="NAMESPACE"></a>NAMESPACE ::= <span class="string">"&lt;namespace&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/namespace&gt;"</span> ;
+
+  <span class="comment"># The event type is e.g., <span class="string">"click"</span>, <span class="string">"mousemove"</span></span>
+  <span class="comment"># More examples are at <a href="http://www.w3.org/TR/2000/REC-DOM-Level-2-Events-20001113/events.html">http://www.w3.org/TR/2000/REC-DOM-Level-2-Events-20001113/events.html</a></span>
+  <span class="comment"># Exactly which events are implemented depends on the host, and is not defined in this protocol.</span>
+
+  <a name="EVENT-TYPE"></a>EVENT-TYPE ::= <span class="string">"&lt;event-type&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/event-type&gt;"</span> ;
+
+  <a name="STATUS"></a>STATUS ::= <span class="string">"&lt;status&gt;"</span>
+               ( <span class="string">"completed"</span> | <span class="string">"unhandled-exception"</span> | <span class="string">"aborted"</span> | <span class="string">"cancelled-by-scheduler"</span> )
+             <span class="string">"&lt;/status&gt;"</span> ;
+
+  <a name="DATA-TYPE"></a>DATA-TYPE ::= <span class="string">"&lt;data-type&gt;"</span>
+                 ( <span class="string">"number"</span> | <span class="string">"boolean"</span> | <span class="string">"string"</span> | <span class="string">"null"</span> | <span class="string">"undefined"</span> | <span class="string">"object"</span> )
+               <span class="string">"&lt;/data-type&gt;"</span> ;
+
+  <a name="MODE"></a>MODE ::= <span class="string">"&lt;mode&gt;"</span>
+             ( <span class="string">"run"</span> | <span class="string">"step-into-call"</span> | <span class="string">"step-next-line"</span> | <span class="string">"step-out-of-call"</span> )
+           <span class="string">"&lt;/mode&gt;"</span> ;
+
+  <span class="comment"># <span class="string">"broken"</span> is sent in response to a <a href="#BREAK">BREAK</a> command.</span>
+  <span class="comment"># <span class="string">"breakpoint"</span> is sent when the script hits a debugger-set breakpoint.</span>
+
+  <a name="STOPPED-REASON"></a>STOPPED-REASON ::= <span class="string">"&lt;stopped-reason&gt;"</span>
+                       ( <span class="string">"broken"</span> | <span class="string">"function-return"</span> | <span class="string">"exception"</span> | <span class="string">"debugger statement"</span> | <span class="string">"breakpoint"</span> | <span class="string">"unknown"</span> )
+                     <span class="string">"&lt;/stopped-reason&gt;"</span> ;
+
+  <a name="LINE-NUMBER"></a>LINE-NUMBER ::= <span class="string">"&lt;line-number&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/line-number&gt;"</span> ;
+
+  <a name="ARGUMENT-OBJECT"></a>ARGUMENT-OBJECT ::= <span class="string">"&lt;argument-object&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/argument-object&gt;"</span> ;
+
+  <a name="VARIABLE-OBJECT"></a>VARIABLE-OBJECT ::= <span class="string">"&lt;variable-object&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/variable-object&gt;"</span> ;
+
+  <a name="THIS-OBJECT"></a>THIS-OBJECT ::= <span class="string">"&lt;this-object&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/this-object&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Generic context-free data:</span>
+  <span class="comment">#</span>
+  <span class="comment"># A <a href="#TAG">TAG</a> represents a value passed from the client to the host and</span>
+  <span class="comment"># returned from the host with a reply.</span>
+  <span class="comment">#</span>
+
+  <a name="TAG"></a>TAG ::= <span class="string">"&lt;tag&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/tag&gt;"</span> ;
+
+  <a name="YESNO"></a>YESNO ::= <span class="string">"&lt;yes/&gt;"</span> | <span class="string">"&lt;no/&gt;"</span> ;
+
+  <a name="STRING"></a>STRING ::= <span class="string">"&lt;string&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/string&gt;"</span> ;
+
+  <a name="URI"></a>URI ::= <span class="string">"&lt;uri&gt;"</span> <a href="#TEXT">TEXT</a> <span class="string">"&lt;/uri&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Identifiers:  Most of these are globally unique (they're just the</span>
+  <span class="comment"># integer representation of some pointer).  <a href="#THREAD-ID">THREAD-ID</a> and <a href="#PARENT-THREAD-ID">PARENT-THREAD-ID</a></span>
+  <span class="comment"># are relative to a <a href="#RUNTIME-ID">RUNTIME-ID</a>.  <a href="#FRAME-ID">FRAME-ID</a> is relative to the current stack</span>
+  <span class="comment"># height in a stopped thread: 0 being the top-most frame (i.e., the most</span>
+  <span class="comment"># recently called), 1 being the caller for that, and so on.</span>
+  <span class="comment">#</span>
+
+  <a name="RUNTIME-ID"></a>RUNTIME-ID ::= <span class="string">"&lt;runtime-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/runtime-id&gt;"</span> ;
+
+  <a name="OBJECT-ID"></a>OBJECT-ID ::= <span class="string">"&lt;object-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/object-id&gt;"</span> ;
+
+  <span class="comment"># The window ID is shared across scope. Notably, it's the same as in the console logger and window manager</span>
+  <span class="comment"># INTERNAL: The value is from Window::id</span>
+
+  <a name="WINDOW-ID"></a>WINDOW-ID ::= <span class="string">"&lt;window-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/window-id&gt;"</span> ;
+
+  <a name="PROTOTYPE-ID"></a>PROTOTYPE-ID ::= <span class="string">"&lt;prototype-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/prototype-id&gt;"</span> ;
+
+  <a name="FUNCTION-ID"></a>FUNCTION-ID ::= <span class="string">"&lt;function-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/function-id&gt;"</span> ;
+
+  <a name="SCRIPT-ID"></a>SCRIPT-ID ::= <span class="string">"&lt;script-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/script-id&gt;"</span> ;
+
+  <a name="BREAKPOINT-ID"></a>BREAKPOINT-ID ::= <span class="string">"&lt;breakpoint-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/breakpoint-id&gt;"</span> ;
+
+  <a name="HANDLER-ID"></a>HANDLER-ID ::= <span class="string">"&lt;handler-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/handler-id&gt;"</span> ;
+
+  <a name="FRAME-ID"></a>FRAME-ID ::= <span class="string">"&lt;frame-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/frame-id&gt;"</span> ;
+
+  <a name="THREAD-ID"></a>THREAD-ID ::= <span class="string">"&lt;thread-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/thread-id&gt;"</span> ;
+
+  <a name="PARENT-THREAD-ID"></a>PARENT-THREAD-ID ::= <span class="string">"&lt;parent-thread-id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/parent-thread-id&gt;"</span> ;
+
+  <span class="comment">###</span>
+  <span class="comment"># Primitive data:</span>
+  <span class="comment">#</span>
+  <span class="comment"># You may *NOT* assume that an <a href="#UNSIGNED">UNSIGNED</a> received from the host fits</span>
+  <span class="comment"># in 32 bits, but you may assume that 64 bits is enough.</span>
+  <span class="comment">#</span>
+  <span class="comment"># You must *NOT* send an <a href="#UNSIGNED">UNSIGNED</a> to the host that does not fit in 32</span>
+  <span class="comment"># bits unless it was received from the host.</span>
+  <span class="comment">#</span>
+
+  <a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+
+  <a name="TEXT"></a>TEXT ::= <a href="#BASE64-ENCODED-DATA">BASE64-ENCODED-DATA</a> | textual-data ;
+
+  <a name="BASE64-ENCODED-DATA"></a>BASE64-ENCODED-DATA ::= <span class="string">"&lt;base64-encoded-data&gt;"</span> textual-data <span class="string">"&lt;/base64-encoded-data&gt;"</span> ;
+</pre></pre>
+
+
+<h2>Critique</h2>
+
+<p> The USER-AGENT value is not actually static but can be different
+with every request.  It is strictly speaking an attribute of the
+script, not of the debugging host.  In practice we cannot know the user
+agent used for all scripts, but for "inline" and "linked" we do.</p>
+
+<p> The tagging system is probably too weak to support multiple
+clients: tags will need to contain information about the specific
+client that sent the command.  There are other ways to fix this, e.g., by
+making one (designated) client send a message on behalf of another,
+but fixing the tagging would probably be better.</p>
+
+<p> (The tagging failure may be a generic weakness in the way the
+protocols work, but most services won't have multiple clients so it is
+not so visible elsewhere.)</p>
+
+</body>
+</html>

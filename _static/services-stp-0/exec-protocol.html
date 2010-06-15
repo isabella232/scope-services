@@ -1,0 +1,282 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+<link rel="stylesheet" href="scope.css" />
+<title>Opera Exec protocol</title>
+
+<style type="text/css">
+h3 { font-weight: bold; font-style: italic }
+h3::before { font-style: normal }
+</style>
+
+<script type="text/javascript" src="markup_grammar.js"></script>
+</head>
+
+<body onload="markup_grammar()">
+<h1>Opera Exec protocol</h1>
+
+<p>The Opera Exec protocol can be used to control an Opera instance from
+the outside, and various operations can be initiated.  This functionality is
+mainly useful for QA testing.</p>
+
+<h2>BNF</h2>
+
+<p> This is the grammar describing the data.</p>
+
+<pre>
+
+<span class="comment">#</span>
+<span class="comment"># Commands (messages sent to the Opera instance to be manipulated)</span>
+<span class="comment">#</span>
+
+<a name="PROTOCOL"></a>PROTOCOL ::= (<a href="#COMMAND">COMMAND</a> | <a href="#EVENT">EVENT</a>)*;
+
+<a name="COMMAND"></a>COMMAND ::= <a href="#EXEC">EXEC</a>
+          | <a href="#GET-ACTION-INFO-LIST">GET-ACTION-INFO-LIST</a>
+          | <a href="#SCREEN-WATCHER">SCREEN-WATCHER</a>
+          ;
+
+<a name="EVENT"></a>EVENT ::= <a href="#ACTION-INFO-LIST">ACTION-INFO-LIST</a>
+        | <a href="#SCREEN-WATCHER-REPLY">SCREEN-WATCHER-REPLY</a>
+        ;
+
+<a name="EXEC"></a>EXEC ::= <span class="string">"&lt;exec&gt;"</span> <a href="#OPERATION">OPERATION</a>+ <span class="string">"&lt;/exec&gt;"</span> ;
+
+<span class="comment"># Although the EBNF does not reflect this, only one <a href="#MOUSE-ACTION">MOUSE-ACTION</a> is</span>
+<span class="comment"># allowed per <a href="#EXEC">EXEC</a> command.</span>
+
+<a name="OPERATION"></a>OPERATION ::= <a href="#KEYDOWN">KEYDOWN</a>
+            | <a href="#KEYUP">KEYUP</a>
+            | <a href="#TYPE">TYPE</a>
+            | <a href="#ACTION">ACTION</a>
+            | <a href="#MOUSE-ACTION">MOUSE-ACTION</a>
+            ;
+
+<a name="KEYDOWN"></a>KEYDOWN ::= <span class="string">"&lt;keydown&gt;"</span>
+            <a href="#KEY">KEY</a>
+            <span class="string">"&lt;/keydown&gt;"</span>
+            ;
+
+<a name="KEYUP"></a>KEYUP ::= <span class="string">"&lt;keyup&gt;"</span>
+          <a href="#KEY">KEY</a>
+          <span class="string">"&lt;/keyup&gt;"</span>
+          ;
+
+<a name="TYPE"></a>TYPE ::= <span class="string">"&lt;type&gt;"</span>
+         <a href="#TEXT">TEXT</a>
+         <span class="string">"&lt;/type&gt;"</span>
+         ;
+
+<a name="ACTION"></a>ACTION ::= <span class="string">"&lt;action&gt;"</span>
+           <a href="#NAME">NAME</a>
+           <a href="#PARAM">PARAM</a>?
+           <a href="#WINDOW-ID">WINDOW-ID</a>?
+           <span class="string">"&lt;/action&gt;"</span>
+           ;
+
+<span class="comment"># <a href="#PARAM">PARAM</a> to the action. E.g. <span class="string">"opera.com"</span> to the command <span class="string">"go"</span></span>
+<a name="PARAM"></a>PARAM ::= <span class="string">"&lt;param&gt;"</span>
+          <a href="#TEXT">TEXT</a>
+          <span class="string">"&lt;/param&gt;"</span>
+          ;
+
+<a name="WINDOW-ID"></a>WINDOW-ID ::= <span class="string">"&lt;window-id&gt;"</span>
+              <a href="#UNSIGNED">UNSIGNED</a>
+              <span class="string">"&lt;/window-id&gt;"</span>
+              ;
+
+<span class="comment"># The <a href="#KEY">KEY</a> is either a key-name (<span class="string">"ctrl"</span>, <span class="string">"down"</span>, etc.)</span>
+<span class="comment"># or a single character (<span class="string">"a"</span>, <span class="string">"b"</span>, etc.)</span>
+
+<a name="KEY"></a>KEY ::= <a href="#TEXT">TEXT</a> ;
+
+<span class="comment"># The <a href="#ACTION-NAME">ACTION-NAME</a> is the name of an Action (<span class="string">"Page Down"</span>, <span class="string">"New Page"</span>, etc.)</span>
+
+<a name="ACTION-NAME"></a>ACTION-NAME ::= <a href="#TEXT">TEXT</a> ;
+
+<span class="comment"># Request a list of valid actions. The reply will come as an <a href="#ACTION-INFO-LIST">ACTION-INFO-LIST</a></span>
+
+<a name="GET-ACTION-INFO-LIST"></a>GET-ACTION-INFO-LIST ::= <span class="string">"&lt;get-action-info-list /&gt;"</span> ;
+
+<a name="ACTION-INFO-LIST"></a>ACTION-INFO-LIST ::= <span class="string">"&lt;action-info-list&gt;"</span>
+                        <a href="#NAME">NAME</a>*
+                     <span class="string">"&lt;/action-info-list&gt;"</span>
+                     ;
+
+<a name="NAME"></a>NAME ::= <span class="string">"&lt;name&gt;"</span>
+            <a href="#ACTION-NAME">ACTION-NAME</a>
+         <span class="string">"&lt;/name&gt;"</span>
+         ;
+
+
+<span class="comment"># Defaults:</span>
+<span class="comment">#   <a href="#WINDOW-ID">WINDOW-ID</a>:  current window</span>
+<span class="comment">#   <a href="#TIMEOUT">TIMEOUT</a>:    150000 (15 seconds)</span>
+<span class="comment">#   <a href="#AREA">AREA</a>:       x=0, y=0, w=200, h=100</span>
+
+<a name="SCREEN-WATCHER"></a>SCREEN-WATCHER ::= <span class="string">"&lt;screen-watcher&gt;"</span>
+                     <a href="#WINDOW-ID">WINDOW-ID</a>?
+                     <a href="#TIMEOUT">TIMEOUT</a>?
+                     <a href="#AREA">AREA</a>?
+                     <a href="#MD5">MD5</a>*
+                     <a href="#COLOR-SPEC">COLOR-SPEC</a>*
+                  <span class="string">"&lt;/screen-watcher&gt;"</span> ;
+
+<span class="comment"># Timeout in milliseconds</span>
+<span class="comment"># If omitted, defaults to 15 seconds</span>
+
+<a name="TIMEOUT"></a>TIMEOUT ::= <span class="string">"&lt;timeout&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/timeout&gt;"</span> ;
+
+<span class="comment"># Define an area on the page, relative to the page (not viewport)</span>
+
+<a name="AREA"></a>AREA ::= <span class="string">"&lt;area&gt;"</span>
+            <span class="string">"&lt;x&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/x&gt;"</span> <span class="comment"># horizontal offset</span>
+            <span class="string">"&lt;y&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/y&gt;"</span> <span class="comment"># vertical offset</span>
+            <span class="string">"&lt;w&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/w&gt;"</span> <span class="comment"># width</span>
+            <span class="string">"&lt;h&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/h&gt;"</span> <span class="comment"># height</span>
+         <span class="string">"&lt;/area&gt;"</span> ;
+
+<span class="comment"># <a href="#MD5">MD5</a> sum of an image, in hexadecimal</span>
+
+<a name="MD5"></a>MD5 ::= <span class="string">"&lt;md5&gt;"</span> <span class="string">"0x"</span> [0-9a-f]{32} <span class="string">"&lt;/md5&gt;"</span> ;
+
+<span class="comment"># The reply <a href="#SCREEN-WATCHER-REPLY">SCREEN-WATCHER-REPLY</a> will include a count of all the pixles for the</span>
+<span class="comment"># various id's given in the colspecs. You can have multiple colspecs with the</span>
+<span class="comment"># same id - the report will then include the total count of all the colspecs</span>
+<span class="comment"># for that id. You can also have overlapping color specifications.</span>
+<span class="comment">#</span>
+<span class="comment"># Note: There can be maximum 16 colorspecs!</span>
+<span class="comment">#</span>
+<span class="comment"># Any LOW-* element missing will default to 0</span>
+<span class="comment"># Any HIGH-* element missing will default to 255</span>
+<span class="comment">#</span>
+<span class="comment"># Returns <a href="#SCREEN-WATCHER-REPLY">SCREEN-WATCHER-REPLY</a></span>
+
+<a name="COLOR-SPEC"></a>COLOR-SPEC ::= <span class="string">"&lt;color-spec&gt;"</span>
+                  ID
+                  <a href="#LOW-RED">LOW-RED</a>?
+                  <a href="#HIGH-RED">HIGH-RED</a>?
+                  <a href="#LOW-GREEN">LOW-GREEN</a>?
+                  <a href="#HIGH-GREEN">HIGH-GREEN</a>?
+                  <a href="#LOW-BLUE">LOW-BLUE</a>?
+                  <a href="#HIGH-BLUE">HIGH-BLUE</a>?
+               <span class="string">"&lt;/color-spec&gt;"</span> ;
+
+<span class="comment"># ID is used by <a href="#COLOR-SPEC">COLOR-SPEC</a> to identify a color. Does not need to be unique</span>
+
+ID ::= <span class="string">"&lt;id&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/id&gt;"</span> ;
+
+<span class="comment"># Sent as reply to <a href="#SCREEN-WATCHER">SCREEN-WATCHER</a> command.</span>
+
+<a name="SCREEN-WATCHER-REPLY"></a>SCREEN-WATCHER-REPLY ::= <span class="string">"&lt;screen-watcher-reply&gt;"</span>
+                            <a href="#WINDOW-ID">WINDOW-ID</a>
+                            <a href="#MD5">MD5</a>
+                            <a href="#COLOR-MATCH">COLOR-MATCH</a>*
+                         <span class="string">"&lt;/screen-watcher-reply&gt;"</span> ;
+
+<span class="comment"># The count of color IDs that matched (ID is from <a href="#COLOR-SPEC">COLOR-SPEC</a>).</span>
+
+<a name="COLOR-MATCH"></a>COLOR-MATCH ::= <span class="string">"&lt;color-match&gt;"</span>
+                   ID
+                   <span class="string">"&lt;count&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/count&gt;"</span>
+                <span class="string">"&lt;/color-match&gt;"</span> ;
+
+<span class="comment">###</span>
+<span class="comment"># Color values ranging from 0 (no color) to 255 (maximal saturation).</span>
+<span class="comment"># Default (meaning element missing) is 0 for LOW-* elements and 255 for HIGH-* elements.</span>
+<span class="comment">#</span>
+
+<a name="LOW-RED"></a>LOW-RED    ::= <span class="string">"&lt;low-red&gt;"</span>    <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/low-red&gt;"</span> ;
+<a name="HIGH-RED"></a>HIGH-RED   ::= <span class="string">"&lt;high-red&gt;"</span>   <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/high-red&gt;"</span> ;
+<a name="LOW-GREEN"></a>LOW-GREEN  ::= <span class="string">"&lt;low-green&gt;"</span>  <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/low-green&gt;"</span> ;
+<a name="HIGH-GREEN"></a>HIGH-GREEN ::= <span class="string">"&lt;high-green&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/high-green&gt;"</span> ;
+<a name="LOW-BLUE"></a>LOW-BLUE   ::= <span class="string">"&lt;low-blue&gt;"</span>   <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/low-blue&gt;"</span> ;
+<a name="HIGH-BLUE"></a>HIGH-BLUE  ::= <span class="string">"&lt;high-blue&gt;"</span>  <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/high-blue&gt;"</span> ;
+
+<span class="comment"># Moved mouse to the given position on the screen/window.</span>
+<span class="comment"># Note that the mouse cursor is not moved visibly.</span>
+<span class="comment">#</span>
+<span class="comment"># The coordinates are relative to the upper left corner of the tab</span>
+<span class="comment"># (not including chrome).</span>
+<span class="comment">#</span>
+<span class="comment"># Only one <a href="#MOUSE-ACTION">MOUSE-ACTION</a> can be sent per <a href="#EXEC">EXEC</a> command.</span>
+
+<a name="MOUSE-ACTION"></a>MOUSE-ACTION ::= <span class="string">"&lt;mouse-action&gt;"</span>
+                    <a href="#WINDOW-ID">WINDOW-ID</a>
+                    <span class="string">"&lt;x&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/x&gt;"</span>
+                    <span class="string">"&lt;y&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/y&gt;"</span>
+                    <a href="#BUTTONS">BUTTONS</a>
+                 <span class="string">"&lt;/mouse-action&gt;"</span>
+                 ;
+
+<span class="comment"># <a href="#BUTTONS">BUTTONS</a> specifies the buttons to press or release</span>
+<span class="comment"># It is specifies as the sum of button actions:</span>
+<span class="comment">#       1 - Button 1 down</span>
+<span class="comment">#       2 - Button 1 up</span>
+<span class="comment">#</span>
+<span class="comment">#       4 - Button 2 down</span>
+<span class="comment">#       8 - Button 2 up</span>
+<span class="comment">#</span>
+<span class="comment">#      16 - Button 3 down</span>
+<span class="comment">#      32 - Button 3 up</span>
+<span class="comment">#</span>
+<span class="comment"># For example, to press button 1 and release button 2, the value is 9 (1+8)</span>
+<span class="comment">#</span>
+<span class="comment"># Buttons are clicked in the sequence listed above. Note that down actions are</span>
+<span class="comment"># listed before up actions, thus allowing single-clicking with one command</span>
+<span class="comment"># (e.g. using value 3)</span>
+
+<a name="BUTTONS"></a>BUTTONS ::= <span class="string">"&lt;buttons&gt;"</span> <a href="#UNSIGNED">UNSIGNED</a> <span class="string">"&lt;/buttons&gt;"</span> ;
+
+<span class="comment">###</span>
+<span class="comment"># From ecmascript-debugger-protocol.html</span>
+<span class="comment">#</span>
+
+<a name="UNSIGNED"></a>UNSIGNED ::= [0-9]+ ;
+
+<a name="TEXT"></a>TEXT ::= <a href="#BASE64-ENCODED-DATA">BASE64-ENCODED-DATA</a> | textual-data ;
+
+<a name="BASE64-ENCODED-DATA"></a>BASE64-ENCODED-DATA ::= <span class="string">"&lt;base64-encoded-data&gt;"</span> textual-data <span class="string">"&lt;/base64-encoded-data&gt;"</span> ;
+</pre></pre>
+
+<h2>Examples</h2>
+
+<p>The following example will do a spatial navigation down:</p>
+
+<pre>
+&lt;exec&gt;
+  &lt;keydown&gt;shift&lt;/keydown&gt;&lt;keydown&gt;down&lt;/keydown&gt;
+  &lt;keyup&gt;down&lt;/keyup&gt;&lt;keyup&gt;shift&lt;/keyup&gt;
+&lt;/exec&gt;
+</pre>
+
+<p>The following will type the text "Hello":</p>
+
+<pre>
+&lt;exec&gt;&lt;type&gt;Hello&lt;/type&gt;&lt;/exec&gt;
+</pre>
+
+<p> Take note that shift-modifier key-presses are neither generated
+nor taken into account when processing the letters of the TYPE
+operation. This means that no shift key will be pressed around the 'H'
+in 'Hello' above, and the text typed would still be 'Hello' if the
+shift key was pressed (with a KEYDOWN operation) before the TYPE
+operation.</p>
+
+<p>The following will trigger an Action of "Page down":</p>
+
+<pre>
+&lt;exec&gt;&lt;action&gt;Page Down&lt;/action&gt;&lt;/exec&gt;
+</pre>
+
+<h2>Error handling</h2>
+
+<p>There are currently no error messages or other reports of a failed
+operation.  Incorrect syntax, unknown keys, or other invalid input will
+be silently dropped.</p>
+
+
+</body>
+</html>
