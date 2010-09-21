@@ -491,6 +491,7 @@ For errors the message contains::
       required uint32 format = 3;
       optional uint32 status = 4;
       optional uint32 tag = 5;
+      required bytes  payload = 8;
     }
 
 service
