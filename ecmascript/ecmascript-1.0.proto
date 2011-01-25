@@ -5,8 +5,7 @@ syntax = scope;
  * Basic usage is to query the runtime list first, all commands require
  * a runtime ID to work with.
  *
- * All IDs in this service will be invalid once the service is disabled or
- * ReleaseObjects() is called.
+ * All IDs in this service will be invalid once the service is disabled.
  *
  * Note: For debugging of ECMAScript see the EcmascriptDebugger service.
  */
@@ -17,7 +16,7 @@ service Ecmascript
     option (cpp_class) = OpScopeEcmascript;
 
     /**
-     * List all runtimes in (in all Windows).
+     * List all runtimes (in all Windows).
      * For instance to fetch all runtimes of all windows one can do::
      *
      *   ListRuntimes(runtimeList=[], create=true)
@@ -57,9 +56,20 @@ service Ecmascript
      * Release protected ECMAScript objects. This will just make them garbage
      * collectible. Released objects are not necessarily freed immediately.
      * 
-     * Calling ReleaseObjects invalidates all previously receieved object IDs.
+     * Calling ReleaseObjects with an empty list causes all objects to be
+     * released. Otherwise, only the specified objects will be released.
+     * Attempting to release a non-existent object has no effect, and will
+     * fail silently.
+     * 
+     * Releasing objects invalidates associated object IDs immediately.
      */
     command ReleaseObjects(ReleaseObjectsArg) returns (Default) = 4;
+
+    /**
+     * Occurs when certain 'milestones' of page-loading have been reached.
+     * See message 'ReadyStateChange' for details.
+     */
+    event OnReadyStateChanged returns (ReadyStateChange) = 5;
 }
 
 // command ListRuntimes(ListRuntimesArg) returns (RuntimeList) = 1;
@@ -70,7 +80,7 @@ message ListRuntimesArg
      * If non-empty, only information about the specified runtime(s) will
      * be received.
      */
-    repeated uint32 runtimeList = 1;
+    repeated uint32 runtimeIDList = 1;
 
     /**
      * If true, runtimes will be created for documents which would otherwise
@@ -85,7 +95,7 @@ message RuntimeList
 }
 
 /**
- * Information on a runtime. 
+ * A runtime is an ECMAScript execution environment.
  */
 message Runtime
 {
@@ -220,7 +230,7 @@ message ExamineObjectsArg
     /**
      * List of object IDs to examine.
      */
-    repeated uint32 objectList = 2;
+    repeated uint32 objectIDList = 2;
 
     /**
      * If true then each examined object will also include the prototype
@@ -252,7 +262,8 @@ message PrototypeChain
 // Common
 
 /**
- * Information on an ECMAscript object.
+ * An Object is any non-primitive value in ECMAScript. Functions
+ * and arrays, for instance, are also Objects.
  */
 message Object
 {
@@ -295,12 +306,23 @@ message Object
     optional uint32 prototypeID = 4;
 
     /**
-     * The name of the class used to create this object.
+     * The name of the class used to create this object. Examples::
+     *
+     *   "Object"
+     *   "Array"
+     *   "Function"
+     *   "HTMLHtmlElement"
      */
     optional string className = 5;
 
     /**
-     * The name of the function, only set if type = FUNCTION.
+     * The name of the function, only set if type = FUNCTION. If the function
+     * is anonymous, then a suitable alias *may* be assigned based on context,
+     * if possible. For instance::
+     * 
+     *   foo.bar = function(){}
+     *
+     * Would get the functionName 'bar'.
      */
     optional string functionName = 6;
 
@@ -416,5 +438,33 @@ message Value
  */
 message ReleaseObjectsArg
 {
-    repeated uint32 objectList = 1;
+    repeated uint32 objectIDList = 1;
+}
+
+message ReadyStateChange
+{
+    enum State
+    {
+        /**
+         * Occurs immediately after the DOM environment is created
+         * for a document.
+         */
+        DOM_ENVIRONMENT_CREATED = 1;
+
+        /**
+         * This state indicates that the HTML tree is done (for now). The event
+         * happens immediately after the DOMContentLoaded event fires on the window 
+         * object. Useful for figuring out when we can inspect the DOM.
+         */
+        DOM_CONTENT_LOADED = 2;
+
+        /**
+         * Occurs after onload is finished, and after external resources are loaded. 
+         * When this event is observed, it should be safe to take a screenshot.
+         */
+        AFTER_ONLOAD = 3;
+    }
+
+    required uint32 runtimeID = 1;
+    required State state = 2;
 }
