@@ -66,6 +66,7 @@ service WindowManager
     option (core_release) = "2.5";
     option (version) = "2.1";
     option (cpp_class) = OpScopeWindowManager;
+    option (draft) = true;
 
     /**
      * Request the currently active window.
