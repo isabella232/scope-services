@@ -38,7 +38,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Scope Interface'
-copyright = u'2009, Opera Software ASA. All rights reserved'
+copyright = u'2011, Opera Software ASA. All rights reserved'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
