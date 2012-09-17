@@ -1,6 +1,6 @@
-=============================
- Scope transport protocol v1
-=============================
+===================================
+ Scope Transport Protocol Version 1
+===================================
 
 :Author:  Jan Borsodi (jborsodi [at] opera.com)
 :Version: 0.10
@@ -56,7 +56,7 @@ STP version 0 is defined as:
 The flow of the transport protocol currently looks like this::
 
   Opera                           proxy                    client
-  
+
   *services     ---------------->
                                       ----------------->   *services
                                       <-----------------   *enable
@@ -130,7 +130,7 @@ The protocol was designed to handle multiple clients with the use of
 the proxy. However, there are problems with multiple clients
 in some services (ecmascript-debugger). Multi-client will be removed and the
 proxy updated to only allow one client at a time.
-  
+
 Overview
 ========
 
@@ -193,7 +193,7 @@ in this case a mobile phone::
   |         |
   +---------+
 
-Other clients can communicate directly using STP. In the following case, the Python client 
+Other clients can communicate directly using STP. In the following case, the Python client
 is shown::
 
   +-------+ STP/0 +-------+  STP/0   +---------+
@@ -218,7 +218,7 @@ version they do not know how to handle.
 
 Services however, will use a combination of incremental and breaking changes.
 This is handled by supplying a version number with two components: the first
-is the major version and determines changes that will break existing clients, and 
+is the major version and determines changes that will break existing clients, and
 the second is the minor version which will determine incremental (or additional)
 changes. This means that clients will not need to be updated if only the minor
 version increases. For this to be possible the following rules apply:
@@ -448,7 +448,7 @@ The headers are defined using a Protocol Buffer message::
     }
 
 Some of the fields are optional and will be present depending on the type of
-STP message. 
+STP message.
 
 For commands the message will be::
 
@@ -630,7 +630,7 @@ The client must then initiate the handshake which also determines the STP
 version to use, for instance to enable STP version 1::
 
   Host                              client
-  
+
   *services     =================>
                 <~~~~~~~~~~~~~~~~~  *enable stp-1
   STP/1\n       ~ ~ ~ ~ ~ ~ ~ ~ ~>
@@ -640,7 +640,7 @@ version to use, for instance to enable STP version 1::
 A typical message flow between a client, proxy and host looks like this::
 
   Opera                             proxy                   client
-  
+
   handshake       <~~~~~~~~~~~~~~~~     ~ ~ ~ ~ ~ ~ ~ ~ ~>  handshake
                                         <-----------------  scope.Connect
   scope.Connect   <----------------

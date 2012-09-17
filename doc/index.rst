@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root * `toctree` directive.
 
-=====================================
-Scope Interface for the Opera Browser
-=====================================
+=======================
+Opera Scope Architecure
+=======================
 
 General Overview
 ================
