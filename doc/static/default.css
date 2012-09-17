@@ -410,12 +410,16 @@ span.eqno {
 
 /* -- page layout ----------------------------------------------------------- */
 
-body {
-    font-family: sans-serif;
-    font-size: 100%;
+html, body {
+    font: menu;
+    font-size: 12px;
     color: #000;
     margin: 0;
     padding: 0;
+    max-width: 800px;
+    position: relative;
+    margin: auto;
+    height: 100%;
 }
 
 div.document {
@@ -423,25 +427,23 @@ div.document {
 }
 
 div.documentwrapper {
-    float: left;
-    width: 100%;
+
 }
 
 div.bodywrapper {
-    margin: 0 0 0 230px;
+
 }
 
 div.body {
     background-color: #ffffff;
     color: #000000;
-    padding: 0 20px 30px 20px;
-    border: 1px solid #ccc;
-    position:absolute;
-    left: 230px;
-    top: 30px;
-    bottom:30px;
-    right: 0;
-    overflow: auto;
+    padding: 0 20px 30px 250px;
+    Xposition:absolute;
+    Xleft: 0;
+    Xtop: 0;
+    Xbottom: 0;
+    Xright: 0;
+    Xoverflow: auto;
 }
 
 div.footer {
@@ -473,13 +475,12 @@ div.related a {
 }
 
 div.sphinxsidebar {
-    position:absolute;
-    left: 0px;
+    position:fixed;
     width: 230px;
-    top: 30px;
-    bottom:30px;
-    right: 0;
+    top: 47px;
+    bottom: 0;
     overflow: auto;
+    border-right: 1px solid hsl(0, 0%, 70%);
 }
 
 div.sphinxsidebar h3 {
@@ -550,11 +551,8 @@ div.body h3,
 div.body h4,
 div.body h5,
 div.body h6 {
-    font-family: 'Trebuchet MS', sans-serif;
-    background-color: #f2f2f2;
+
     font-weight: normal;
-    color: #20435c;
-    border-bottom: 1px solid #ccc;
     margin: 20px -20px 10px -20px;
     padding: 3px 0 3px 10px;
 }
@@ -566,7 +564,15 @@ div.body h3 {
     padding: 3px 0 3px;
 }
 
-div.body h1 { margin-top: 0; font-size: 200%; }
+div.body h1 {
+  margin-top: 0;
+  font-size: 2.5em;
+  margin: 0;
+  margin-left: -250px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid hsl(0, 0%, 70%);
+  padding: .5em 8px;
+}
 div.body h2 { font-size: 160%; }
 div.body h3 { font-size: 140%; }
 div.body h4 { font-size: 120%; }
@@ -622,8 +628,9 @@ p.admonition-title:after {
 }
 
 pre {
+    font-family: Consolas, monospace;
     padding: 5px;
-    background-color: #e6e6e6;
+    background-color: hsl(0, 0%, 97%);
     color: #333333;
     line-height: 120%;
     border: 1px solid #ccc;
@@ -634,7 +641,7 @@ pre {
 tt {
     padding: 0 1px 0 1px;
     font-size: 0.95em;
-    color: #ff7f00;
+    color: #DD1144;
     font-weight: bold;
 }
 
@@ -735,5 +742,5 @@ cite {
   content: "?";
   float: right;
   width: 2em;
-  margin-right: -2em; 
+  margin-right: -2em;
 }
